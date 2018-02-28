@@ -1,0 +1,229 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package io.github.helenocampos;
+
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.dynamicreports.report.builder.DynamicReports;
+import net.sf.dynamicreports.report.builder.column.Columns;
+import net.sf.dynamicreports.report.builder.datatype.DataTypes;
+import net.sf.dynamicreports.report.exception.DRException;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import static net.sf.dynamicreports.report.builder.DynamicReports.*;
+import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
+import net.sf.dynamicreports.report.builder.style.StyleBuilder;
+import net.sf.dynamicreports.report.constant.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+/**
+ *
+ * @author helenocampos
+ */
+public class ExperimentReport
+{
+
+    private List<ExecutionData> executionData;
+    private String projectName;
+    private File experimentFolder;
+
+    public ExperimentReport(String projectName, File experimentFolder, List<String> reports)
+    {
+        this.executionData = new LinkedList<ExecutionData>();
+        this.projectName = projectName;
+        this.experimentFolder = experimentFolder;
+        scanExperimentFolder();
+        generateReport(reports);
+    }
+
+    private void scanExperimentFolder()
+    {
+        //each folder in the experiment folder is a prioritization run
+        if (this.experimentFolder.isDirectory())
+        {
+            File[] subFiles = this.experimentFolder.listFiles();
+            for (File subFile : subFiles)
+            {
+                if (subFile.isDirectory())
+                {
+                    File runFolder = new File(subFile, projectName);
+                    this.executionData.addAll(ExecutionData.readExecutionData(runFolder));
+                }
+            }
+        }
+    }
+
+    private void generateReport(List<String> reports)
+    {
+        if (reports != null)
+        {
+            for (String report : reports)
+            {
+                if (report.equals("summary"))
+                {
+                    ExecutionSummary summary = new ExecutionSummary(executionData);
+                    buildSummaryReport(summary);
+                } else if (report.equals("raw"))
+                {
+                    buildRawDataReport();
+                }
+            }
+        } else
+        {
+            ExecutionSummary summary = new ExecutionSummary(executionData);
+            buildSummaryReport(summary);
+            buildRawDataReport();
+        }
+    }
+
+    private void buildSummaryReport(ExecutionSummary summary)
+    {
+        JasperReportBuilder report = DynamicReports.report();
+        StyleBuilder boldStyle = stl.style().bold();
+        StyleBuilder bigStyle = stl.style(boldStyle).setFontSize(20).setHorizontalAlignment(HorizontalAlignment.CENTER);
+
+        report.title(cmp.text("Prioritization Experiment Report Summary").setStyle(bigStyle));
+        String timeStamp = new SimpleDateFormat("HH:mm:ss MM/dd/yyyy").format(new Date());
+        report.title(cmp.text("Generated at: " + timeStamp));
+        report.title(cmp.text(""));
+
+        report.title(cmp.text("Experiment context").setStyle(boldStyle));
+        report.title(cmp.text("Amount of mutation faults seeded into each execution: " + summary.getExperimentContext().getSeededFaultsAmount()).setStyle(boldStyle));
+        report.title(cmp.text("Amount of test cases in the experimented software: " + summary.getExperimentContext().getTestCasesAmount()).setStyle(boldStyle));
+        report.title(cmp.text("Granularity of the test cases in the experimented software: " + summary.getExperimentContext().getTestGranularity()).setStyle(boldStyle));
+
+        report.title(cmp.text(""));
+
+        report.addColumn(Columns.column("Technique", "technique", DataTypes.stringType()));
+        report.addColumn(Columns.column("Executions", "amountApfds", DataTypes.integerType()));
+        report.addColumn(Columns.column("Min APFD", "minAPFD", DataTypes.doubleType()).setPattern("#,##0.###"));
+        TextColumnBuilder<Double> meanAPFDColumn = Columns.column("Mean APFD", "meanAPFD", DataTypes.doubleType()).setPattern("#,##0.###");
+        report.addColumn(meanAPFDColumn);
+        report.addColumn(Columns.column("Median APFD", "medianAPFD", DataTypes.doubleType()).setPattern("#,##0.###"));
+        report.addColumn(Columns.column("Max APFD", "maxAPFD", DataTypes.doubleType()).setPattern("#,##0.###"));
+
+        StyleBuilder boldCenteredStyle = stl.style(boldStyle)
+                .setHorizontalAlignment(HorizontalAlignment.CENTER);
+
+        StyleBuilder columnTitleStyle = stl.style(boldCenteredStyle)
+                .setBorder(stl.pen1Point())
+                .setBackgroundColor(Color.LIGHT_GRAY);
+
+        report.setColumnTitleStyle(columnTitleStyle)
+                .highlightDetailEvenRows()
+                .title(cmp.text("Project: " + projectName).setStyle(boldCenteredStyle))
+                .pageFooter(cmp.pageXofY().setStyle(boldCenteredStyle));
+
+        report.setDataSource(new JRBeanCollectionDataSource(summary.getExperimentData().values()));
+        report.sortBy(desc(meanAPFDColumn));
+        try
+        {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            report.toPdf(buffer);
+            try
+            {
+                OutputStream outputStream = new FileOutputStream(new File(experimentFolder, "summary_report.pdf"));
+                buffer.writeTo(outputStream);
+            } catch (FileNotFoundException ex)
+            {
+                Logger.getLogger(ExperimentReport.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex)
+            {
+                Logger.getLogger(ExperimentReport.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        } catch (DRException ex)
+        {
+            Logger.getLogger(ExperimentReport.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    private void buildRawDataReport()
+    {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("Experiment data");
+
+        createHeadings(sheet, workbook);
+        int rowNum = 2;
+        for (ExecutionData data : executionData)
+        {
+            proccessRowValues(data, rowNum++, sheet);
+        }
+
+        try
+        {
+            FileOutputStream outputStream = new FileOutputStream(new File(experimentFolder, "raw_data.xls"));
+            workbook.write(outputStream);
+            workbook.close();
+        } catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private void proccessRowValues(ExecutionData data, int rowNum, XSSFSheet sheet)
+    {
+        Row row = sheet.createRow(rowNum);
+        int colNum = 0;
+
+        for (String value : data.getValues())
+        {
+            Cell cell = row.createCell(colNum++);
+            cell.setCellValue(value);
+        }
+    }
+
+    private void createHeadings(XSSFSheet sheet, XSSFWorkbook wb)
+    {
+        Row row = sheet.createRow(0);
+        Cell cell = row.createCell(0);
+        String timeStamp = new SimpleDateFormat("HH:mm:ss MM/dd/yyyy").format(new Date());
+        cell.setCellValue("Report for " + this.projectName + " experiment. Generated at: " + timeStamp);
+        row = sheet.createRow(1);
+        XSSFCellStyle style = wb.createCellStyle();
+        XSSFFont font = wb.createFont();
+        font.setBold(true);
+        style.setFont(font);
+        cell = row.createCell(0);
+        cell.setCellValue("Technique");
+        cell.setCellStyle(style);
+        cell = row.createCell(1);
+        cell.setCellValue("APFD");
+        cell.setCellStyle(style);
+        cell = row.createCell(2);
+        cell.setCellValue("Optimal APFD");
+        cell.setCellStyle(style);
+        cell = row.createCell(3);
+        cell.setCellValue("Faults amount");
+        cell.setCellStyle(style);
+        cell = row.createCell(4);
+        cell.setCellValue("Executed tests");
+        cell.setCellStyle(style);
+        cell = row.createCell(5);
+        cell.setCellValue("Test granularity");
+    }
+
+}
