@@ -1,25 +1,15 @@
 package io.github.helenocampos.surefire;
 
-import io.github.helenocampos.surefire.ordering.methods.MethodsAlphabeticalOrder;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 import org.apache.maven.surefire.util.TestsToRun;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
 
-public class TestMethodsToRun implements Iterable<String> {
-
-    private final List<String> tests;
+public class TestMethodsToRun extends AbstractTestsToRun{
 
     public TestMethodsToRun(TestsToRun tcs, boolean isJUnit4) {
-
-        tests = new LinkedList<String>();
         for (Class<?> clazz : tcs) {
             for (Class<?> c : extractClassesFromSuite(clazz)) {
                 ArrayList<String> methods = new ArrayList<String>();
@@ -41,40 +31,19 @@ public class TestMethodsToRun implements Iterable<String> {
                 }
                 Collections.sort(methods);
                 for (String s : methods) {
-                    tests.add(c.getName() + "#" + s);
+                    TestMethod testMethod = new TestMethod();
+                    testMethod.setTestClass(c);
+                    testMethod.setMethodName(s);
+                    this.addTest(testMethod);
                 }
             }
         }
-//        Collections.shuffle(tests);
-        Collections.sort(tests, new MethodsAlphabeticalOrder());
-    }
-
-    private Class<?>[] extractClassesFromSuite(Class<?> suite) {
-        if (isSuite(suite)) {
-            Suite.SuiteClasses annotation = suite.getAnnotation(Suite.SuiteClasses.class);
-            return annotation.value();
-        } else {
-            return new Class<?>[]{suite};
-        }
-
-    }
-
-    private boolean isSuite(Class<?> clazz) {
-        for (Annotation a : clazz.getAnnotationsByType(RunWith.class)) {
-            RunWith annotation = (RunWith) a;
-            if (annotation.value().equals(Suite.class)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override
-    public String toString() {
-        return "TestMethodsToRun [tests=" + tests + "]";
+    public String getGranularity()
+    {
+        return "Method";
     }
 
-    public Iterator<String> iterator() {
-        return tests.iterator();
-    }
 }

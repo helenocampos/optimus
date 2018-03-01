@@ -15,14 +15,27 @@
  */
 package io.github.helenocampos.surefire.api;
 
-import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  *
  * @author helenocampos
  */
-public interface MethodsOrderer<T> extends Comparator<T>{
-    //object is String containing className#methodName 
-    int compare(T o1, T o2);
-    boolean equals(Object obj);
+public abstract class AdditionalOrderer<T> implements Orderer{
+    private HashMap<String, boolean[]> coveredCode;
+    public abstract T getHighestCoverageTest(List<T> tests);
+    
+    public HashMap<String,boolean[]> getCoveredCode(){
+        return this.coveredCode;
+    }
+    
+    public void setCoveredCode(HashMap<String,boolean[]> coveredCode){
+        this.coveredCode = coveredCode;
+    }
+    
+    public void updateCoveredCode(HashMap<String, boolean[]> newCoveredCode){
+        this.coveredCode.putAll(newCoveredCode);
+    }
+    
 }

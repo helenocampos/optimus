@@ -9,8 +9,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <modules>
-        <module>optimus-framework</module>
         <module>optimus-test</module>
+        <module>optimus-framework</module>
         <module>fault-injection-plugin</module>
     </modules>
 </project>

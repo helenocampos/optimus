@@ -15,15 +15,12 @@
  */
 package io.github.helenocampos.surefire.api;
 
-import io.github.helenocampos.surefire.AbstractTest;
-import org.apache.maven.surefire.suite.RunResult;
-import org.apache.maven.surefire.testset.TestSetFailedException;
+import java.util.Comparator;
 
 /**
  *
  * @author helenocampos
  */
-public interface JUnitExecutor {
-    RunResult invokeMethod(AbstractTest test) throws TestSetFailedException;
-    RunResult invokeClass(AbstractTest test) throws TestSetFailedException;
+public abstract class DefaultOrderer<AbstractTest> implements Comparator<AbstractTest>, Orderer {
+    public abstract int compare(AbstractTest o1, AbstractTest o2);
 }

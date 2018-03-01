@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.helenocampos.surefire.api;
+package io.github.helenocampos.surefire.ordering.techniques;
 
-import io.github.helenocampos.surefire.AbstractTest;
-import org.apache.maven.surefire.suite.RunResult;
-import org.apache.maven.surefire.testset.TestSetFailedException;
+import io.github.helenocampos.surefire.ordering.Strategy;
+import io.github.helenocampos.surefire.api.Orderer;
 
 /**
  *
  * @author helenocampos
  */
-public interface JUnitExecutor {
-    RunResult invokeMethod(AbstractTest test) throws TestSetFailedException;
-    RunResult invokeClass(AbstractTest test) throws TestSetFailedException;
+public class RandomPrioritization implements Orderer
+{
+
+    @Override
+    public String getStrategy()
+    {
+        return Strategy.RANDOM.getName();
+    }
 }
