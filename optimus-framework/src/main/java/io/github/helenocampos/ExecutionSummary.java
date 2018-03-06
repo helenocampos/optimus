@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math3.stat.descriptive.rank.Max;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.stat.descriptive.rank.Min;
@@ -96,10 +97,14 @@ public class ExecutionSummary
         Min min = new Min();
         double minValue = min.evaluate(unboxedApfd);
 
+        StandardDeviation sd = new StandardDeviation();
+        double sdValue = sd.evaluate(unboxedApfd);
+        
         entry.setMaxAPFD(maxValue);
         entry.setMeanAPFD(meanValue);
         entry.setMedianAPFD(medianValue);
         entry.setMinAPFD(minValue);
+        entry.setStandardDeviation(sdValue);
     }
 
     public ExperimentContext getExperimentContext()

@@ -6,18 +6,24 @@
 package io.github.helenocampos;
 
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.DynamicReports;
 import net.sf.dynamicreports.report.builder.column.Columns;
@@ -28,12 +34,24 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.*;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalAlignment;
+import net.sf.dynamicreports.report.constant.ImageScale;
+import org.apache.commons.math3.util.Precision;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.labels.BoxAndWhiskerToolTipGenerator;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.renderer.category.BoxAndWhiskerRenderer;
+import org.jfree.data.statistics.BoxAndWhiskerCategoryDataset;
+import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 
 /**
  *
@@ -80,7 +98,7 @@ public class ExperimentReport
             {
                 if (report.equals("summary"))
                 {
-                    ExecutionSummary summary = new ExecutionSummary(executionData);
+                    ExecutionSummary summary = new ExecutionSummary(this.executionData);
                     buildSummaryReport(summary);
                 } else if (report.equals("raw"))
                 {
@@ -89,37 +107,40 @@ public class ExperimentReport
             }
         } else
         {
-            ExecutionSummary summary = new ExecutionSummary(executionData);
+            ExecutionSummary summary = new ExecutionSummary(this.executionData);
             buildSummaryReport(summary);
             buildRawDataReport();
         }
+
     }
 
     private void buildSummaryReport(ExecutionSummary summary)
     {
-        JasperReportBuilder report = DynamicReports.report();
+        createBoxPlot();
+        JasperReportBuilder table = DynamicReports.report();
         StyleBuilder boldStyle = stl.style().bold();
         StyleBuilder bigStyle = stl.style(boldStyle).setFontSize(20).setHorizontalAlignment(HorizontalAlignment.CENTER);
 
-        report.title(cmp.text("Prioritization Experiment Report Summary").setStyle(bigStyle));
+        table.title(cmp.text("Prioritization Experiment Report Summary").setStyle(bigStyle));
         String timeStamp = new SimpleDateFormat("HH:mm:ss MM/dd/yyyy").format(new Date());
-        report.title(cmp.text("Generated at: " + timeStamp));
-        report.title(cmp.text(""));
+        table.title(cmp.text("Generated at: " + timeStamp));
+        table.title(cmp.text(""));
 
-        report.title(cmp.text("Experiment context").setStyle(boldStyle));
-        report.title(cmp.text("Amount of mutation faults seeded into each execution: " + summary.getExperimentContext().getSeededFaultsAmount()).setStyle(boldStyle));
-        report.title(cmp.text("Amount of test cases in the experimented software: " + summary.getExperimentContext().getTestCasesAmount()).setStyle(boldStyle));
-        report.title(cmp.text("Granularity of the test cases in the experimented software: " + summary.getExperimentContext().getTestGranularity()).setStyle(boldStyle));
+        table.title(cmp.text("Experiment context").setStyle(boldStyle));
+        table.title(cmp.text("Amount of mutation faults seeded into each execution: " + summary.getExperimentContext().getSeededFaultsAmount()).setStyle(boldStyle));
+        table.title(cmp.text("Amount of test cases in the experimented software: " + summary.getExperimentContext().getTestCasesAmount()).setStyle(boldStyle));
+        table.title(cmp.text("Granularity of the test cases in the experimented software: " + summary.getExperimentContext().getTestGranularity()).setStyle(boldStyle));
 
-        report.title(cmp.text(""));
+        table.title(cmp.text(""));
 
-        report.addColumn(Columns.column("Technique", "technique", DataTypes.stringType()));
-        report.addColumn(Columns.column("Executions", "amountApfds", DataTypes.integerType()));
-        report.addColumn(Columns.column("Min APFD", "minAPFD", DataTypes.doubleType()).setPattern("#,##0.###"));
+        table.addColumn(Columns.column("Technique", "technique", DataTypes.stringType()));
+        table.addColumn(Columns.column("Executions", "amountApfds", DataTypes.integerType()));
+        table.addColumn(Columns.column("Min APFD", "minAPFD", DataTypes.doubleType()).setPattern("#,##0.###"));
         TextColumnBuilder<Double> meanAPFDColumn = Columns.column("Mean APFD", "meanAPFD", DataTypes.doubleType()).setPattern("#,##0.###");
-        report.addColumn(meanAPFDColumn);
-        report.addColumn(Columns.column("Median APFD", "medianAPFD", DataTypes.doubleType()).setPattern("#,##0.###"));
-        report.addColumn(Columns.column("Max APFD", "maxAPFD", DataTypes.doubleType()).setPattern("#,##0.###"));
+        table.addColumn(meanAPFDColumn);
+        table.addColumn(Columns.column("Median APFD", "medianAPFD", DataTypes.doubleType()).setPattern("#,##0.###"));
+        table.addColumn(Columns.column("Max APFD", "maxAPFD", DataTypes.doubleType()).setPattern("#,##0.###"));
+        table.addColumn(Columns.column("Standard Deviation", "standardDeviation", DataTypes.doubleType()).setPattern("#,##0.###"));
 
         StyleBuilder boldCenteredStyle = stl.style(boldStyle)
                 .setHorizontalAlignment(HorizontalAlignment.CENTER);
@@ -128,13 +149,20 @@ public class ExperimentReport
                 .setBorder(stl.pen1Point())
                 .setBackgroundColor(Color.LIGHT_GRAY);
 
-        report.setColumnTitleStyle(columnTitleStyle)
+        table.setColumnTitleStyle(columnTitleStyle)
                 .highlightDetailEvenRows()
                 .title(cmp.text("Project: " + projectName).setStyle(boldCenteredStyle))
                 .pageFooter(cmp.pageXofY().setStyle(boldCenteredStyle));
 
-        report.setDataSource(new JRBeanCollectionDataSource(summary.getExperimentData().values()));
-        report.sortBy(desc(meanAPFDColumn));
+        table.setDataSource(new JRBeanCollectionDataSource(summary.getExperimentData().values()));
+        table.sortBy(desc(meanAPFDColumn));
+
+        JasperReportBuilder reportImage = DynamicReports.report();
+        reportImage.title(cmp.image(new File(experimentFolder, "boxplot.png").getAbsolutePath()).setImageScale(ImageScale.REAL_SIZE));
+
+        JasperReportBuilder report = DynamicReports.report();
+        report.title(cmp.verticalList(cmp.subreport(table), cmp.subreport(reportImage)));
+
         try
         {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -165,7 +193,7 @@ public class ExperimentReport
 
         createHeadings(sheet, workbook);
         int rowNum = 2;
-        for (ExecutionData data : executionData)
+        for (ExecutionData data : this.executionData)
         {
             proccessRowValues(data, rowNum++, sheet);
         }
@@ -224,6 +252,75 @@ public class ExperimentReport
         cell.setCellStyle(style);
         cell = row.createCell(5);
         cell.setCellValue("Test granularity");
+    }
+
+    private void createBoxPlot()
+    {
+
+        final BoxAndWhiskerCategoryDataset dataset = getBoxPlotData(new DefaultBoxAndWhiskerCategoryDataset());
+
+        final CategoryAxis xAxis = new CategoryAxis("Technique");
+        xAxis.setMaximumCategoryLabelLines(3);
+        final NumberAxis yAxis = new NumberAxis("APFD");
+
+        NumberFormat df = NumberFormat.getNumberInstance();
+        df.setMaximumFractionDigits(3);
+        df.setMinimumFractionDigits(3);
+        yAxis.setNumberFormatOverride(df);
+
+        yAxis.setAutoRangeIncludesZero(false);
+        final BoxAndWhiskerRenderer renderer = new BoxAndWhiskerRenderer();
+        renderer.setFillBox(true);
+        renderer.setSeriesPaint(0, Color.WHITE);
+        renderer.setSeriesPaint(1, Color.LIGHT_GRAY);
+        renderer.setSeriesOutlinePaint(0, Color.BLACK);
+        renderer.setSeriesOutlinePaint(1, Color.BLACK);
+        renderer.setUseOutlinePaintForWhiskers(true);
+
+        Font legendFont = new Font("SansSerif", Font.PLAIN, 16);
+        renderer.setLegendTextFont(0, legendFont);
+        renderer.setLegendTextFont(1, legendFont);
+        renderer.setMedianVisible(true);
+        renderer.setMeanVisible(false);
+
+        renderer.setToolTipGenerator(new BoxAndWhiskerToolTipGenerator());
+        final CategoryPlot plot = new CategoryPlot(dataset, xAxis, yAxis, renderer);
+
+        final JFreeChart chart = new JFreeChart(
+                "APFD boxplot",
+                new Font("SansSerif", Font.BOLD, 14),
+                plot,
+                false
+        );
+
+        try
+        {
+            ChartUtilities.saveChartAsPNG(new File(experimentFolder, "boxplot.png"), chart, 600, 800);
+        } catch (IOException ex)
+        {
+            Logger.getLogger(ExperimentReport.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private DefaultBoxAndWhiskerCategoryDataset getBoxPlotData(DefaultBoxAndWhiskerCategoryDataset dataset)
+    {
+        HashMap<String, List<Double>> values = new HashMap<String, List<Double>>();
+        for (ExecutionData entry : executionData)
+        {
+            List<Double> techniqueValues = values.get(entry.getTechnique());
+            if (techniqueValues == null)
+            {
+                techniqueValues = new LinkedList<Double>();
+            }
+            techniqueValues.add(Precision.round(entry.getAPFD(), 3));
+            values.put(entry.getTechnique(), techniqueValues);
+        }
+
+        for (Map.Entry<String, List<Double>> entry : values.entrySet())
+        {
+            dataset.add(entry.getValue(), "Technique", entry.getKey());
+        }
+        return dataset;
     }
 
 }

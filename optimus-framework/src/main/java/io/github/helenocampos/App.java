@@ -15,9 +15,11 @@ import java.util.List;
  */
 public class App
 {
-    public static void main(String[] args){
-        File experimentFolder = new File("/Users/helenocampos/Documents/out/143059-28022018");
-        String projectName = "MockProject2";
+
+    public static void main(String[] args)
+    {
+        File experimentFolder = new File("/Users/helenocampos/Documents/out/184301-06032018");
+        String projectName = "gameoflife-core";
         List<String> reports = new ArrayList<String>();
         ExperimentReport report = new ExperimentReport(projectName, experimentFolder, null);
     }

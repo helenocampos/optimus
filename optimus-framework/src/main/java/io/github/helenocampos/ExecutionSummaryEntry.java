@@ -23,6 +23,7 @@ public class ExecutionSummaryEntry
     private double meanAPFD;
     private double medianAPFD;
     private double maxAPFD;
+    private double standardDeviation;
 
     public ExecutionSummaryEntry(String technique)
     {
@@ -94,6 +95,16 @@ public class ExecutionSummaryEntry
     public List<Double> getApfds()
     {
         return apfds;
+    }
+
+    public double getStandardDeviation()
+    {
+        return standardDeviation;
+    }
+
+    public void setStandardDeviation(double standardDeviation)
+    {
+        this.standardDeviation = standardDeviation;
     }
 
 }
