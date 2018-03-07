@@ -104,25 +104,17 @@ public abstract class OptimusMojo
 
     protected void runPitestPlugin()
     {
-        Dependency dep = new Dependency();
-        dep.setGroupId("org.pitest.plugins");
-        dep.setArtifactId("pitest-export-plugin");
-        dep.setVersion("0.1-SNAPSHOT");
-
         Plugin assembly = MojoExecutor.plugin(
                 "org.pitest",
                 "pitest-maven",
-                "1.2.5");
-        List<Dependency> dependencies = new LinkedList<Dependency>();
-        dependencies.add(dep);
-        assembly.setDependencies(dependencies);
-
+                "1.3.2");
         try
         {
             MojoExecutor.executeMojo(assembly,
                     MojoExecutor.goal("mutationCoverage"),
                     configuration(
-                            element(name("outputFormats"), "XML")
+                            element(name("outputFormats"), "XML"),
+                            element(name("features"), element(name("value"), "+EXPORT"))
                     ),
                     executionEnvironment(
                             mavenProject,
