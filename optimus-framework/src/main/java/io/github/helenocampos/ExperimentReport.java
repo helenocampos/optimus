@@ -6,7 +6,6 @@
 package io.github.helenocampos;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JFrame;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.DynamicReports;
 import net.sf.dynamicreports.report.builder.column.Columns;
@@ -42,7 +40,6 @@ import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
@@ -57,15 +54,13 @@ import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
  *
  * @author helenocampos
  */
-public class ExperimentReport
-{
+public class ExperimentReport {
 
     private List<ExecutionData> executionData;
     private String projectName;
     private File experimentFolder;
 
-    public ExperimentReport(String projectName, File experimentFolder, List<String> reports)
-    {
+    public ExperimentReport(String projectName, File experimentFolder, List<String> reports) {
         this.executionData = new LinkedList<ExecutionData>();
         this.projectName = projectName;
         this.experimentFolder = experimentFolder;
@@ -73,16 +68,12 @@ public class ExperimentReport
         generateReport(reports);
     }
 
-    private void scanExperimentFolder()
-    {
+    private void scanExperimentFolder() {
         //each folder in the experiment folder is a prioritization run
-        if (this.experimentFolder.isDirectory())
-        {
+        if (this.experimentFolder.isDirectory()) {
             File[] subFiles = this.experimentFolder.listFiles();
-            for (File subFile : subFiles)
-            {
-                if (subFile.isDirectory())
-                {
+            for (File subFile : subFiles) {
+                if (subFile.isDirectory()) {
                     File runFolder = new File(subFile, projectName);
                     this.executionData.addAll(ExecutionData.readExecutionData(runFolder));
                 }
@@ -90,23 +81,17 @@ public class ExperimentReport
         }
     }
 
-    private void generateReport(List<String> reports)
-    {
-        if (reports != null)
-        {
-            for (String report : reports)
-            {
-                if (report.equals("summary"))
-                {
+    private void generateReport(List<String> reports) {
+        if (reports != null) {
+            for (String report : reports) {
+                if (report.equals("summary")) {
                     ExecutionSummary summary = new ExecutionSummary(this.executionData);
                     buildSummaryReport(summary);
-                } else if (report.equals("raw"))
-                {
+                } else if (report.equals("raw")) {
                     buildRawDataReport();
                 }
             }
-        } else
-        {
+        } else {
             ExecutionSummary summary = new ExecutionSummary(this.executionData);
             buildSummaryReport(summary);
             buildRawDataReport();
@@ -114,8 +99,7 @@ public class ExperimentReport
 
     }
 
-    private void buildSummaryReport(ExecutionSummary summary)
-    {
+    private void buildSummaryReport(ExecutionSummary summary) {
         createBoxPlot();
         JasperReportBuilder table = DynamicReports.report();
         StyleBuilder boldStyle = stl.style().bold();
@@ -126,11 +110,12 @@ public class ExperimentReport
         table.title(cmp.text("Generated at: " + timeStamp));
         table.title(cmp.text(""));
 
-        table.title(cmp.text("Experiment context").setStyle(boldStyle));
-        table.title(cmp.text("Amount of mutation faults seeded into each execution: " + summary.getExperimentContext().getSeededFaultsAmount()).setStyle(boldStyle));
-        table.title(cmp.text("Amount of test cases in the experimented software: " + summary.getExperimentContext().getTestCasesAmount()).setStyle(boldStyle));
-        table.title(cmp.text("Granularity of the test cases in the experimented software: " + summary.getExperimentContext().getTestGranularity()).setStyle(boldStyle));
-
+        if (summary.getExperimentContext() != null) {
+            table.title(cmp.text("Experiment context").setStyle(boldStyle));
+            table.title(cmp.text("Amount of mutation faults seeded into each execution: " + summary.getExperimentContext().getSeededFaultsAmount()).setStyle(boldStyle));
+            table.title(cmp.text("Amount of test cases in the experimented software: " + summary.getExperimentContext().getTestCasesAmount()).setStyle(boldStyle));
+            table.title(cmp.text("Granularity of the test cases in the experimented software: " + summary.getExperimentContext().getTestGranularity()).setStyle(boldStyle));
+        }
         table.title(cmp.text(""));
 
         table.addColumn(Columns.column("Technique", "technique", DataTypes.stringType()));
@@ -163,69 +148,56 @@ public class ExperimentReport
         JasperReportBuilder report = DynamicReports.report();
         report.title(cmp.verticalList(cmp.subreport(table), cmp.subreport(reportImage)));
 
-        try
-        {
+        try {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             report.toPdf(buffer);
-            try
-            {
+            try {
                 OutputStream outputStream = new FileOutputStream(new File(experimentFolder, "summary_report.pdf"));
                 buffer.writeTo(outputStream);
-            } catch (FileNotFoundException ex)
-            {
+            } catch (FileNotFoundException ex) {
                 Logger.getLogger(ExperimentReport.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex)
-            {
+            } catch (IOException ex) {
                 Logger.getLogger(ExperimentReport.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-        } catch (DRException ex)
-        {
+        } catch (DRException ex) {
             Logger.getLogger(ExperimentReport.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
 
-    private void buildRawDataReport()
-    {
+    private void buildRawDataReport() {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Experiment data");
 
         createHeadings(sheet, workbook);
         int rowNum = 2;
-        for (ExecutionData data : this.executionData)
-        {
+        for (ExecutionData data : this.executionData) {
             proccessRowValues(data, rowNum++, sheet);
         }
 
-        try
-        {
+        try {
             FileOutputStream outputStream = new FileOutputStream(new File(experimentFolder, "raw_data.xls"));
             workbook.write(outputStream);
             workbook.close();
-        } catch (FileNotFoundException e)
-        {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void proccessRowValues(ExecutionData data, int rowNum, XSSFSheet sheet)
-    {
+    private void proccessRowValues(ExecutionData data, int rowNum, XSSFSheet sheet) {
         Row row = sheet.createRow(rowNum);
         int colNum = 0;
 
-        for (String value : data.getValues())
-        {
+        for (String value : data.getValues()) {
             Cell cell = row.createCell(colNum++);
             cell.setCellValue(value);
         }
     }
 
-    private void createHeadings(XSSFSheet sheet, XSSFWorkbook wb)
-    {
+    private void createHeadings(XSSFSheet sheet, XSSFWorkbook wb) {
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
         String timeStamp = new SimpleDateFormat("HH:mm:ss MM/dd/yyyy").format(new Date());
@@ -254,8 +226,7 @@ public class ExperimentReport
         cell.setCellValue("Test granularity");
     }
 
-    private void createBoxPlot()
-    {
+    private void createBoxPlot() {
 
         final BoxAndWhiskerCategoryDataset dataset = getBoxPlotData(new DefaultBoxAndWhiskerCategoryDataset());
 
@@ -293,31 +264,25 @@ public class ExperimentReport
                 false
         );
 
-        try
-        {
+        try {
             ChartUtilities.saveChartAsPNG(new File(experimentFolder, "boxplot.png"), chart, 600, 800);
-        } catch (IOException ex)
-        {
+        } catch (IOException ex) {
             Logger.getLogger(ExperimentReport.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private DefaultBoxAndWhiskerCategoryDataset getBoxPlotData(DefaultBoxAndWhiskerCategoryDataset dataset)
-    {
+    private DefaultBoxAndWhiskerCategoryDataset getBoxPlotData(DefaultBoxAndWhiskerCategoryDataset dataset) {
         HashMap<String, List<Double>> values = new HashMap<String, List<Double>>();
-        for (ExecutionData entry : executionData)
-        {
+        for (ExecutionData entry : executionData) {
             List<Double> techniqueValues = values.get(entry.getTechnique());
-            if (techniqueValues == null)
-            {
+            if (techniqueValues == null) {
                 techniqueValues = new LinkedList<Double>();
             }
             techniqueValues.add(Precision.round(entry.getAPFD(), 3));
             values.put(entry.getTechnique(), techniqueValues);
         }
 
-        for (Map.Entry<String, List<Double>> entry : values.entrySet())
-        {
+        for (Map.Entry<String, List<Double>> entry : values.entrySet()) {
             dataset.add(entry.getValue(), "Technique", entry.getKey());
         }
         return dataset;
