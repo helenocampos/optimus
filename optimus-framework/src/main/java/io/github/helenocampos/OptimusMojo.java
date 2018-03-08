@@ -23,12 +23,14 @@ import org.apache.maven.plugins.annotations.Parameter;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.BuildPluginManager;
+import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
@@ -59,7 +61,7 @@ public abstract class OptimusMojo
      */
     @Parameter(defaultValue = "${session}", readonly = true)
     private MavenSession mavenSession;
-
+    
     /**
      * The Maven BuildPluginManager component.
      *
@@ -68,40 +70,53 @@ public abstract class OptimusMojo
      */
     @Component
     private BuildPluginManager pluginManager;
-
+    
     @Parameter(defaultValue = "", readonly = true)
     private String prioritization;
     
     @Parameter(defaultValue = "", readonly = true)
     private List<String> prioritizationTechniques;
-
-        @Parameter(defaultValue = "", readonly = true)
+    
+    @Parameter(defaultValue = "", readonly = true)
     private List<String> reports;
     
     @Parameter(defaultValue = "", readonly = true)
     private String granularity;
-
+    
     @Parameter(property = "experimentOutputDirectory", defaultValue = "")
     private String experimentOutputDirectory = "";
-
+    
+    private final String jacocoVersion = "0.7.9";
+    
+    @Component
+    private MojoExecution execution;
+    
     protected void addJacocoPlugin() throws MojoExecutionException
     {
-        executeMojo(
-                plugin(
-                        groupId("org.jacoco"),
-                        artifactId("jacoco-maven-plugin"),
-                        version("0.7.9")
-                ),
-                goal("prepare-agent"),
-                new Xpp3Dom(""),
-                executionEnvironment(
-                        mavenProject,
-                        mavenSession,
-                        pluginManager
-                )
-        );
+        System.out.println("");
+        prepareJacocoAgent();
+            executeMojo(
+                    plugin(
+                            groupId("org.jacoco"),
+                            artifactId("jacoco-maven-plugin"),
+                            version(jacocoVersion)
+                    ),
+                    goal("prepare-agent"),
+                    new Xpp3Dom(""),
+                    executionEnvironment(
+                            mavenProject,
+                            mavenSession,
+                            pluginManager
+                    )
+            );      
     }
-
+    
+    private void prepareJacocoAgent(){
+        //remove any jacoco agent that was previously prepared
+        final Properties projectProperties = mavenProject.getProperties();
+        projectProperties.setProperty("argLine", "");
+    }
+       
     protected void runPitestPlugin()
     {
         Plugin assembly = MojoExecutor.plugin(
@@ -127,10 +142,10 @@ public abstract class OptimusMojo
             Logger.getLogger(OptimusMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     protected void runFaultInjectionPlugin(String experimentFolder, String injectionId) throws MojoExecutionException
     {
-
+        
         File outputExperimentFolder = new File(new File(getExperimentOutputDirectory(), experimentFolder).getAbsolutePath(), injectionId);
         executeMojo(
                 plugin(
@@ -149,28 +164,26 @@ public abstract class OptimusMojo
                 )
         );
     }
-
+    
     protected void runPrioritizationPlugin()
     {
         Dependency dep = new Dependency();
         dep.setGroupId("io.github.helenocampos.surefire");
         dep.setArtifactId("optimus-test");
         dep.setVersion("2.20.1");
-
+        
         Plugin assembly = MojoExecutor.plugin(
                 "org.apache.maven.plugins",
                 "maven-surefire-plugin",
                 "2.20.1");
-
+        
         List<Dependency> dependencies = new LinkedList<Dependency>();
         dependencies.add(dep);
         assembly.setDependencies(dependencies);
-
-        
         
         try
         {
-
+            
             MojoExecutor.executeMojo(assembly, goal("test"),
                     getPrioritizationProperties(),
                     executionEnvironment(
@@ -179,24 +192,25 @@ public abstract class OptimusMojo
                             pluginManager
                     )
             );
-
+            
         } catch (MojoExecutionException ex)
         {
             Logger.getLogger(OptimusMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     private Xpp3Dom getPrioritizationProperties()
     {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
         Xpp3Dom properties = new Xpp3Dom("properties");
         configuration.addChild(properties);
-        properties.addChild(createPropertyNode("granularity",this.granularity));
-        properties.addChild(createPropertyNode("prioritization",this.prioritization));
+        properties.addChild(createPropertyNode("granularity", this.granularity));
+        properties.addChild(createPropertyNode("prioritization", this.prioritization));
         return configuration;
     }
     
-    private Xpp3Dom createPropertyNode(String propertyName, String propertyValue){
+    private Xpp3Dom createPropertyNode(String propertyName, String propertyValue)
+    {
         Xpp3Dom property = new Xpp3Dom("property");
         Xpp3Dom name = new Xpp3Dom("name");
         name.setValue(propertyName);
@@ -225,39 +239,45 @@ public abstract class OptimusMojo
     {
         return prioritization;
     }
-
+    
     public String getGranularity()
     {
         return granularity;
     }
-
+    
     public String getExperimentOutputDirectory()
     {
         return experimentOutputDirectory;
     }
     
-    public MavenProject getMavenProject(){
+    public MavenProject getMavenProject()
+    {
         return this.mavenProject;
     }
-
+    
     public List<String> getPrioritizationTechniques()
     {
         return prioritizationTechniques;
     }
-
+    
     public void setPrioritizationTechniques(List<String> prioritizationTechniques)
     {
         this.prioritizationTechniques = prioritizationTechniques;
     }
-
+    
     public List<String> getReports()
     {
         return reports;
     }
-
+    
     public void setReports(List<String> reports)
     {
         this.reports = reports;
     }
 
+    public MojoExecution getExecution()
+    {
+        return execution;
+    }
+    
 }

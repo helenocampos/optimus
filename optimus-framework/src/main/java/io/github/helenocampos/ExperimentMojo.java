@@ -41,7 +41,6 @@ public class ExperimentMojo
     public void execute()
             throws MojoExecutionException {
         addJacocoPlugin();
-
         String timeStamp = new SimpleDateFormat("HHmmss-ddMMyyyy").format(new Date());
 
         int execTimes = Integer.valueOf(executionTimes);
