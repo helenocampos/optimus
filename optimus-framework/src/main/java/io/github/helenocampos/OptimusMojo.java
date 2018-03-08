@@ -30,7 +30,6 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.BuildPluginManager;
-import org.apache.maven.plugin.MojoExecution;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
@@ -61,7 +60,7 @@ public abstract class OptimusMojo
      */
     @Parameter(defaultValue = "${session}", readonly = true)
     private MavenSession mavenSession;
-    
+
     /**
      * The Maven BuildPluginManager component.
      *
@@ -88,12 +87,10 @@ public abstract class OptimusMojo
     
     private final String jacocoVersion = "0.7.9";
     
-    @Component
-    private MojoExecution execution;
-    
     protected void addJacocoPlugin() throws MojoExecutionException
     {
-        if(!hasJacocoAgentSet()){
+        if (!hasJacocoAgentSet())
+        {
             executeMojo(
                     plugin(
                             groupId("org.jacoco"),
@@ -107,16 +104,17 @@ public abstract class OptimusMojo
                             mavenSession,
                             pluginManager
                     )
-            );   
+            );            
         }
     }
     
-    private boolean hasJacocoAgentSet(){
+    private boolean hasJacocoAgentSet()
+    {
         final Properties projectProperties = mavenProject.getProperties();
         String argLine = projectProperties.getProperty("argLine");
         return argLine.contains("jacoco");
     }
-       
+    
     protected void runPitestPlugin()
     {
         Plugin assembly = MojoExecutor.plugin(
@@ -220,21 +218,7 @@ public abstract class OptimusMojo
         property.addChild(value);
         return property;
     }
-
-//    private Collection<Artifact> getPrioritizationPlugin()
-//    {
-//        File repo = this.session.getLocalRepository().getBasedir();
-//        Aether aether = new Aether(this.mavenProject, repo);
-//        Collection<Artifact> deps = new LinkedList<Artifact>();
-//        deps = aether.resolve(
-//                new DefaultArtifact("org.apache.maven.plugins", "maven-surefire-plugin", "", "jar", "2.20.1"),
-//                JavaScopes.COMPILE
-//        );
-//        deps.addAll(aether.resolve(
-//                new DefaultArtifact("io.github.helenocampos.surefire", "optimus-test", "", "jar", "2.20.1"),
-//                JavaScopes.COMPILE));
-//        return deps;
-//    }
+    
     public String getPrioritization()
     {
         return prioritization;
@@ -274,10 +258,4 @@ public abstract class OptimusMojo
     {
         this.reports = reports;
     }
-
-    public MojoExecution getExecution()
-    {
-        return execution;
-    }
-    
 }

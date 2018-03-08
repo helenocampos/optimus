@@ -358,7 +358,7 @@ public class MyMojo
             if (f.exists())
             {
                 DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                factory.setValidating(true);
+                factory.setValidating(false);
                 factory.setIgnoringElementContentWhitespace(true);
                 DocumentBuilder builder;
                 try
