@@ -93,7 +93,7 @@ public abstract class OptimusMojo
     
     protected void addJacocoPlugin() throws MojoExecutionException
     {
-        prepareJacocoAgent();
+        if(!hasJacocoAgentSet()){
             executeMojo(
                     plugin(
                             groupId("org.jacoco"),
@@ -107,13 +107,14 @@ public abstract class OptimusMojo
                             mavenSession,
                             pluginManager
                     )
-            );      
+            );   
+        }
     }
     
-    private void prepareJacocoAgent(){
-        //remove any jacoco agent that was previously prepared
+    private boolean hasJacocoAgentSet(){
         final Properties projectProperties = mavenProject.getProperties();
-        projectProperties.setProperty("argLine", "");
+        String argLine = projectProperties.getProperty("argLine");
+        return argLine.contains("jacoco");
     }
        
     protected void runPitestPlugin()
