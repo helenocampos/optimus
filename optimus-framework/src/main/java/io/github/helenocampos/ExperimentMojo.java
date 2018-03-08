@@ -45,7 +45,7 @@ public class ExperimentMojo
 
         int execTimes = Integer.valueOf(executionTimes);
         for (int x = 1; x <= execTimes; x++) {
-            logMessage("Experiment run #"+executionTimes);
+            logMessage("Experiment run #"+x);
             logMessage("Generating code mutants");
             runPitestPlugin();
             logMessage("Injecting faults");
@@ -89,11 +89,15 @@ public class ExperimentMojo
     }
 
     private void invokePrioritization(String technique, File outputExperimentFolder) throws MojoExecutionException {
+        long start = System.currentTimeMillis();
         logMessage("Executing tests with "+technique+" prioritization technique");
         Runtime rt = Runtime.getRuntime();
         PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
         PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath());
         invokeProcess(rt, outputExperimentFolder);
+        long finish = System.currentTimeMillis();
+        double time = (finish-start) / 1000;
+        logMessage("Execution took "+time+ " seconds.");
     }
 
     private void invokeProcess(Runtime rt, File folder) {
