@@ -93,7 +93,6 @@ public abstract class OptimusMojo
     
     protected void addJacocoPlugin() throws MojoExecutionException
     {
-        System.out.println("");
         prepareJacocoAgent();
             executeMojo(
                     plugin(
