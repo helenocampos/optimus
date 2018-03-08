@@ -45,11 +45,15 @@ public class ExperimentMojo
 
         int execTimes = Integer.valueOf(executionTimes);
         for (int x = 1; x <= execTimes; x++) {
+            logMessage("Experiment run #"+executionTimes);
+            logMessage("Generating code mutants");
             runPitestPlugin();
+            logMessage("Injecting faults");
             runFaultInjectionPlugin(timeStamp, Integer.toString(x));
 
             File outputExperimentFolder = new File(new File(getExperimentOutputDirectory(), timeStamp).getAbsolutePath(), Integer.toString(x));
             outputExperimentFolder = new File(outputExperimentFolder, getMavenProject().getName());
+            logMessage("Collecting coverage data");
             collectCoverageData(outputExperimentFolder);
             if (this.getPrioritizationTechniques() != null) {
                 for (String technique : this.getPrioritizationTechniques()) {
@@ -66,6 +70,7 @@ public class ExperimentMojo
 
             }
         }
+        logMessage("Generating reports");
         ExperimentReport report = new ExperimentReport(this.getMavenProject().getName(), new File(getExperimentOutputDirectory(), timeStamp), this.getReports());
     }
 
@@ -76,8 +81,15 @@ public class ExperimentMojo
         Runtime rt = Runtime.getRuntime();
         invokeProcess(rt, outputExperimentFolder);
     }
+    
+    private void logMessage(String message){
+        System.out.println("-------------------------");
+        System.out.println("[OPTIMUS]" + message);
+        System.out.println("-------------------------");
+    }
 
     private void invokePrioritization(String technique, File outputExperimentFolder) throws MojoExecutionException {
+        logMessage("Executing tests with "+technique+" prioritization technique");
         Runtime rt = Runtime.getRuntime();
         PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
         PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath());
