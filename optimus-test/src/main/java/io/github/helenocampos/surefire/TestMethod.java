@@ -38,13 +38,14 @@ public class TestMethod extends AbstractTest
     }
     
     @Override
-    public String getQualifiedName(){
-        return this.getClass().getName()+"#"+this.getTestName();
-    }
-    
-    @Override
     public String toString(){
         return this.getTestClass().getSimpleName()+"."+this.getMethodName();
+    }
+
+    @Override
+    public String getQualifiedName()
+    {
+        return this.getTestClass().getName()+"."+this.getTestName();
     }
     
 }

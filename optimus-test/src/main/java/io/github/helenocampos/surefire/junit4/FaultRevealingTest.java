@@ -5,10 +5,6 @@
  */
 package io.github.helenocampos.surefire.junit4;
 
-import io.github.helenocampos.surefire.ordering.Granularity;
-import java.util.LinkedList;
-import java.util.List;
-
 /**
  *
  * @author helenocampos
@@ -43,5 +39,9 @@ public class FaultRevealingTest
     public void setTestName(String testName)
     {
         this.testName = testName;
+    }
+    
+    public String toString(){
+        return this.getTestName();
     }
 }

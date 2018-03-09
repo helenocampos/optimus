@@ -44,4 +44,10 @@ public class TestClass extends AbstractTest
     {
         return this.getTestClass().getName();
     }
+
+    @Override
+    public String getQualifiedName()
+    {
+        return getTestName();
+    }
 }

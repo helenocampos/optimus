@@ -96,7 +96,7 @@ public class ExperimentMojo
         PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath());
         invokeProcess(rt, outputExperimentFolder);
         long finish = System.currentTimeMillis();
-        double time = (finish-start) / 1000;
+        double time = (double)(finish-start) / 1000;
         logMessage("Execution took "+time+ " seconds.");
     }
 

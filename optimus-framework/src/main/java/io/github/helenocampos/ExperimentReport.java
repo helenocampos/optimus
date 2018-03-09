@@ -231,7 +231,7 @@ public class ExperimentReport {
         final BoxAndWhiskerCategoryDataset dataset = getBoxPlotData(new DefaultBoxAndWhiskerCategoryDataset());
 
         final CategoryAxis xAxis = new CategoryAxis("Technique");
-        xAxis.setMaximumCategoryLabelLines(3);
+        xAxis.setMaximumCategoryLabelLines(5);
         final NumberAxis yAxis = new NumberAxis("APFD");
 
         NumberFormat df = NumberFormat.getNumberInstance();

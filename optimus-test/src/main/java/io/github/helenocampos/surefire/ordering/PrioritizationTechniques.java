@@ -10,6 +10,7 @@ import io.github.helenocampos.surefire.ordering.techniques.AdditionalBranchCover
 import io.github.helenocampos.surefire.ordering.techniques.AdditionalMethodCoverage;
 import io.github.helenocampos.surefire.ordering.techniques.AdditionalStatementCoverage;
 import io.github.helenocampos.surefire.ordering.techniques.AlphabeticalOrder;
+import io.github.helenocampos.surefire.ordering.techniques.OptimalOrder;
 import io.github.helenocampos.surefire.ordering.techniques.RandomPrioritization;
 import io.github.helenocampos.surefire.ordering.techniques.TotalBranchCoverage;
 import io.github.helenocampos.surefire.ordering.techniques.TotalMethodCoverage;
@@ -27,6 +28,7 @@ public enum PrioritizationTechniques
     DEFAULT("default", null),
     ALPHABETICAL("alphabetical", AlphabeticalOrder.class),
     RANDOM("random", RandomPrioritization.class),
+    OPTIMAL("optimal", OptimalOrder.class),
     TOTAL_STATEMENT_COVERAGE("total statement coverage", TotalStatementCoverage.class),
     TOTAL_METHOD_COVERAGE("total method coverage", TotalMethodCoverage.class),
     TOTAL_BRANCH_COVERAGE("total branch coverage", TotalBranchCoverage.class),
