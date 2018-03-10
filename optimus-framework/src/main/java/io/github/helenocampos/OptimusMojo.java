@@ -112,7 +112,7 @@ public abstract class OptimusMojo
     {
         final Properties projectProperties = mavenProject.getProperties();
         String argLine = projectProperties.getProperty("argLine");
-        return argLine.contains("jacoco");
+        return argLine!=null && argLine.contains("jacoco");
     }
     
     protected void runPitestPlugin()

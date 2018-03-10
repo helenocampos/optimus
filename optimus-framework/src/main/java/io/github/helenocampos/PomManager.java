@@ -170,6 +170,9 @@ public class PomManager
     private static Xpp3Dom getPrioritizationProperties(String granularity, String prioritization)
     {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
+        Xpp3Dom argLine = new Xpp3Dom("argLine");
+        argLine.setValue("@{argLine}");
+        configuration.addChild(argLine);
         Xpp3Dom properties = new Xpp3Dom("properties");
         configuration.addChild(properties);
         properties.addChild(createPropertyNode("granularity", granularity));
