@@ -14,8 +14,6 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
@@ -34,7 +32,7 @@ import org.twdata.maven.mojoexecutor.MojoExecutor;
 public class PomManager
 {
 
-    public static void setupPrioritizationPlugin(String granularity, String technique, String projectFolder)
+    public static void setupPrioritizationPlugin(String granularity, String technique, String projectFolder, String dbPath, String projectName)
     {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         File newProjectDir = new File(projectFolder);
@@ -48,7 +46,7 @@ public class PomManager
                     Model model = reader.read(new FileReader(pom));
                     Build build = model.getBuild();
                     addJacocoPlugin(build.getPlugins());
-                    addPrioritizationPlugin(build.getPlugins(), granularity, technique);
+                    addPrioritizationPlugin(build.getPlugins(), granularity, technique, dbPath, projectName);
                     MavenXpp3Writer writer = new MavenXpp3Writer();
                     OutputStream output = new FileOutputStream(pom);
                     writer.write(output, model);
@@ -65,10 +63,10 @@ public class PomManager
             }
         }
     }
-    
-    
+
     //a tests run to gather coverage data only
-    public static void setupFirstRun(String projectFolder){
+    public static void setupFirstRun(String projectFolder)
+    {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         File newProjectDir = new File(projectFolder);
         if (newProjectDir.exists())
@@ -146,7 +144,7 @@ public class PomManager
         return plugins;
     }
 
-    private static void addPrioritizationPlugin(List<Plugin> plugins, String granularity, String technique)
+    private static void addPrioritizationPlugin(List<Plugin> plugins, String granularity, String technique, String dbPath, String projectName)
     {
         Dependency dep = new Dependency();
         dep.setGroupId("io.github.helenocampos.surefire");
@@ -162,12 +160,12 @@ public class PomManager
         dependencies.add(dep);
         assembly.setDependencies(dependencies);
 
-        assembly.setConfiguration(getPrioritizationProperties(granularity, technique));
+        assembly.setConfiguration(getPrioritizationProperties(granularity, technique, dbPath, projectName));
         plugins.add(assembly);
 
     }
 
-    private static Xpp3Dom getPrioritizationProperties(String granularity, String prioritization)
+    private static Xpp3Dom getPrioritizationProperties(String granularity, String prioritization, String dbPath, String projectName)
     {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
         Xpp3Dom argLine = new Xpp3Dom("argLine");
@@ -178,6 +176,13 @@ public class PomManager
         properties.addChild(createPropertyNode("granularity", granularity));
         properties.addChild(createPropertyNode("prioritization", prioritization));
         properties.addChild(createPropertyNode("apfd", "true"));
+
+        if (!dbPath.equals(""))
+        {
+            properties.addChild(createPropertyNode("dbPath", dbPath));
+            properties.addChild(createPropertyNode("projectName", projectName));
+        }
+
         return configuration;
     }
 

@@ -47,5 +47,5 @@ public class TestMethod extends AbstractTest
     {
         return this.getTestClass().getName()+"."+this.getTestName();
     }
-    
+
 }

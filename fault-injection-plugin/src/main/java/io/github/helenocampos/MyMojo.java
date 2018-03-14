@@ -140,10 +140,11 @@ public class MyMojo
         List<String> testsRevealingFaults = new LinkedList<String>();
         for (MutantDetails mutant : this.summary.getKilledMutations())
         {
-            if(!testsRevealingFaults.contains(mutant.getKillingTest())){
+            if (!testsRevealingFaults.contains(mutant.getKillingTest()))
+            {
                 testsRevealingFaults.add(mutant.getKillingTest());
             }
-            
+
         }
         Path file = Paths.get("TestsRevealingFaults");
         try
@@ -237,16 +238,20 @@ public class MyMojo
             Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     /*
         This is important in order to guarantee that no wrong paths are in the projectData.xml file. 
     A new projectData.xml file will be generated in the next build of the exported project, with all up to date info.
-    */
-    private void searchAndDeleteProjectData(){
+     */
+    private void searchAndDeleteProjectData()
+    {
         File newProjectDir = new File(outputDir, projectDir.getName());
-        if(newProjectDir.exists()){
-            for(File file: newProjectDir.listFiles()){
-                if(file.getName().equals("projectData.xml")){
+        if (newProjectDir.exists())
+        {
+            for (File file : newProjectDir.listFiles())
+            {
+                if (file.getName().equals("projectData.xml"))
+                {
                     file.delete();
                 }
             }
@@ -319,20 +324,16 @@ public class MyMojo
                 }
             }
 
-            //allow only one mutant per method of the class. remove any secondary
-            //compare each mutant to every other (in terms of which method they mutate)
-            List<ProjectClassMutant> toRemove = new LinkedList<ProjectClassMutant>();
-            for(ProjectClassMutant mutant: clazz.getMutants()){
-                for(ProjectClassMutant anotherMutant: clazz.getMutants()){
-                    if (!mutant.equals(anotherMutant) && mutant.getDetails().getMethod().equals(anotherMutant.getDetails().getMethod()))
-                    {
-                        if(!toRemove.contains(mutant)){
-                            toRemove.add(mutant);
-                        }
-                    }
+            //generate a new list with only 1 mutant per method of the current class
+            HashMap<String, ProjectClassMutant> newList = new HashMap<String, ProjectClassMutant>();
+            for (ProjectClassMutant mutant : clazz.getMutants())
+            {
+                if (!newList.containsKey(mutant.getDetails().getMethod()))
+                {
+                    newList.put(mutant.getDetails().getMethod(), mutant);
                 }
             }
-            clazz.getMutants().removeAll(toRemove);
+            clazz.setMutants(new LinkedList<ProjectClassMutant>(newList.values()));
 //            classMutantsIterator = clazz.getMutants().iterator();
 //            while (classMutantsIterator.hasNext())
 //            {

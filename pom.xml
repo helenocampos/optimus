@@ -12,5 +12,6 @@
         <module>optimus-test</module>
         <module>optimus-framework</module>
         <module>fault-injection-plugin</module>
+        <module>OptimusHistoricalAnalyzer</module>
     </modules>
 </project>

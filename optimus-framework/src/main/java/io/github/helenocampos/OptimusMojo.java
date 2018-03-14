@@ -82,6 +82,9 @@ public abstract class OptimusMojo
     @Parameter(defaultValue = "", readonly = true)
     private String granularity;
     
+    @Parameter(defaultValue = "", readonly = true)
+    private String dbPath = "";
+    
     @Parameter(property = "experimentOutputDirectory", defaultValue = "")
     private String experimentOutputDirectory = "";
     
@@ -110,9 +113,18 @@ public abstract class OptimusMojo
     
     private boolean hasJacocoAgentSet()
     {
+        //only returns true if has jacoco set and it is allowed version
         final Properties projectProperties = mavenProject.getProperties();
         String argLine = projectProperties.getProperty("argLine");
-        return argLine!=null && argLine.contains("jacoco");
+        if(argLine!=null && argLine.contains("jacoco")){
+            if(!argLine.contains(jacocoVersion)){
+                projectProperties.setProperty("argLine", "");
+                return false;
+            }else{
+                return true;
+            }
+        }
+        return false;
     }
     
     protected void runPitestPlugin()
@@ -204,6 +216,12 @@ public abstract class OptimusMojo
         configuration.addChild(properties);
         properties.addChild(createPropertyNode("granularity", this.granularity));
         properties.addChild(createPropertyNode("prioritization", this.prioritization));
+        
+        if(!dbPath.equals("")){
+            properties.addChild(createPropertyNode("dbPath", this.dbPath));
+            properties.addChild(createPropertyNode("projectName", this.mavenProject.getName()));
+        }
+        
         return configuration;
     }
     
@@ -257,5 +275,15 @@ public abstract class OptimusMojo
     public void setReports(List<String> reports)
     {
         this.reports = reports;
+    }
+
+    public String getDbPath()
+    {
+        return dbPath;
+    }
+
+    public void setDbPath(String dbPath)
+    {
+        this.dbPath = dbPath;
     }
 }

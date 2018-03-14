@@ -5,6 +5,7 @@ import io.github.helenocampos.surefire.extractor.LocalProjectCrawler;
 import io.github.helenocampos.surefire.junit4.ClassAPFDListener;
 import io.github.helenocampos.surefire.junit4.MethodAPFDListener;
 import io.github.helenocampos.surefire.junit4.CoverageListener;
+import io.github.helenocampos.surefire.junit4.HistoricalDataListener;
 import io.github.helenocampos.surefire.junit4.JUnit4Executor;
 import io.github.helenocampos.surefire.ordering.Granularity;
 import io.github.helenocampos.surefire.ordering.TestsSorter;
@@ -46,6 +47,9 @@ public class OptimusProvider extends AbstractProvider
     final ConsoleStream consoleStream;
     private boolean integrationTests;
     private boolean calculateAPFD = false;
+    private boolean registerExecution = true;
+    private String dbPath;
+    private String projectName;
 
     public OptimusProvider(ProviderParameters booterParameters)
     {
@@ -97,6 +101,13 @@ public class OptimusProvider extends AbstractProvider
                             this.customRunListeners.add(new ClassAPFDListener());
                         }
                     }
+                    if (this.registerExecution)
+                    {
+                        if (this.projectName != null)
+                        {
+                            this.customRunListeners.add(new HistoricalDataListener(this.testGranularity, this.dbPath, this.projectName));
+                        }
+                    }
                 }
             }
         }
@@ -131,15 +142,28 @@ public class OptimusProvider extends AbstractProvider
         Properties properties = System.getProperties();
         this.testGranularity = properties.getProperty("granularity");
         this.prioritizationTechnique = properties.getProperty("prioritization");
+        this.dbPath = properties.getProperty("dbPath");
+
         if (this.testGranularity == null && this.prioritizationTechnique == null)
         {
-            Map<String, String> providerProperties = this.providerParameters.getProviderProperties();
-            this.testGranularity = providerProperties.getOrDefault("granularity", "class");
-            this.prioritizationTechnique = providerProperties.getOrDefault("prioritization", "");
-            String apfd = providerProperties.getOrDefault("apfd", "false");
-            this.calculateAPFD = Boolean.valueOf(apfd);
+            this.testGranularity = getProviderProperties("granularity", "class");
+            this.prioritizationTechnique = getProviderProperties("prioritization", "");
+            this.calculateAPFD = Boolean.valueOf(getProviderProperties("apfd", "false"));
         }
+        if (dbPath == null)
+        {
+            this.dbPath = getProviderProperties("dbPath", "");
+            this.registerExecution = !dbPath.equals("");
+            properties.setProperty("dbPath", this.dbPath);
+        }
+        this.projectName = getProviderProperties("projectName", null);
+        properties.setProperty("projectName", this.projectName);
 
+    }
+
+    private String getProviderProperties(String property, String defaultValue)
+    {
+        return this.providerParameters.getProviderProperties().getOrDefault(property, defaultValue);
     }
 
     private TestsToRun scanClassPath()
@@ -180,7 +204,7 @@ public class OptimusProvider extends AbstractProvider
         }
         if (!integrationTests)
         {
-            TestsSorter sorter = new TestsSorter(consoleStream);
+            TestsSorter sorter = new TestsSorter(consoleStream,projectName);
             tests = sorter.sort(tests, prioritizationTechnique, testGranularity);
         }
         return tests;
@@ -204,9 +228,10 @@ public class OptimusProvider extends AbstractProvider
                     executionData = MethodAPFDListener.calculateAPFD();
                 } else
                 {
-                    executionData =ClassAPFDListener.calculateAPFD();
+                    executionData = ClassAPFDListener.calculateAPFD();
                 }
-                if(executionData!=null){
+                if (executionData != null)
+                {
                     executionData.setTechnique(prioritizationTechnique);
                     executionData.setTestGranularity(testGranularity);
                     executionData.setProjectPath(projectPath);

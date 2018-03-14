@@ -21,9 +21,11 @@ import org.apache.maven.surefire.report.ConsoleStream;
 public class TestsSorter
 {
     private final ConsoleStream consoleStream;
+    private String projectName;
     
-    public TestsSorter(ConsoleStream consoleStream){
+    public TestsSorter(ConsoleStream consoleStream,String projectName){
         this.consoleStream = consoleStream;
+        this.projectName = projectName;
     }
     
     public List<AbstractTest> sort(List<AbstractTest> tests, String prioritizationTechnique, String testGranularity){

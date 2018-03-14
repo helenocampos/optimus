@@ -13,14 +13,29 @@ public enum Granularity
 {
     METHOD("method"),
     CLASS("class");
-    
-    Granularity(String name){
+
+    Granularity(String name)
+    {
         this.name = name;
     }
-    
+
     private String name;
-    public String getName(){
+
+    public String getName()
+    {
         return this.name;
     }
-    
+
+    public static Granularity getGranularityByName(String name)
+    {
+        for (Granularity value : values())
+        {
+            if (value.getName().equalsIgnoreCase(name))
+            {
+                return value;
+            }
+        }
+        return null;
+    }
+
 }

@@ -37,6 +37,9 @@ public class ExperimentMojo
 
     @Parameter(defaultValue = "1", readonly = true)
     private String executionTimes;
+    
+    private final String MVN_CLEAN_TEST = "mvn clean test";
+    private final String MVN_TEST = "mvn test";
 
     public void execute()
             throws MojoExecutionException {
@@ -79,7 +82,7 @@ public class ExperimentMojo
         PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
         PomManager.setupFirstRun(outputExperimentFolder.getAbsolutePath());
         Runtime rt = Runtime.getRuntime();
-        invokeProcess(rt, outputExperimentFolder);
+        invokeProcess(rt, outputExperimentFolder,true);
     }
     
     private void logMessage(String message){
@@ -93,17 +96,23 @@ public class ExperimentMojo
         logMessage("Executing tests with "+technique+" prioritization technique");
         Runtime rt = Runtime.getRuntime();
         PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
-        PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath());
-        invokeProcess(rt, outputExperimentFolder);
+        PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath(), getDbPath(), this.getMavenProject().getName());
+        invokeProcess(rt, outputExperimentFolder,false);
         long finish = System.currentTimeMillis();
         double time = (double)(finish-start) / 1000;
         logMessage("Execution took "+time+ " seconds.");
     }
 
-    private void invokeProcess(Runtime rt, File folder) {
+    private void invokeProcess(Runtime rt, File folder, boolean clean) {
         try {
+            String mvnInvokation;
+            if(clean){
+                mvnInvokation = MVN_CLEAN_TEST;
+            }else{
+                mvnInvokation = MVN_TEST;
+            }
             if (PlatformUtil.isWindows()) {
-                ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "mvn test");
+                ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", mvnInvokation);
                 pb.directory(folder);
                 Process p = pb.start();
                 StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream(), "ERROR");
@@ -112,7 +121,7 @@ public class ExperimentMojo
                 outputGobbler.start();
                 p.waitFor();
             } else {
-                Process pr = rt.exec("mvn test", new String[0], folder);
+                Process pr = rt.exec(mvnInvokation, new String[0], folder);
                 pr.waitFor();
             }
         } catch (IOException ex) {
