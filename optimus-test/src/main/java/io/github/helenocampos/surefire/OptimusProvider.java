@@ -5,6 +5,7 @@ import io.github.helenocampos.surefire.extractor.LocalProjectCrawler;
 import io.github.helenocampos.surefire.junit4.ClassAPFDListener;
 import io.github.helenocampos.surefire.junit4.MethodAPFDListener;
 import io.github.helenocampos.surefire.junit4.CoverageListener;
+import io.github.helenocampos.surefire.junit4.FaultsListener;
 import io.github.helenocampos.surefire.junit4.HistoricalDataListener;
 import io.github.helenocampos.surefire.junit4.JUnit4Executor;
 import io.github.helenocampos.surefire.ordering.Granularity;
@@ -14,7 +15,6 @@ import io.github.helenocampos.surefire.util.JUnit4TestChecker;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.surefire.common.junit3.JUnit3TestChecker;
@@ -50,6 +50,7 @@ public class OptimusProvider extends AbstractProvider
     private boolean registerExecution = true;
     private String dbPath;
     private String projectName;
+    private boolean generateFaultsFile = false;
 
     public OptimusProvider(ProviderParameters booterParameters)
     {
@@ -108,6 +109,10 @@ public class OptimusProvider extends AbstractProvider
                             this.customRunListeners.add(new HistoricalDataListener(this.testGranularity, this.dbPath, this.projectName));
                         }
                     }
+                    if (this.generateFaultsFile && this.testGranularity != null)
+                    {
+                        this.customRunListeners.add(new FaultsListener(this.testGranularity));
+                    }
                 }
             }
         }
@@ -149,6 +154,7 @@ public class OptimusProvider extends AbstractProvider
             this.testGranularity = getProviderProperties("granularity", "class");
             this.prioritizationTechnique = getProviderProperties("prioritization", "");
             this.calculateAPFD = Boolean.valueOf(getProviderProperties("apfd", "false"));
+            this.generateFaultsFile = Boolean.valueOf(getProviderProperties("faultsFile", "false"));
         }
         if (dbPath == null)
         {
@@ -204,7 +210,7 @@ public class OptimusProvider extends AbstractProvider
         }
         if (!integrationTests)
         {
-            TestsSorter sorter = new TestsSorter(consoleStream,projectName);
+            TestsSorter sorter = new TestsSorter(consoleStream, projectName);
             tests = sorter.sort(tests, prioritizationTechnique, testGranularity);
         }
         return tests;

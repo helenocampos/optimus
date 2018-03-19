@@ -45,27 +45,38 @@ public enum PrioritizationTechniques
     }
     private String name;
     private Class orderer;
-    
-    public static Orderer getTechinqueByNameAndGranularity(String name, String granularity, ConsoleStream out){
-        for(PrioritizationTechniques technique: values()){
-            if(technique.getName().equals(name)){
-                    out.println("Ordering tests at the "+granularity+" level, using the "+name+" prioritization technique. \n");
-                    return technique.getOrderer();
+
+    public static Orderer getTechinqueByNameAndGranularity(String name, String granularity, ConsoleStream out)
+    {
+        for (PrioritizationTechniques technique : values())
+        {
+            if (technique.getName().equals(name))
+            {
+                out.println("Ordering tests at the " + granularity + " level, using the " + name + " prioritization technique. \n");
+                return technique.getOrderer();
             }
         }
-        out.println("Using default tests ordering at the "+granularity+" level. \n");
+        out.println("Using default tests ordering at the " + granularity + " level. \n");
         return null;
     }
-    
-    public String getName(){
+
+    public String getName()
+    {
         return this.name;
     }
-    
-    
-    public Orderer getOrderer(){
+
+    public Orderer getOrderer()
+    {
         try
         {
-            return (Orderer) this.orderer.newInstance();
+            if (this != null)
+            {
+                if (this.orderer != null)
+                {
+                    return (Orderer) this.orderer.newInstance();
+                }
+            }
+
         } catch (InstantiationException ex)
         {
             Logger.getLogger(PrioritizationTechniques.class.getName()).log(Level.SEVERE, null, ex);
@@ -75,11 +86,13 @@ public enum PrioritizationTechniques
         }
         return null;
     }
-    
-    public static String[] getAllTechniquesNames(){
+
+    public static String[] getAllTechniquesNames()
+    {
         String[] names = new String[values().length];
-        int index  = 0;
-        for(PrioritizationTechniques technique: values()){
+        int index = 0;
+        for (PrioritizationTechniques technique : values())
+        {
             names[index++] = technique.getName();
         }
         return names;

@@ -88,6 +88,12 @@ public abstract class OptimusMojo
     @Parameter(property = "experimentOutputDirectory", defaultValue = "")
     private String experimentOutputDirectory = "";
     
+    @Parameter(property = "mutation", defaultValue = "")
+    private String experimentType = "";
+    
+    @Parameter(property = "", defaultValue = "")
+    private String versionsFolder = "";
+    
     private final String jacocoVersion = "0.7.9";
     
     protected void addJacocoPlugin() throws MojoExecutionException
@@ -285,5 +291,25 @@ public abstract class OptimusMojo
     public void setDbPath(String dbPath)
     {
         this.dbPath = dbPath;
+    }
+
+    public String getExperimentType()
+    {
+        return experimentType;
+    }
+
+    public void setExperimentType(String experimentType)
+    {
+        this.experimentType = experimentType;
+    }
+
+    public String getVersionsFolder()
+    {
+        return versionsFolder;
+    }
+
+    public void setVersionsFolder(String versionsFolder)
+    {
+        this.versionsFolder = versionsFolder;
     }
 }

@@ -9,8 +9,6 @@ import io.github.helenocampos.optimushistoricalanalyzer.HistoricalAnalyzer;
 import io.github.helenocampos.optimushistoricalanalyzer.domain.TestExecution;
 import io.github.helenocampos.optimushistoricalanalyzer.domain.TestGranularity;
 import io.github.helenocampos.surefire.ordering.Granularity;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;

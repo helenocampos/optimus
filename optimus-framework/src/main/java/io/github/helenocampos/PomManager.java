@@ -32,7 +32,7 @@ import org.twdata.maven.mojoexecutor.MojoExecutor;
 public class PomManager
 {
 
-    public static void setupPrioritizationPlugin(String granularity, String technique, String projectFolder, String dbPath, String projectName)
+    public static void setupPrioritizationPlugin(String granularity, String technique, String projectFolder, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD)
     {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         File newProjectDir = new File(projectFolder);
@@ -46,7 +46,7 @@ public class PomManager
                     Model model = reader.read(new FileReader(pom));
                     Build build = model.getBuild();
                     addJacocoPlugin(build.getPlugins());
-                    addPrioritizationPlugin(build.getPlugins(), granularity, technique, dbPath, projectName);
+                    addPrioritizationPlugin(build.getPlugins(), granularity, technique, dbPath, projectName, generateFaultsFile, calcAPFD);
                     MavenXpp3Writer writer = new MavenXpp3Writer();
                     OutputStream output = new FileOutputStream(pom);
                     writer.write(output, model);
@@ -144,7 +144,7 @@ public class PomManager
         return plugins;
     }
 
-    private static void addPrioritizationPlugin(List<Plugin> plugins, String granularity, String technique, String dbPath, String projectName)
+    private static void addPrioritizationPlugin(List<Plugin> plugins, String granularity, String technique, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD)
     {
         Dependency dep = new Dependency();
         dep.setGroupId("io.github.helenocampos.surefire");
@@ -160,12 +160,12 @@ public class PomManager
         dependencies.add(dep);
         assembly.setDependencies(dependencies);
 
-        assembly.setConfiguration(getPrioritizationProperties(granularity, technique, dbPath, projectName));
+        assembly.setConfiguration(getPrioritizationProperties(granularity, technique, dbPath, projectName, generateFaultsFile, calcAPFD));
         plugins.add(assembly);
 
     }
 
-    private static Xpp3Dom getPrioritizationProperties(String granularity, String prioritization, String dbPath, String projectName)
+    private static Xpp3Dom getPrioritizationProperties(String granularity, String prioritization, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD)
     {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
         Xpp3Dom argLine = new Xpp3Dom("argLine");
@@ -175,7 +175,8 @@ public class PomManager
         configuration.addChild(properties);
         properties.addChild(createPropertyNode("granularity", granularity));
         properties.addChild(createPropertyNode("prioritization", prioritization));
-        properties.addChild(createPropertyNode("apfd", "true"));
+        properties.addChild(createPropertyNode("apfd", Boolean.toString(calcAPFD)));
+        properties.addChild(createPropertyNode("faultsFile", Boolean.toString(generateFaultsFile)));
 
         if (!dbPath.equals(""))
         {

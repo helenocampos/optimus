@@ -20,7 +20,10 @@ import io.github.helenocampos.surefire.ordering.PrioritizationTechniques;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -33,22 +36,97 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 @Mojo(name = "experiment", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES, requiresDependencyResolution = ResolutionScope.TEST)
 
 public class ExperimentMojo
-        extends OptimusMojo {
+        extends OptimusMojo
+{
 
     @Parameter(defaultValue = "1", readonly = true)
     private String executionTimes;
-    
+
     private final String MVN_CLEAN_TEST = "mvn clean test";
     private final String MVN_TEST = "mvn test";
 
     public void execute()
-            throws MojoExecutionException {
+            throws MojoExecutionException
+    {
         addJacocoPlugin();
-        String timeStamp = new SimpleDateFormat("HHmmss-ddMMyyyy").format(new Date());
 
+        if (getExperimentType().equals("mutation"))
+        {
+            executeMutationExperiment();
+        } else if (getExperimentType().equals("versions"))
+        {
+            executeVersionsExperiment();
+        }
+    }
+
+    private void executeVersionsExperiment() throws MojoExecutionException
+    {
+        if (this.getVersionsFolder() != null)
+        {
+
+            File versionsFolderFile = new File(this.getVersionsFolder());
+            List<File> versions = getVersionsFolders(versionsFolderFile);
+            for (File version : versions)
+            {
+                if (version.isDirectory())
+                {
+                    logMessage("Initializing experiment for " + version.getName());
+
+                    logMessage("Collecting coverage and faults data");
+                    collectCoverageAndGenerateFaultsFile(version);
+                    executeTechniques(version);
+                }
+            }
+
+        }
+    }
+
+    private List<File> getVersionsFolders(File versionFolder)
+    {
+        List<File> versions = new LinkedList<File>();
+        if (versionFolder.isDirectory())
+        {
+            versions.addAll(Arrays.asList(versionFolder.listFiles()));
+        }
+        return versions;
+    }
+
+    private void executeTechniques(File projectFolder) throws MojoExecutionException
+    {
+        if (this.getPrioritizationTechniques() != null)
+        {
+            for (String technique : this.getPrioritizationTechniques())
+            {
+                invokePrioritization(technique, projectFolder, false, true);
+            }
+        } else
+        {
+            if (this.getPrioritization().equals("all"))
+            {
+                for (String technique : PrioritizationTechniques.getAllTechniquesNames())
+                {
+                    invokePrioritization(technique, projectFolder, false, true);
+                }
+            } else
+            {
+                invokePrioritization(this.getPrioritization(), projectFolder, false, true);
+            }
+
+        }
+    }
+
+    private void collectCoverageAndGenerateFaultsFile(File projectFolder) throws MojoExecutionException
+    {
+        invokePrioritization("default", projectFolder, true, false);
+    }
+
+    private void executeMutationExperiment() throws MojoExecutionException
+    {
+        String timeStamp = new SimpleDateFormat("HHmmss-ddMMyyyy").format(new Date());
         int execTimes = Integer.valueOf(executionTimes);
-        for (int x = 1; x <= execTimes; x++) {
-            logMessage("Experiment run #"+x);
+        for (int x = 1; x <= execTimes; x++)
+        {
+            logMessage("Experiment run #" + x);
             logMessage("Generating code mutants");
             runPitestPlugin();
             logMessage("Injecting faults");
@@ -58,60 +136,55 @@ public class ExperimentMojo
             outputExperimentFolder = new File(outputExperimentFolder, getMavenProject().getName());
             logMessage("Collecting coverage data");
             collectCoverageData(outputExperimentFolder);
-            if (this.getPrioritizationTechniques() != null) {
-                for (String technique : this.getPrioritizationTechniques()) {
-                    invokePrioritization(technique, outputExperimentFolder);
-                }
-            } else {
-                if (this.getPrioritization().equals("all")) {
-                    for (String technique : PrioritizationTechniques.getAllTechniquesNames()) {
-                        invokePrioritization(technique, outputExperimentFolder);
-                    }
-                } else {
-                    invokePrioritization(this.getPrioritization(), outputExperimentFolder);
-                }
-
-            }
+            executeTechniques(outputExperimentFolder);
         }
         logMessage("Generating reports");
         ExperimentReport report = new ExperimentReport(this.getMavenProject().getName(), new File(getExperimentOutputDirectory(), timeStamp), this.getReports());
     }
 
     //executed each time when it is the first execution, so that coverage data can be gathered before prioritization
-    private void collectCoverageData(File outputExperimentFolder) {
+    private void collectCoverageData(File outputExperimentFolder)
+    {
         PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
         PomManager.setupFirstRun(outputExperimentFolder.getAbsolutePath());
         Runtime rt = Runtime.getRuntime();
-        invokeProcess(rt, outputExperimentFolder,true);
+        invokeProcess(rt, outputExperimentFolder, true);
     }
-    
-    private void logMessage(String message){
+
+    private void logMessage(String message)
+    {
         System.out.println("-------------------------");
         System.out.println("[OPTIMUS]" + message);
         System.out.println("-------------------------");
     }
 
-    private void invokePrioritization(String technique, File outputExperimentFolder) throws MojoExecutionException {
+    private void invokePrioritization(String technique, File outputExperimentFolder, boolean generateFaultsFile, boolean calcAPFD) throws MojoExecutionException
+    {
         long start = System.currentTimeMillis();
-        logMessage("Executing tests with "+technique+" prioritization technique");
+        logMessage("Executing tests with " + technique + " prioritization technique");
         Runtime rt = Runtime.getRuntime();
         PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
-        PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath(), getDbPath(), this.getMavenProject().getName());
-        invokeProcess(rt, outputExperimentFolder,false);
+        PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath(), getDbPath(), outputExperimentFolder.getName(), generateFaultsFile, calcAPFD);
+        invokeProcess(rt, outputExperimentFolder, false);
         long finish = System.currentTimeMillis();
-        double time = (double)(finish-start) / 1000;
-        logMessage("Execution took "+time+ " seconds.");
+        double time = (double) (finish - start) / 1000;
+        logMessage("Execution took " + time + " seconds.");
     }
 
-    private void invokeProcess(Runtime rt, File folder, boolean clean) {
-        try {
+    private void invokeProcess(Runtime rt, File folder, boolean clean)
+    {
+        try
+        {
             String mvnInvokation;
-            if(clean){
+            if (clean)
+            {
                 mvnInvokation = MVN_CLEAN_TEST;
-            }else{
+            } else
+            {
                 mvnInvokation = MVN_TEST;
             }
-            if (PlatformUtil.isWindows()) {
+            if (PlatformUtil.isWindows())
+            {
                 ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", mvnInvokation);
                 pb.directory(folder);
                 Process p = pb.start();
@@ -120,13 +193,16 @@ public class ExperimentMojo
                 errorGobbler.start();
                 outputGobbler.start();
                 p.waitFor();
-            } else {
+            } else
+            {
                 Process pr = rt.exec(mvnInvokation, new String[0], folder);
                 pr.waitFor();
             }
-        } catch (IOException ex) {
+        } catch (IOException ex)
+        {
             Logger.getLogger(ExperimentMojo.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
+        } catch (InterruptedException ex)
+        {
             Logger.getLogger(ExperimentMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
