@@ -27,21 +27,19 @@ import org.junit.runner.notification.RunListener;
  */
 public class FaultsListener extends RunListener
 {
-
-    private String granularity;
-
-    public FaultsListener(String granularity)
+    public FaultsListener()
     {
         super();
-        this.granularity = granularity;
-
     }
 
     private void writeFaultToFile(String testName)
     {
         Path file = Paths.get("TestsRevealingFaults");
         List<String> existingFaults = readFaultsFile(file);
-        existingFaults.add(testName);
+        if (!existingFaults.contains(testName))
+        {
+            existingFaults.add(testName);
+        }
         try
         {
             Files.write(file, existingFaults, Charset.forName("UTF-8"));
@@ -71,20 +69,15 @@ public class FaultsListener extends RunListener
     public void testFailure(Failure failure) throws Exception
     {
         super.testFailure(failure);
-        if (this.granularity != null)
-        {
-            String testName = getTestName(failure.getDescription());
-            writeFaultToFile(testName);
-        }
+
+        String testName = getTestName(failure.getDescription());
+        writeFaultToFile(testName);
+
     }
 
     private String getTestName(Description description)
     {
-        String testName = description.getClassName();
-        if (this.granularity.equals(Granularity.METHOD.getName()))
-        {
-            testName = testName + "." + description.getMethodName();
-        }
+        String testName = description.getClassName() + "." + description.getMethodName();
         return testName;
     }
 

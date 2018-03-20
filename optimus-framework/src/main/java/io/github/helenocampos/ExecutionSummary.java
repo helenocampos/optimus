@@ -13,6 +13,7 @@ import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import org.apache.commons.math3.stat.descriptive.rank.Max;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.commons.math3.stat.descriptive.rank.Min;
+import io.github.helenocampos.surefire.report.ExecutionData;
 
 /**
  *

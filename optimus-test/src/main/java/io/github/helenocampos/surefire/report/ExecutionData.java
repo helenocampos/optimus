@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -24,16 +25,23 @@ public class ExecutionData
 {
 
     private double APFD;
-    private double optimalAPFD;
     private String technique;
     private int seededFaultsAmount;
     private int amountExecutedTests;
     private String testGranularity;
     private String projectPath;
+    private List<TestExecution> executedTests;
+    private List<String> faultRevealingTests;
 
     public ExecutionData()
     {
-
+        this.executedTests = new LinkedList<TestExecution>();
+    }
+    
+    public ExecutionData(String projectPath)
+    {
+        this.projectPath = projectPath;
+        this.executedTests = new LinkedList<TestExecution>();
     }
 
     public double getAPFD()
@@ -44,16 +52,6 @@ public class ExecutionData
     public void setAPFD(double APFD)
     {
         this.APFD = APFD;
-    }
-
-    public double getOptimalAPFD()
-    {
-        return optimalAPFD;
-    }
-
-    public void setOptimalAPFD(double optimalAPFD)
-    {
-        this.optimalAPFD = optimalAPFD;
     }
 
     public String getTechnique()
@@ -104,6 +102,7 @@ public class ExecutionData
         existentData.add(this);
         XStream xstream = new XStream();
         xstream.alias("ExecutionData", ExecutionData.class);
+        xstream.alias("TestExecution", TestExecution.class);
         List<String> lines = Arrays.asList(xstream.toXML(existentData));
 
         try
@@ -135,6 +134,7 @@ public class ExecutionData
     {
         XStream xstream = new XStream();
         xstream.alias("ExecutionData", ExecutionData.class);
+        xstream.alias("TestExecution", TestExecution.class);
         xstream.alias("list", List.class);
         List<ExecutionData> dataExecutions = new ArrayList<ExecutionData>();
         try
@@ -160,5 +160,47 @@ public class ExecutionData
     public void setProjectPath(String projectPath)
     {
         this.projectPath = projectPath;
+    }
+
+    public List<TestExecution> getExecutedTests()
+    {
+        return executedTests;
+    }
+
+    public void setExecutedTests(List<TestExecution> executedTests)
+    {
+        this.executedTests = executedTests;
+    }
+
+    public List<String> getFaultRevealingTests()
+    {
+        return faultRevealingTests;
+    }
+
+    public void setFaultRevealingTests(List<String> faultRevealingTests)
+    {
+        this.faultRevealingTests = faultRevealingTests;
+    }
+    
+    public double getTotalExecutionTimeInSeconds(){
+        double total = 0;
+        for(TestExecution execution: executedTests){
+            total+=execution.getExecutionTime();
+        }
+        total = total/1000;
+        return total;
+    }
+    
+     public String[] getValues()
+    {
+        String[] values = new String[6];
+        values[0] = this.technique;
+        values[1] = Double.toString(this.APFD);
+        values[2] = Integer.toString(this.seededFaultsAmount);
+        values[3] = Integer.toString(this.amountExecutedTests);
+        values[4] = this.testGranularity;
+        values[5] = Double.toString(getTotalExecutionTimeInSeconds());
+        
+        return values;
     }
 }

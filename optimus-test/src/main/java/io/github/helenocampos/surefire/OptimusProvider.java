@@ -2,6 +2,7 @@ package io.github.helenocampos.surefire;
 
 import io.github.helenocampos.surefire.api.JUnitExecutor;
 import io.github.helenocampos.surefire.extractor.LocalProjectCrawler;
+import io.github.helenocampos.surefire.junit4.APFDListener;
 import io.github.helenocampos.surefire.junit4.ClassAPFDListener;
 import io.github.helenocampos.surefire.junit4.MethodAPFDListener;
 import io.github.helenocampos.surefire.junit4.CoverageListener;
@@ -96,10 +97,10 @@ public class OptimusProvider extends AbstractProvider
                     {
                         if (this.testGranularity.equals(Granularity.METHOD.getName()))
                         {
-                            this.customRunListeners.add(new MethodAPFDListener());
+                            this.customRunListeners.add(new MethodAPFDListener(this.testGranularity));
                         } else
                         {
-                            this.customRunListeners.add(new ClassAPFDListener());
+                            this.customRunListeners.add(new ClassAPFDListener(this.testGranularity));
                         }
                     }
                     if (this.registerExecution)
@@ -111,7 +112,7 @@ public class OptimusProvider extends AbstractProvider
                     }
                     if (this.generateFaultsFile && this.testGranularity != null)
                     {
-                        this.customRunListeners.add(new FaultsListener(this.testGranularity));
+                        this.customRunListeners.add(new FaultsListener());
                     }
                 }
             }
@@ -229,13 +230,8 @@ public class OptimusProvider extends AbstractProvider
             if (this.calculateAPFD)
             {
                 ExecutionData executionData;
-                if (this.testGranularity.equals(Granularity.METHOD.getName()))
-                {
-                    executionData = MethodAPFDListener.calculateAPFD();
-                } else
-                {
-                    executionData = ClassAPFDListener.calculateAPFD();
-                }
+                APFDListener listener = getAPFDListener();
+                executionData = listener.calculateAPFD();
                 if (executionData != null)
                 {
                     executionData.setTechnique(prioritizationTechnique);
@@ -253,6 +249,18 @@ public class OptimusProvider extends AbstractProvider
         if (executor == null)
         {
             throw new TestSetFailedException("Optimus test doesn't support this junit version. Please use junit 3 or junit 4. If you are using a supported version, please report this bug.");
+        }
+        return null;
+    }
+
+    private APFDListener getAPFDListener()
+    {
+        for (org.junit.runner.notification.RunListener listener : this.customRunListeners)
+        {
+            if (listener instanceof APFDListener)
+            {
+                return (APFDListener) listener;
+            }
         }
         return null;
     }
