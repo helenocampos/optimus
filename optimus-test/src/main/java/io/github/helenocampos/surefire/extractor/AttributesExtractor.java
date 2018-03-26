@@ -36,7 +36,7 @@ public class AttributesExtractor extends VoidVisitorAdapter
     {
         if (isTestMethod(declaration))
         {
-            this.testMethods.put(declaration.getName(), new ClassMethod(declaration.getName()));
+            this.testMethods.put(declaration.getNameAsString(), new ClassMethod(declaration.getNameAsString()));
         }
         super.visit(declaration, arg);
     }
@@ -46,13 +46,13 @@ public class AttributesExtractor extends VoidVisitorAdapter
         List<AnnotationExpr> annotations = declaration.getAnnotations();
         for (AnnotationExpr annotation : annotations)
         {
-            if (annotation.getName().getName().equals("Test"))
+            if (annotation.getNameAsString().equals("Test"))
             { // junit 4 test
                 return true;
             }
         }
         //junit 3 test has "Test" in its name
-        return declaration.getName().contains("Test");
+        return declaration.getNameAsString().contains("Test");
     }
 
     @Override
@@ -94,10 +94,9 @@ public class AttributesExtractor extends VoidVisitorAdapter
         } catch (FileNotFoundException ex)
         {
 //            Logger.getLogger(CouplingManager.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ParseException ex)
-        {
+        } 
 
-        } finally
+        finally
         {
             if (in != null)
             {

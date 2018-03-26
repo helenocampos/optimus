@@ -3,7 +3,6 @@ package io.github.helenocampos.surefire.extractor;
 import io.github.helenocampos.surefire.extractor.model.JavaSourceCodeClass;
 import io.github.helenocampos.surefire.extractor.model.JavaTestClass;
 import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.sun.org.apache.bcel.internal.classfile.ClassParser;
@@ -140,10 +139,9 @@ public class LocalProjectCrawler
         } catch (FileNotFoundException ex)
         {
 //            Logger.getLogger(CouplingManager.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ParseException ex)
-        {
-            
-        } finally
+        }  catch(Exception ex){
+             Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.SEVERE, null, ex);
+        }finally
         {
             if (in != null)
             {
@@ -158,7 +156,7 @@ public class LocalProjectCrawler
         }
         if (cu != null)
         {
-            return cu.getPackage().getName().toString();
+            return cu.getPackageDeclaration().get().getNameAsString();
         } else
         {
             return "";
@@ -176,10 +174,10 @@ public class LocalProjectCrawler
         } catch (FileNotFoundException ex)
         {
 //            Logger.getLogger(CouplingManager.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ParseException ex)
-        {
-            
-        } finally
+        } catch(Exception ex){
+             Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        finally
         {
             if (in != null)
             {
@@ -198,7 +196,7 @@ public class LocalProjectCrawler
             for (ImportDeclaration i : imports)
             {
                 if (i.getName().toString().equals("org.junit.Test")
-                        || i.getName().getName().equals("junit.framework.TestCase"))
+                        || i.getNameAsString().equals("junit.framework.TestCase"))
                 {
                     return true;
                 }

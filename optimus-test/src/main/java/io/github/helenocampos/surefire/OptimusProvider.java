@@ -164,7 +164,10 @@ public class OptimusProvider extends AbstractProvider
             properties.setProperty("dbPath", this.dbPath);
         }
         this.projectName = getProviderProperties("projectName", null);
-        properties.setProperty("projectName", this.projectName);
+        if(this.projectName!=null){
+                    properties.setProperty("projectName", this.projectName);
+        }
+
 
     }
 

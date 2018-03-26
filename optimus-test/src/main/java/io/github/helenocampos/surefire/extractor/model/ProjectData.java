@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -136,12 +137,12 @@ public class ProjectData
         }
 
         //removes classes that dont exist in the new build
-        Set<String> keys = this.classes.keySet();
-        for (String key : keys)
-        {
+        Iterator<String> keys = this.classes.keySet().iterator();
+        while(keys.hasNext()){
+            String key = keys.next();
             if (classes.get(key) == null)
             {
-                this.classes.remove(key);
+                keys.remove();
             }
         }
     }
@@ -161,14 +162,14 @@ public class ProjectData
             }
 
         }
-        Set<String> keys = this.classes.keySet();
         //removes tests that dont exist in the new build
-        for (String key : keys)
-        {
-            if (tests.get(key) == null)
-            {
-                this.tests.remove(key);
-            }
+         Iterator<String> keys = this.tests.keySet().iterator();
+         while(keys.hasNext()){
+            String key = keys.next();
+                if (tests.get(key) == null)
+                {
+                    keys.remove();
+                }
         }
     }
 
