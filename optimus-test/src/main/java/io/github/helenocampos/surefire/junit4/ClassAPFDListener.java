@@ -5,15 +5,7 @@
  */
 package io.github.helenocampos.surefire.junit4;
 
-import io.github.helenocampos.surefire.report.ExecutionData;
 import io.github.helenocampos.surefire.report.TestExecution;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.LinkedList;
-import java.util.List;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 

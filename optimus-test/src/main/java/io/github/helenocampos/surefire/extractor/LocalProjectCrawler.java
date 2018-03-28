@@ -5,7 +5,8 @@ import io.github.helenocampos.surefire.extractor.model.JavaTestClass;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
-import com.sun.org.apache.bcel.internal.classfile.ClassParser;
+import org.apache.bcel.classfile.ClassParser;
+import org.apache.bcel.classfile.JavaClass;
 import io.github.helenocampos.surefire.extractor.model.ProjectData;
 import java.io.File;
 import java.io.FileInputStream;
@@ -115,7 +116,7 @@ public class LocalProjectCrawler
                 try
                 {
                     ClassParser parser = new ClassParser(f.getPath());
-                    com.sun.org.apache.bcel.internal.classfile.JavaClass cls = parser.parse();
+                    JavaClass cls = parser.parse();
                     String qualifiedName = f.getName().replace(".class", "");
                     qualifiedName = cls.getPackageName() + "." + qualifiedName;
                     classFilesPaths.put(qualifiedName, f.getPath());

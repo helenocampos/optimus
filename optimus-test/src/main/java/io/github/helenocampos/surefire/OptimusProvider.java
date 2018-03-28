@@ -112,7 +112,7 @@ public class OptimusProvider extends AbstractProvider
                     }
                     if (this.generateFaultsFile && this.testGranularity != null)
                     {
-                        this.customRunListeners.add(new FaultsListener());
+                        this.customRunListeners.add(new FaultsListener(getAPFDListener()));
                     }
                 }
             }

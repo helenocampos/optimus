@@ -181,7 +181,7 @@ public abstract class OptimusMojo
         );
     }
     
-    protected void runPrioritizationPlugin()
+    protected void runPrioritizationPlugin(boolean generateReport)
     {
         Dependency dep = new Dependency();
         dep.setGroupId("io.github.helenocampos.surefire");
@@ -196,12 +196,12 @@ public abstract class OptimusMojo
         List<Dependency> dependencies = new LinkedList<Dependency>();
         dependencies.add(dep);
         assembly.setDependencies(dependencies);
-        
+        boolean exit = false;
         try
         {
             
             MojoExecutor.executeMojo(assembly, goal("test"),
-                    getPrioritizationProperties(),
+                    getPrioritizationProperties(generateReport),
                     executionEnvironment(
                             mavenProject,
                             mavenSession,
@@ -211,17 +211,28 @@ public abstract class OptimusMojo
             
         } catch (MojoExecutionException ex)
         {
-            Logger.getLogger(OptimusMojo.class.getName()).log(Level.SEVERE, null, ex);
+            exit = true;
+        }finally{
+            if(generateReport){
+                PrioritizationReport report = new PrioritizationReport(this.getMavenProject().getName(), this.getMavenProject().getBasedir());
+            }
+            if(exit){
+                System.exit(1);
+            }
         }
     }
     
-    private Xpp3Dom getPrioritizationProperties()
+    private Xpp3Dom getPrioritizationProperties(boolean generateReport)
     {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
         Xpp3Dom properties = new Xpp3Dom("properties");
         configuration.addChild(properties);
         properties.addChild(createPropertyNode("granularity", this.granularity));
         properties.addChild(createPropertyNode("prioritization", this.prioritization));
+        if(generateReport){
+            properties.addChild(createPropertyNode("apfd", "true"));
+            properties.addChild(createPropertyNode("faultsFile", "true"));
+        }
         
         if(!dbPath.equals("")){
             properties.addChild(createPropertyNode("dbPath", this.dbPath));

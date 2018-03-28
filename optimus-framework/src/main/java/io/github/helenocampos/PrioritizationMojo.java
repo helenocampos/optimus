@@ -30,7 +30,7 @@ public void execute()
             throws MojoExecutionException
     {
       addJacocoPlugin();
-      runPrioritizationPlugin();
+      runPrioritizationPlugin(this.getReports()!=null);
     }
 
     

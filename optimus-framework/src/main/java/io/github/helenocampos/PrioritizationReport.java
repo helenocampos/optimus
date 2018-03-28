@@ -1,0 +1,164 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package io.github.helenocampos;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import io.github.helenocampos.surefire.report.ExecutionData;
+import io.github.helenocampos.surefire.report.TestExecution;
+
+/**
+ *
+ * @author helenocampos
+ */
+public class PrioritizationReport {
+
+    private List<ExecutionData> executionData;
+    private String projectName;
+    private File projectFolder;
+
+    public PrioritizationReport(String projectName, File projectFolder) {
+        this.executionData = new LinkedList<ExecutionData>();
+        this.projectName = projectName;
+        this.projectFolder = projectFolder;
+        scanExperimentFolder();
+        generateReport();
+    }
+
+    private void scanExperimentFolder() {
+        if (this.projectFolder.isDirectory()) {
+            ExecutionData data = new ExecutionData(projectFolder.getAbsolutePath());
+            this.executionData.addAll(data.readExecutionData());
+
+        }
+    }
+
+    private void generateReport() {
+        buildRawDataReport();
+    }
+
+    private void buildRawDataReport() {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("Execution data");
+
+        createHeadings(sheet, workbook);
+        int rowNum = 2;
+        for (ExecutionData data : this.executionData) {
+            proccessRowValues(data, rowNum++, sheet);
+        }
+
+        createExecutionLogs(workbook);
+
+        try {
+            FileOutputStream outputStream = new FileOutputStream(new File(projectFolder, "raw_data.xlsx"));
+            workbook.write(outputStream);
+            workbook.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void createExecutionLogs(XSSFWorkbook wb) {
+
+        int executionNr = 1;
+        for (ExecutionData data : executionData) {
+            XSSFSheet sheet = wb.createSheet("Execution #" + executionNr++);
+            int order = 1;
+            int testNr = 2;
+            createLogHeadings(sheet, data);
+            for (TestExecution execution : data.getExecutedTests()) {
+
+                Row row = sheet.createRow(testNr++);
+                Cell cell = row.createCell(0);
+                cell.setCellValue(order++);
+
+                cell = row.createCell(1);
+                cell.setCellValue(execution.getTestName());
+
+                cell = row.createCell(2);
+                cell.setCellValue(execution.getTestResult());
+
+                cell = row.createCell(3);
+                double time = (double) execution.getExecutionTime() / 1000;
+                cell.setCellValue(time);
+            }
+        }
+    }
+
+    private void createLogHeadings(XSSFSheet sheet, ExecutionData data) {
+        Row row = sheet.createRow(0);
+        Cell cell = row.createCell(0);
+        cell.setCellValue("Test logs for " + data.getTechnique() + " prioritization technique");
+
+        row = sheet.createRow(1);
+        cell = row.createCell(0);
+        cell.setCellValue("Order");
+
+        cell = row.createCell(1);
+        cell.setCellValue("Test name");
+
+        cell = row.createCell(2);
+        cell.setCellValue("Test passed?");
+
+        cell = row.createCell(3);
+        cell.setCellValue("Execution time (seconds)");
+    }
+
+    private void proccessRowValues(ExecutionData data, int rowNum, XSSFSheet sheet) {
+        Row row = sheet.createRow(rowNum);
+        int colNum = 0;
+
+        for (String value : data.getValues()) {
+            Cell cell = row.createCell(colNum++);
+            cell.setCellValue(value);
+        }
+    }
+
+    private void createHeadings(XSSFSheet sheet, XSSFWorkbook wb) {
+        Row row = sheet.createRow(0);
+        Cell cell = row.createCell(0);
+        String timeStamp = new SimpleDateFormat("HH:mm:ss MM/dd/yyyy").format(new Date());
+        cell.setCellValue("Report for " + this.projectName + " build. Generated at: " + timeStamp);
+        row = sheet.createRow(1);
+        XSSFCellStyle style = wb.createCellStyle();
+        XSSFFont font = wb.createFont();
+        font.setBold(true);
+        style.setFont(font);
+        cell = row.createCell(0);
+        cell.setCellValue("Prioritization technique");
+        cell.setCellStyle(style);
+        cell = row.createCell(1);
+        cell.setCellValue("APFD");
+        cell.setCellStyle(style);
+        cell = row.createCell(2);
+        cell.setCellValue("Failures");
+        cell.setCellStyle(style);
+        cell = row.createCell(3);
+        cell.setCellValue("Executed tests");
+        cell.setCellStyle(style);
+        cell = row.createCell(4);
+        cell.setCellValue("Test granularity");
+        cell.setCellStyle(style);
+        cell = row.createCell(5);
+        cell.setCellValue("Execution time (seconds)");
+        cell.setCellStyle(style);
+
+    }
+}

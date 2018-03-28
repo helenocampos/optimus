@@ -22,16 +22,14 @@ import org.junit.runner.notification.RunListener;
  *
  * @author helenocampos
  */
-public abstract class APFDListener extends RunListener
-{
+public abstract class APFDListener extends RunListener {
 
     private int faultsAmount;
     private HashMap<String, Integer> faultRevealingTests;
     private List<TestExecution> executedTests;
     private String testGranularity;
 
-    public APFDListener(String testGranularity)
-    {
+    public APFDListener(String testGranularity) {
         super();
         this.faultsAmount = 0;
         this.faultRevealingTests = new HashMap<String, Integer>();
@@ -40,46 +38,44 @@ public abstract class APFDListener extends RunListener
         readTestsFile();
     }
 
-    private void readTestsFile()
-    {
+    protected void readTestsFile() {
         Path file = Paths.get("TestsRevealingFaults");
         List<String> fileLines = new LinkedList<String>();
-        try
-        {
+        try {
             fileLines = Files.readAllLines(file, Charset.forName("UTF-8"));
-        } catch (IOException ex)
-        {
+        } catch (IOException ex) {
 //            Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
-        for (String line : fileLines)
-        {
-            if (this.testGranularity.equals("class"))
-            {
-                if (line.contains("."))
-                {
-                    String className = line.substring(0, line.lastIndexOf("."));
-                    this.faultRevealingTests.put(className, 0);
+        for (String line : fileLines) {
+            String testName = getTestName(line);
+             if (this.faultRevealingTests.get(testName) == null) {
+                    this.faultRevealingTests.put(testName, 0);
                 }
-            }else{
-                getFaultRevealingTests().put(line, 0);
-            }
-            
         }
         this.setFaultsAmount(fileLines.size());
     }
+    
+    protected String getTestName(String testName){
+        
+        if (this.testGranularity.equals("class")) {
+                if (testName.contains(".")) {
+                    testName = testName.substring(0, testName.lastIndexOf("."));
+                    
+                }
+            } 
+        return testName;
+    }
 
-    public ExecutionData calculateAPFD()
-    {
+    public ExecutionData calculateAPFD() {
         double n = this.getExecutedTests().size();
         double m = this.getFaultsAmount();
         double APFD = 1 - (sum(this.getFaultRevealingTests().values()) / (n * m)) + (1 / (2 * n));
-        
+
         System.out.println("Achieved APFD=" + APFD);
         return getExecutionData(APFD);
     }
 
-    private ExecutionData getExecutionData(double APFD)
-    {
+    private ExecutionData getExecutionData(double APFD) {
         ExecutionData data = new ExecutionData();
         data.setAmountExecutedTests(this.getExecutedTests().size());
         data.setSeededFaultsAmount(this.getFaultsAmount());
@@ -91,43 +87,35 @@ public abstract class APFDListener extends RunListener
         return data;
     }
 
-    public int sum(Collection<Integer> list)
-    {
+    public int sum(Collection<Integer> list) {
         int sum = 0;
-        for (Integer value : list)
-        {
+        for (Integer value : list) {
             sum += value;
         }
         return sum;
     }
 
-    protected int getFaultsAmount()
-    {
+    protected int getFaultsAmount() {
         return faultsAmount;
     }
 
-    protected void setFaultsAmount(int faultsAmount)
-    {
+    protected void setFaultsAmount(int faultsAmount) {
         this.faultsAmount = faultsAmount;
     }
 
-    protected HashMap<String, Integer> getFaultRevealingTests()
-    {
+    protected HashMap<String, Integer> getFaultRevealingTests() {
         return faultRevealingTests;
     }
 
-    protected void setFaultRevealingTests(HashMap<String, Integer> faultRevealingTests)
-    {
+    protected void setFaultRevealingTests(HashMap<String, Integer> faultRevealingTests) {
         this.faultRevealingTests = faultRevealingTests;
     }
 
-    protected List<TestExecution> getExecutedTests()
-    {
+    protected List<TestExecution> getExecutedTests() {
         return executedTests;
     }
 
-    protected void setExecutedTests(List<TestExecution> executedTests)
-    {
+    protected void setExecutedTests(List<TestExecution> executedTests) {
         this.executedTests = executedTests;
     }
 }

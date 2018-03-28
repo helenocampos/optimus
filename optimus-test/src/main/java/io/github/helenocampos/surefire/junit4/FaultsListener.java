@@ -5,9 +5,7 @@
  */
 package io.github.helenocampos.surefire.junit4;
 
-import io.github.helenocampos.optimushistoricalanalyzer.domain.TestExecution;
-import io.github.helenocampos.optimushistoricalanalyzer.domain.TestGranularity;
-import io.github.helenocampos.surefire.ordering.Granularity;
+import io.github.helenocampos.surefire.report.TestExecution;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -25,58 +23,69 @@ import org.junit.runner.notification.RunListener;
  *
  * @author helenocampos
  */
-public class FaultsListener extends RunListener
-{
-    public FaultsListener()
-    {
+public class FaultsListener extends RunListener {
+
+    private APFDListener apfdListener;
+
+    public FaultsListener(APFDListener apfdListener) {
         super();
+        this.apfdListener = apfdListener;
     }
 
-    private void writeFaultToFile(String testName)
-    {
+    private void writeFaultToFile(String testName) {
         Path file = Paths.get("TestsRevealingFaults");
         List<String> existingFaults = readFaultsFile(file);
-        if (!existingFaults.contains(testName))
-        {
+        if (!existingFaults.contains(testName)) {
             existingFaults.add(testName);
         }
-        try
-        {
+        try {
             Files.write(file, existingFaults, Charset.forName("UTF-8"));
-        } catch (IOException ex)
-        {
+        } catch (IOException ex) {
 //            Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private List<String> readFaultsFile(Path path)
-    {
-        try
-        {
-            if (path.toFile().exists())
-            {
+    private List<String> readFaultsFile(Path path) {
+        try {
+            if (path.toFile().exists()) {
                 return Files.readAllLines(path);
             }
 
-        } catch (IOException ex)
-        {
+        } catch (IOException ex) {
             Logger.getLogger(FaultsListener.class.getName()).log(Level.SEVERE, null, ex);
         }
         return new LinkedList<String>();
     }
 
     @Override
-    public void testFailure(Failure failure) throws Exception
-    {
+    public void testFailure(Failure failure) throws Exception {
         super.testFailure(failure);
 
         String testName = getTestName(failure.getDescription());
         writeFaultToFile(testName);
-
+        updateAPFDListener(testName);
     }
 
-    private String getTestName(Description description)
-    {
+    private void updateAPFDListener(String testFailure) {
+        if (apfdListener.getExecutedTests().size() > 0) {
+            TestExecution lastExecutedTest = apfdListener.getExecutedTests().get(apfdListener.getExecutedTests().size() - 1);
+            if (lastExecutedTest.getTestName().equals(apfdListener.getTestName(testFailure))) {
+                Integer testExecutionOrder = apfdListener.getFaultRevealingTests().get(lastExecutedTest.getTestName());
+                if (testExecutionOrder == null || testExecutionOrder == 0) {
+                    apfdListener.getFaultRevealingTests().put(lastExecutedTest.getTestName(), apfdListener.getExecutedTests().size());
+                    apfdListener.setFaultsAmount(apfdListener.getFaultRevealingTests().size());
+                }
+            }else{
+                Integer testExecutionOrder = apfdListener.getFaultRevealingTests().get(apfdListener.getTestName(testFailure));
+                if (testExecutionOrder == null || testExecutionOrder == 0) {
+                    apfdListener.getFaultRevealingTests().put(apfdListener.getTestName(testFailure), apfdListener.getExecutedTests().size()+1);
+                    apfdListener.setFaultsAmount(apfdListener.getFaultRevealingTests().size());
+                }
+            }
+        }
+    }
+
+    private String getTestName(Description description) {
         String testName = description.getClassName() + "." + description.getMethodName();
         return testName;
     }
