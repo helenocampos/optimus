@@ -14,6 +14,8 @@ import io.github.helenocampos.surefire.ordering.TestsSorter;
 import io.github.helenocampos.surefire.report.ExecutionData;
 import io.github.helenocampos.surefire.util.JUnit4TestChecker;
 import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -225,11 +227,13 @@ public class OptimusProvider extends AbstractProvider
         if (forkTestSet == null)
         {
             RunResult globalResult = new RunResult(0, 0, 0, 0);
+            long startTime = System.currentTimeMillis();
             Iterable<AbstractTest> testsToRun = orderTests(getSuites());
             for (AbstractTest toRun : testsToRun)
             {
                 globalResult.aggregate(invokeExecutor(toRun));
             }
+            long finishTime = System.currentTimeMillis();
             if (this.calculateAPFD)
             {
                 ExecutionData executionData;
@@ -240,6 +244,9 @@ public class OptimusProvider extends AbstractProvider
                     executionData.setTechnique(prioritizationTechnique);
                     executionData.setTestGranularity(testGranularity);
                     executionData.setProjectPath(projectPath);
+                    float executionTime = (float) (finishTime - startTime) / 1000;
+                    executionData.setExecutionTime(executionTime);
+                    executionData.setExecutionDate(new SimpleDateFormat("HH:mm:ss MM/dd/yyyy").format(new Date()));
                     executionData.writeExecutionData();
                 }
             }

@@ -24,6 +24,20 @@ import java.util.List;
 public class ExecutionData
 {
 
+    /**
+     * @return the executionTime
+     */
+    public float getExecutionTime() {
+        return executionTime;
+    }
+
+    /**
+     * @param executionTime the executionTime to set
+     */
+    public void setExecutionTime(float executionTime) {
+        this.executionTime = executionTime;
+    }
+
     private double APFD;
     private String technique;
     private int seededFaultsAmount;
@@ -32,6 +46,8 @@ public class ExecutionData
     private String projectPath;
     private List<TestExecution> executedTests;
     private List<String> faultRevealingTests;
+    private String executionDate;
+    private float executionTime;
 
     public ExecutionData()
     {
@@ -182,25 +198,30 @@ public class ExecutionData
         this.faultRevealingTests = faultRevealingTests;
     }
     
-    public double getTotalExecutionTimeInSeconds(){
-        double total = 0;
-        for(TestExecution execution: executedTests){
-            total+=execution.getExecutionTime();
-        }
-        total = total/1000;
-        return total;
-    }
-    
      public String[] getValues()
     {
-        String[] values = new String[6];
+        String[] values = new String[7];
         values[0] = this.technique;
         values[1] = Double.toString(this.APFD);
         values[2] = Integer.toString(this.seededFaultsAmount);
         values[3] = Integer.toString(this.amountExecutedTests);
         values[4] = this.testGranularity;
-        values[5] = Double.toString(getTotalExecutionTimeInSeconds());
-        
+        values[5] = Float.toString(this.executionTime);
+        values[6] = this.executionDate;
         return values;
+    }
+
+    /**
+     * @return the executionDate
+     */
+    public String getExecutionDate() {
+        return executionDate;
+    }
+
+    /**
+     * @param executionDate the executionDate to set
+     */
+    public void setExecutionDate(String executionDate) {
+        this.executionDate = executionDate;
     }
 }

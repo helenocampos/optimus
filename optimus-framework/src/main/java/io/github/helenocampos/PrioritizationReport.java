@@ -21,6 +21,11 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import io.github.helenocampos.surefire.report.ExecutionData;
 import io.github.helenocampos.surefire.report.TestExecution;
+import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.hssf.util.HSSFColor;
+
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 
 /**
  *
@@ -59,7 +64,7 @@ public class PrioritizationReport {
         createHeadings(sheet, workbook);
         int rowNum = 2;
         for (ExecutionData data : this.executionData) {
-            proccessRowValues(data, rowNum++, sheet);
+            proccessRowValues(data, rowNum++, sheet, workbook);
         }
 
         createExecutionLogs(workbook);
@@ -79,10 +84,10 @@ public class PrioritizationReport {
 
         int executionNr = 1;
         for (ExecutionData data : executionData) {
-            XSSFSheet sheet = wb.createSheet("Execution #" + executionNr++);
+            XSSFSheet sheet = wb.createSheet("Execution#" + executionNr++);
             int order = 1;
             int testNr = 2;
-            createLogHeadings(sheet, data);
+            createLogHeadings(sheet, data, wb);
             for (TestExecution execution : data.getExecutedTests()) {
 
                 Row row = sheet.createRow(testNr++);
@@ -102,10 +107,11 @@ public class PrioritizationReport {
         }
     }
 
-    private void createLogHeadings(XSSFSheet sheet, ExecutionData data) {
+    private void createLogHeadings(XSSFSheet sheet, ExecutionData data, XSSFWorkbook wb) {
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
         cell.setCellValue("Test logs for " + data.getTechnique() + " prioritization technique");
+        createExecutionDataLink(row, wb);
 
         row = sheet.createRow(1);
         cell = row.createCell(0);
@@ -121,7 +127,19 @@ public class PrioritizationReport {
         cell.setCellValue("Execution time (seconds)");
     }
 
-    private void proccessRowValues(ExecutionData data, int rowNum, XSSFSheet sheet) {
+    private void createExecutionDataLink(Row row, XSSFWorkbook wb) {
+        Cell cell = row.createCell(5);
+
+        CreationHelper createHelper = wb.getCreationHelper();
+        XSSFHyperlink link = (XSSFHyperlink) createHelper.createHyperlink(HyperlinkType.DOCUMENT);
+
+        link.setAddress("'Execution data'!A1");
+        cell.setHyperlink(link);
+        cell.setCellValue("Back to Execution data");
+        cell.setCellStyle(getLinkStyle(wb));
+    }
+
+    private void proccessRowValues(ExecutionData data, int rowNum, XSSFSheet sheet, XSSFWorkbook wb) {
         Row row = sheet.createRow(rowNum);
         int colNum = 0;
 
@@ -129,6 +147,27 @@ public class PrioritizationReport {
             Cell cell = row.createCell(colNum++);
             cell.setCellValue(value);
         }
+        createExecutionOrderLink(colNum, row, rowNum, wb);
+    }
+
+    private XSSFCellStyle getLinkStyle(XSSFWorkbook wb) {
+        XSSFCellStyle hlinkstyle = wb.createCellStyle();
+        XSSFFont hlinkfont = wb.createFont();
+        hlinkfont.setUnderline(XSSFFont.U_SINGLE);
+        hlinkfont.setColor(HSSFColor.BLUE.index);
+        hlinkstyle.setFont(hlinkfont);
+        return hlinkstyle;
+    }
+
+    private void createExecutionOrderLink(int colNum, Row row, int rowNum, XSSFWorkbook wb) {
+        Cell cell = row.createCell(colNum++);
+
+        CreationHelper createHelper = wb.getCreationHelper();
+        XSSFHyperlink link = (XSSFHyperlink) createHelper.createHyperlink(HyperlinkType.DOCUMENT);
+        link.setAddress("'Execution#" + (rowNum - 1) + "'!A1");
+        cell.setHyperlink(link);
+        cell.setCellValue("Order");
+        cell.setCellStyle(getLinkStyle(wb));
     }
 
     private void createHeadings(XSSFSheet sheet, XSSFWorkbook wb) {
@@ -158,6 +197,13 @@ public class PrioritizationReport {
         cell.setCellStyle(style);
         cell = row.createCell(5);
         cell.setCellValue("Execution time (seconds)");
+        cell.setCellStyle(style);
+        cell = row.createCell(6);
+        cell.setCellValue("Timestamp");
+        cell.setCellStyle(style);
+
+        cell = row.createCell(7);
+        cell.setCellValue("Execution order");
         cell.setCellStyle(style);
 
     }
