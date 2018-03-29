@@ -15,7 +15,6 @@ package io.github.helenocampos;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.google.common.io.Files;
 import com.sun.javafx.PlatformUtil;
 import io.github.helenocampos.surefire.ordering.PrioritizationTechniques;
 import java.io.File;
@@ -27,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.io.FileUtils;
+import org.apache.maven.model.Model;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -60,13 +59,13 @@ public class ExperimentMojo
     }
 
     private void executeLocalExperiment() throws MojoExecutionException {
+        Model pom = PomManager.getPom(this.getMavenProject().getBasedir().getAbsolutePath());
         logMessage("Collecting coverage data");
-        createPomBackup();
         collectCoverageData(this.getMavenProject().getBasedir());
-        executeTechniques(this.getMavenProject().getBasedir());
-        restoreOriginalPom();
+        executeTechniques(this.getMavenProject().getBasedir(), true);
         logMessage("Generating reports");
         PrioritizationReport report = new PrioritizationReport(this.getMavenProject().getName(), this.getMavenProject().getBasedir());
+        PomManager.writePom(this.getMavenProject().getBasedir().getAbsolutePath(), pom);
     }
 
     private void executeVersionsExperiment() throws MojoExecutionException {
@@ -80,31 +79,9 @@ public class ExperimentMojo
 
                     logMessage("Collecting coverage and faults data");
                     collectCoverageAndGenerateFaultsFile(version);
-                    executeTechniques(version);
+                    executeTechniques(version, false);
                 }
             }
-
-        }
-    }
-
-    private void createPomBackup() {
-        File originalPomFile = this.getMavenProject().getFile();
-        File bkpPom = new File(this.getMavenProject().getBasedir(), "bkpPom.xml");
-        try {
-            FileUtils.copyFile(originalPomFile, bkpPom);
-        } catch (IOException ex) {
-            Logger.getLogger(ExperimentMojo.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void restoreOriginalPom() {
-        File originalPomFile = new File(this.getMavenProject().getBasedir(), "bkpPom.xml");
-        File tempPom = this.getMavenProject().getFile();
-        if (originalPomFile.exists()) {
-            if (tempPom.exists()) {
-                tempPom.delete();
-            }
-            originalPomFile.renameTo(tempPom);
 
         }
     }
@@ -117,18 +94,18 @@ public class ExperimentMojo
         return versions;
     }
 
-    private void executeTechniques(File projectFolder) throws MojoExecutionException {
+    private void executeTechniques(File projectFolder, boolean generateFaultsFile) throws MojoExecutionException {
         if (this.getPrioritizationTechniques() != null) {
             for (String technique : this.getPrioritizationTechniques()) {
-                invokePrioritization(technique, projectFolder, false, true);
+                invokePrioritization(technique, projectFolder, generateFaultsFile, true);
             }
         } else {
             if (this.getPrioritization().equals("all")) {
                 for (String technique : PrioritizationTechniques.getAllTechniquesNames()) {
-                    invokePrioritization(technique, projectFolder, false, true);
+                    invokePrioritization(technique, projectFolder, generateFaultsFile, true);
                 }
             } else {
-                invokePrioritization(this.getPrioritization(), projectFolder, false, true);
+                invokePrioritization(this.getPrioritization(), projectFolder, generateFaultsFile, true);
             }
 
         }
@@ -152,7 +129,7 @@ public class ExperimentMojo
             outputExperimentFolder = new File(outputExperimentFolder, getMavenProject().getName());
             logMessage("Collecting coverage data");
             collectCoverageData(outputExperimentFolder);
-            executeTechniques(outputExperimentFolder);
+            executeTechniques(outputExperimentFolder, false);
         }
         logMessage("Generating reports");
         ExperimentReport report = new ExperimentReport(this.getMavenProject().getName(), new File(getExperimentOutputDirectory(), timeStamp), this.getReports());

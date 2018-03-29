@@ -173,6 +173,8 @@ public class ExperimentReport
             {
                 OutputStream outputStream = new FileOutputStream(new File(experimentFolder, "summary_report.pdf"));
                 buffer.writeTo(outputStream);
+                outputStream.close();
+                buffer.close();
             } catch (FileNotFoundException ex)
             {
                 Logger.getLogger(ExperimentReport.class.getName()).log(Level.SEVERE, null, ex);
@@ -207,6 +209,7 @@ public class ExperimentReport
             FileOutputStream outputStream = new FileOutputStream(new File(experimentFolder, "raw_data.xls"));
             workbook.write(outputStream);
             workbook.close();
+            outputStream.close();
         } catch (FileNotFoundException e)
         {
             e.printStackTrace();

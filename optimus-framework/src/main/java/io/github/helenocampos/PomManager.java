@@ -50,6 +50,7 @@ public class PomManager
                     MavenXpp3Writer writer = new MavenXpp3Writer();
                     OutputStream output = new FileOutputStream(pom);
                     writer.write(output, model);
+                    output.close();
                 } catch (FileNotFoundException ex)
                 {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
@@ -82,6 +83,7 @@ public class PomManager
                     MavenXpp3Writer writer = new MavenXpp3Writer();
                     OutputStream output = new FileOutputStream(pom);
                     writer.write(output, model);
+                    output.close();
                 } catch (FileNotFoundException ex)
                 {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
@@ -115,6 +117,7 @@ public class PomManager
                     MavenXpp3Writer writer = new MavenXpp3Writer();
                     OutputStream output = new FileOutputStream(pom);
                     writer.write(output, model);
+                    output.close();
                 } catch (FileNotFoundException ex)
                 {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
@@ -163,6 +166,59 @@ public class PomManager
         assembly.setConfiguration(getPrioritizationProperties(granularity, technique, dbPath, projectName, generateFaultsFile, calcAPFD));
         plugins.add(assembly);
 
+    }
+    
+    public static Model getPom(String projectFolder){
+        Model model = null;
+        MavenXpp3Reader reader = new MavenXpp3Reader();
+        File newProjectDir = new File(projectFolder);
+        if (newProjectDir.exists())
+        {
+            File pom = new File(newProjectDir, "pom.xml");
+            if (pom.exists())
+            {
+                try
+                {
+                    model = reader.read(new FileReader(pom));
+                   
+                } catch (FileNotFoundException ex)
+                {
+//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex)
+                {
+//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (XmlPullParserException ex)
+                {
+//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        return model;
+    }
+    
+    public static void writePom(String projectFolder, Model model){
+        File newProjectDir = new File(projectFolder);
+        if (newProjectDir.exists())
+        {
+            File pom = new File(newProjectDir, "pom.xml");
+            if (pom.exists())
+            {
+                try
+                {
+                    MavenXpp3Writer writer = new MavenXpp3Writer();
+                    OutputStream output = new FileOutputStream(pom);
+                    writer.write(output, model);
+                    output.close();
+                   
+                } catch (FileNotFoundException ex)
+                {
+//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex)
+                {
+//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
     }
 
     private static Xpp3Dom getPrioritizationProperties(String granularity, String prioritization, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD)

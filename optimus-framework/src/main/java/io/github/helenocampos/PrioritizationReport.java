@@ -73,6 +73,7 @@ public class PrioritizationReport {
             FileOutputStream outputStream = new FileOutputStream(new File(projectFolder, "raw_data.xlsx"));
             workbook.write(outputStream);
             workbook.close();
+            outputStream.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
