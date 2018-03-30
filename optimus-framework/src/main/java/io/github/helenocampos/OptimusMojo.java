@@ -16,6 +16,7 @@ package io.github.helenocampos;
  * limitations under the License.
  */
 import java.io.File;
+import java.util.Arrays;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -40,6 +41,20 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 public abstract class OptimusMojo
         extends AbstractMojo
 {
+
+    /**
+     * @return the printLogs
+     */
+    public String getPrintLogs() {
+        return printLogs;
+    }
+
+    /**
+     * @param printLogs the printLogs to set
+     */
+    public void setPrintLogs(String printLogs) {
+        this.printLogs = printLogs;
+    }
 
     /**
      * The project currently being build.
@@ -93,6 +108,9 @@ public abstract class OptimusMojo
     
     @Parameter(property = "", defaultValue = "")
     private String versionsFolder = "";
+    
+    @Parameter(property = "", defaultValue = "false")
+    private String printLogs = "";
     
     private final String jacocoVersion = "0.7.9";
     
@@ -214,7 +232,8 @@ public abstract class OptimusMojo
             exit = true;
         }finally{
             if(generateReport){
-                PrioritizationReport report = new PrioritizationReport(this.getMavenProject().getName(), this.getMavenProject().getBasedir());
+//                PrioritizationReport report = new PrioritizationReport(this.getMavenProject().getName(), this.getMavenProject().getBasedir());
+                ReportsController reports = new ReportsController(this.getMavenProject().getName(), this.getMavenProject().getBasedir(), Arrays.asList(new String[]{"raw"}), "single");
             }
             if(exit){
                 System.exit(1);

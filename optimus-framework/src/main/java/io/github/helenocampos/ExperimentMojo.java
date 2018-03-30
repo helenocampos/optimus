@@ -39,8 +39,18 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 public class ExperimentMojo
         extends OptimusMojo {
 
+    /**
+     * @return the techniquesRepeat
+     */
+    public String getTechniquesRepeat() {
+        return randomRepeat;
+    }
+
     @Parameter(defaultValue = "1", readonly = true)
     private String executionTimes;
+    
+    @Parameter(defaultValue = "1", readonly = true)
+    private String randomRepeat;
 
     private final String MVN_CLEAN_TEST = "mvn clean test";
     private final String MVN_TEST = "mvn test";
@@ -64,7 +74,8 @@ public class ExperimentMojo
         collectCoverageData(this.getMavenProject().getBasedir());
         executeTechniques(this.getMavenProject().getBasedir(), true);
         logMessage("Generating reports");
-        PrioritizationReport report = new PrioritizationReport(this.getMavenProject().getName(), this.getMavenProject().getBasedir());
+//        PrioritizationReport report = new PrioritizationReport(this.getMavenProject().getName(), this.getMavenProject().getBasedir());
+        ReportsController reports = new ReportsController(this.getMavenProject().getName(), this.getMavenProject().getBasedir(), this.getReports(), "single");
         PomManager.writePom(this.getMavenProject().getBasedir().getAbsolutePath(), pom);
     }
 
@@ -82,7 +93,7 @@ public class ExperimentMojo
                     executeTechniques(version, false);
                 }
             }
-
+            ReportsController reports = new ReportsController(this.getMavenProject().getName(), versionsFolderFile, this.getReports(), "multiple");
         }
     }
 
@@ -129,10 +140,10 @@ public class ExperimentMojo
             outputExperimentFolder = new File(outputExperimentFolder, getMavenProject().getName());
             logMessage("Collecting coverage data");
             collectCoverageData(outputExperimentFolder);
-            executeTechniques(outputExperimentFolder, false);
+            executeTechniques(outputExperimentFolder, true);
         }
         logMessage("Generating reports");
-        ExperimentReport report = new ExperimentReport(this.getMavenProject().getName(), new File(getExperimentOutputDirectory(), timeStamp), this.getReports());
+        ReportsController reports = new ReportsController(this.getMavenProject().getName(), new File(getExperimentOutputDirectory(), timeStamp), this.getReports(), "multiple");
     }
 
     //executed each time when it is the first execution, so that coverage data can be gathered before prioritization
@@ -150,15 +161,21 @@ public class ExperimentMojo
     }
 
     private void invokePrioritization(String technique, File outputExperimentFolder, boolean generateFaultsFile, boolean calcAPFD) throws MojoExecutionException {
-        long start = System.currentTimeMillis();
-        logMessage("Executing tests with " + technique + " prioritization technique");
-        Runtime rt = Runtime.getRuntime();
-        PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
-        PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath(), getDbPath(), outputExperimentFolder.getName(), generateFaultsFile, calcAPFD);
-        invokeProcess(rt, outputExperimentFolder, false);
-        long finish = System.currentTimeMillis();
-        double time = (double) (finish - start) / 1000;
-        logMessage("Execution took " + time + " seconds.");
+        int executionsAmount = 1;
+        if(technique.equals("random")){
+            executionsAmount = Integer.valueOf(randomRepeat);
+        }
+        for (int i = 0; i < executionsAmount; i++) {
+            long start = System.currentTimeMillis();
+            logMessage("Executing tests with " + technique + " prioritization technique");
+            Runtime rt = Runtime.getRuntime();
+            PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
+            PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath(), getDbPath(), outputExperimentFolder.getName(), generateFaultsFile, calcAPFD);
+            invokeProcess(rt, outputExperimentFolder, false);
+            long finish = System.currentTimeMillis();
+            double time = (double) (finish - start) / 1000;
+            logMessage("Execution took " + time + " seconds.");
+        }
     }
 
     private void invokeProcess(Runtime rt, File folder, boolean clean) {
@@ -173,8 +190,8 @@ public class ExperimentMojo
                 ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", mvnInvokation);
                 pb.directory(folder);
                 Process p = pb.start();
-                StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream(), "ERROR");
-                StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream(), "OUTPUT");
+                StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream(), "ERROR", Boolean.valueOf(getPrintLogs()));
+                StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream(), "OUTPUT", Boolean.valueOf(getPrintLogs()));
                 errorGobbler.start();
                 outputGobbler.start();
                 p.waitFor();

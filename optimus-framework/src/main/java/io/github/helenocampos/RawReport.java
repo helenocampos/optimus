@@ -11,7 +11,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -31,43 +30,26 @@ import org.apache.poi.xssf.usermodel.XSSFHyperlink;
  *
  * @author helenocampos
  */
-public class PrioritizationReport {
+public final class RawReport {
 
-    private List<ExecutionData> executionData;
-    private String projectName;
-    private File projectFolder;
-
-    public PrioritizationReport(String projectName, File projectFolder) {
-        this.executionData = new LinkedList<ExecutionData>();
-        this.projectName = projectName;
-        this.projectFolder = projectFolder;
-        scanExperimentFolder();
-        generateReport();
+    public static void generateSummaryReport(List<ExecutionData> executionData, String projectName, File projectFolder){
+        buildRawDataReport(executionData, projectName, projectFolder);
+    }
+    
+    private RawReport() {
     }
 
-    private void scanExperimentFolder() {
-        if (this.projectFolder.isDirectory()) {
-            ExecutionData data = new ExecutionData(projectFolder.getAbsolutePath());
-            this.executionData.addAll(data.readExecutionData());
-
-        }
-    }
-
-    private void generateReport() {
-        buildRawDataReport();
-    }
-
-    private void buildRawDataReport() {
+    private static void buildRawDataReport(List<ExecutionData> executionData, String projectName, File projectFolder) {
         XSSFWorkbook workbook = new XSSFWorkbook();
         XSSFSheet sheet = workbook.createSheet("Execution data");
 
-        createHeadings(sheet, workbook);
+        createHeadings(sheet, workbook, projectName);
         int rowNum = 2;
-        for (ExecutionData data : this.executionData) {
+        for (ExecutionData data : executionData) {
             proccessRowValues(data, rowNum++, sheet, workbook);
         }
 
-        createExecutionLogs(workbook);
+        createExecutionLogs(workbook, executionData);
 
         try {
             FileOutputStream outputStream = new FileOutputStream(new File(projectFolder, "raw_data.xlsx"));
@@ -81,7 +63,7 @@ public class PrioritizationReport {
         }
     }
 
-    private void createExecutionLogs(XSSFWorkbook wb) {
+    private static void createExecutionLogs(XSSFWorkbook wb, List<ExecutionData> executionData) {
 
         int executionNr = 1;
         for (ExecutionData data : executionData) {
@@ -108,7 +90,7 @@ public class PrioritizationReport {
         }
     }
 
-    private void createLogHeadings(XSSFSheet sheet, ExecutionData data, XSSFWorkbook wb) {
+    private static void createLogHeadings(XSSFSheet sheet, ExecutionData data, XSSFWorkbook wb) {
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
         cell.setCellValue("Test logs for " + data.getTechnique() + " prioritization technique");
@@ -128,7 +110,7 @@ public class PrioritizationReport {
         cell.setCellValue("Execution time (seconds)");
     }
 
-    private void createExecutionDataLink(Row row, XSSFWorkbook wb) {
+    private static void createExecutionDataLink(Row row, XSSFWorkbook wb) {
         Cell cell = row.createCell(5);
 
         CreationHelper createHelper = wb.getCreationHelper();
@@ -140,7 +122,7 @@ public class PrioritizationReport {
         cell.setCellStyle(getLinkStyle(wb));
     }
 
-    private void proccessRowValues(ExecutionData data, int rowNum, XSSFSheet sheet, XSSFWorkbook wb) {
+    private static void proccessRowValues(ExecutionData data, int rowNum, XSSFSheet sheet, XSSFWorkbook wb) {
         Row row = sheet.createRow(rowNum);
         int colNum = 0;
 
@@ -151,7 +133,7 @@ public class PrioritizationReport {
         createExecutionOrderLink(colNum, row, rowNum, wb);
     }
 
-    private XSSFCellStyle getLinkStyle(XSSFWorkbook wb) {
+    private static XSSFCellStyle getLinkStyle(XSSFWorkbook wb) {
         XSSFCellStyle hlinkstyle = wb.createCellStyle();
         XSSFFont hlinkfont = wb.createFont();
         hlinkfont.setUnderline(XSSFFont.U_SINGLE);
@@ -160,7 +142,7 @@ public class PrioritizationReport {
         return hlinkstyle;
     }
 
-    private void createExecutionOrderLink(int colNum, Row row, int rowNum, XSSFWorkbook wb) {
+    private static void createExecutionOrderLink(int colNum, Row row, int rowNum, XSSFWorkbook wb) {
         Cell cell = row.createCell(colNum++);
 
         CreationHelper createHelper = wb.getCreationHelper();
@@ -171,11 +153,11 @@ public class PrioritizationReport {
         cell.setCellStyle(getLinkStyle(wb));
     }
 
-    private void createHeadings(XSSFSheet sheet, XSSFWorkbook wb) {
+    private static void createHeadings(XSSFSheet sheet, XSSFWorkbook wb, String projectName) {
         Row row = sheet.createRow(0);
         Cell cell = row.createCell(0);
         String timeStamp = new SimpleDateFormat("HH:mm:ss MM/dd/yyyy").format(new Date());
-        cell.setCellValue("Report for " + this.projectName + " build. Generated at: " + timeStamp);
+        cell.setCellValue("Report for " + projectName + " build. Generated at: " + timeStamp);
         row = sheet.createRow(1);
         XSSFCellStyle style = wb.createCellStyle();
         XSSFFont font = wb.createFont();
@@ -206,6 +188,5 @@ public class PrioritizationReport {
         cell = row.createCell(7);
         cell.setCellValue("Execution order");
         cell.setCellStyle(style);
-
     }
 }

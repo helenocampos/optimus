@@ -16,12 +16,14 @@ import java.io.InputStreamReader;
  */
 public class StreamGobbler extends Thread {
 
-    InputStream is;
-    String type;
+    private InputStream is;
+    private String type;
+    private boolean printLogs;
 
-    StreamGobbler(InputStream is, String type) {
+    StreamGobbler(InputStream is, String type, boolean printLogs) {
         this.is = is;
         this.type = type;
+        this.printLogs = printLogs;
     }
 
     // empties buffers
@@ -31,6 +33,9 @@ public class StreamGobbler extends Thread {
             BufferedReader br = new BufferedReader(isr);
             String line = null;
             while ((line = br.readLine()) != null) {
+                if(printLogs){
+                    System.out.println("[DEBUG - INNER PROCESS] [" +this.type+"]"+  line);
+                }
             }
             isr.close();
             br.close();

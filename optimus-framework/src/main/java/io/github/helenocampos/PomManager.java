@@ -224,9 +224,12 @@ public class PomManager
     private static Xpp3Dom getPrioritizationProperties(String granularity, String prioritization, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD)
     {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
-        Xpp3Dom argLine = new Xpp3Dom("argLine");
-        argLine.setValue("@{argLine}");
-        configuration.addChild(argLine);
+        configuration.addChild(createConfigurationNode("argLine", "@{argLine}"));
+        configuration.addChild(createConfigurationNode("reuseForks", "true"));
+        configuration.addChild(createConfigurationNode("forkCount", "1"));
+        configuration.addChild(createConfigurationNode("threadCount", "1"));
+        configuration.addChild(createConfigurationNode("parallel", "none"));
+        configuration.addChild(createConfigurationNode("parallelOptimized", "false"));
         Xpp3Dom properties = new Xpp3Dom("properties");
         configuration.addChild(properties);
         properties.addChild(createPropertyNode("granularity", granularity));
@@ -243,6 +246,12 @@ public class PomManager
         return configuration;
     }
 
+    private static Xpp3Dom createConfigurationNode(String nodeName, String nodeValue){
+        Xpp3Dom node = new Xpp3Dom(nodeName);
+        node.setValue(nodeValue);
+        return node;
+    }
+    
     private static Xpp3Dom createPropertyNode(String propertyName, String propertyValue)
     {
         Xpp3Dom property = new Xpp3Dom("property");

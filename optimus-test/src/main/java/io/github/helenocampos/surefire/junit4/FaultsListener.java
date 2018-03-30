@@ -26,10 +26,20 @@ import org.junit.runner.notification.RunListener;
 public class FaultsListener extends RunListener {
 
     private APFDListener apfdListener;
+    private boolean firstFailure = true;
 
     public FaultsListener(APFDListener apfdListener) {
         super();
         this.apfdListener = apfdListener;
+    }
+    
+    private void resetFaultsFile(){
+        Path file = Paths.get("TestsRevealingFaults");
+        try {
+            Files.write(file, new byte[0]);
+        } catch (IOException ex) {
+//            Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void writeFaultToFile(String testName) {
@@ -60,7 +70,10 @@ public class FaultsListener extends RunListener {
     @Override
     public void testFailure(Failure failure) throws Exception {
         super.testFailure(failure);
-
+        if(firstFailure){
+            firstFailure = false;
+            resetFaultsFile();
+        }
         String testName = getTestName(failure.getDescription());
         writeFaultToFile(testName);
         updateAPFDListener(testName);
@@ -75,13 +88,16 @@ public class FaultsListener extends RunListener {
                     apfdListener.getFaultRevealingTests().put(lastExecutedTest.getTestName(), apfdListener.getExecutedTests().size());
                     apfdListener.setFaultsAmount(apfdListener.getFaultRevealingTests().size());
                 }
-            }else{
+            } else {
                 Integer testExecutionOrder = apfdListener.getFaultRevealingTests().get(apfdListener.getTestName(testFailure));
                 if (testExecutionOrder == null || testExecutionOrder == 0) {
-                    apfdListener.getFaultRevealingTests().put(apfdListener.getTestName(testFailure), apfdListener.getExecutedTests().size()+1);
+                    apfdListener.getFaultRevealingTests().put(apfdListener.getTestName(testFailure), apfdListener.getExecutedTests().size() + 1);
                     apfdListener.setFaultsAmount(apfdListener.getFaultRevealingTests().size());
                 }
             }
+        } else {
+            apfdListener.getFaultRevealingTests().put(apfdListener.getTestName(testFailure), apfdListener.getExecutedTests().size() + 1);
+            apfdListener.setFaultsAmount(apfdListener.getFaultRevealingTests().size());
         }
     }
 
