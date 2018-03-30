@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  *
@@ -96,7 +97,8 @@ public class LocalProjectCrawler
             }
         } else
         {
-            if (f.getName().contains(".java"))
+            String fileExtension = FilenameUtils.getExtension(f.getName());
+            if (fileExtension.equals(".java"))
             {
                 String packageNameSource = getPackageFromSourceFile(f.getPath());
                 if (isTestClass(f.getAbsolutePath()))
@@ -105,13 +107,13 @@ public class LocalProjectCrawler
                     testFiles.put(cls.getQualifiedName(), cls);
                 } else
                 {
-                    if (f.getName().endsWith(".java"))
+                    if (fileExtension.equals(".java"))
                     {
                         JavaSourceCodeClass cls = new JavaSourceCodeClass(f.getName(), f.getPath(), this.projectPath, packageNameSource);
                         javaFiles.put(cls.getQualifiedName(), cls);
                     }
                 }
-            } else if (f.getName().contains(".class"))
+            } else if (fileExtension.equals(".class"))
             {
                 try
                 {
