@@ -114,6 +114,8 @@ public abstract class OptimusMojo
     
     private final String jacocoVersion = "0.7.9";
     
+    protected PomManager pomManager;
+    
     protected void addJacocoPlugin() throws MojoExecutionException
     {
         if (!hasJacocoAgentSet())
@@ -244,6 +246,12 @@ public abstract class OptimusMojo
     private Xpp3Dom getPrioritizationProperties(boolean generateReport)
     {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
+        Xpp3Dom[] excludes = pomManager.getExcludes();
+        if(excludes!=null){
+            for(Xpp3Dom tag: excludes){
+                configuration.addChild(tag);
+            }
+        }
         Xpp3Dom properties = new Xpp3Dom("properties");
         configuration.addChild(properties);
         properties.addChild(createPropertyNode("granularity", this.granularity));

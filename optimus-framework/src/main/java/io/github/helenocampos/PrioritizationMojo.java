@@ -24,15 +24,13 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 @Mojo(name = "prioritization", defaultPhase = LifecyclePhase.PROCESS_TEST_CLASSES, requiresDependencyResolution = ResolutionScope.TEST)
 
 public class PrioritizationMojo
-        extends OptimusMojo
-{
-public void execute()
-            throws MojoExecutionException
-    {
-      addJacocoPlugin();
-      runPrioritizationPlugin(this.getReports()!=null);
-    }
+        extends OptimusMojo {
 
-    
+    public void execute()
+            throws MojoExecutionException {
+        pomManager = new PomManager(this.getMavenProject().getBasedir().getAbsolutePath());
+        addJacocoPlugin();
+        runPrioritizationPlugin(this.getReports() != null);
+    }
 
 }

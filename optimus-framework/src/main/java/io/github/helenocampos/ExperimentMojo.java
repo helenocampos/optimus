@@ -57,6 +57,7 @@ public class ExperimentMojo
 
     public void execute()
             throws MojoExecutionException {
+        pomManager = new PomManager(this.getMavenProject().getBasedir().getAbsolutePath());
         addJacocoPlugin();
 
         if (getExperimentType().equals("mutation")) {
@@ -67,16 +68,15 @@ public class ExperimentMojo
             executeLocalExperiment();
         }
     }
-
+    
     private void executeLocalExperiment() throws MojoExecutionException {
-        Model pom = PomManager.getPom(this.getMavenProject().getBasedir().getAbsolutePath());
+        Model pom = pomManager.readPom(this.getMavenProject().getBasedir().getAbsolutePath());
         logMessage("Collecting coverage data");
         collectCoverageData(this.getMavenProject().getBasedir());
         executeTechniques(this.getMavenProject().getBasedir(), true);
         logMessage("Generating reports");
-//        PrioritizationReport report = new PrioritizationReport(this.getMavenProject().getName(), this.getMavenProject().getBasedir());
         ReportsController reports = new ReportsController(this.getMavenProject().getName(), this.getMavenProject().getBasedir(), this.getReports(), "single");
-        PomManager.writePom(this.getMavenProject().getBasedir().getAbsolutePath(), pom);
+        pomManager.writePom(pom, this.getMavenProject().getBasedir().getAbsolutePath());
     }
 
     private void executeVersionsExperiment() throws MojoExecutionException {
@@ -148,8 +148,8 @@ public class ExperimentMojo
 
     //executed each time when it is the first execution, so that coverage data can be gathered before prioritization
     private void collectCoverageData(File outputExperimentFolder) {
-        PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
-        PomManager.setupFirstRun(outputExperimentFolder.getAbsolutePath());
+        pomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
+        pomManager.setupFirstRun(outputExperimentFolder.getAbsolutePath());
         Runtime rt = Runtime.getRuntime();
         invokeProcess(rt, outputExperimentFolder, true);
     }
@@ -169,8 +169,8 @@ public class ExperimentMojo
             long start = System.currentTimeMillis();
             logMessage("Executing tests with " + technique + " prioritization technique");
             Runtime rt = Runtime.getRuntime();
-            PomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
-            PomManager.setupPrioritizationPlugin(this.getGranularity(), technique, outputExperimentFolder.getAbsolutePath(), getDbPath(), outputExperimentFolder.getName(), generateFaultsFile, calcAPFD);
+            pomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
+            pomManager.setupPrioritizationPlugin(getPrioritizationConfig(technique, outputExperimentFolder.getAbsolutePath(), outputExperimentFolder.getName(), generateFaultsFile, calcAPFD));
             invokeProcess(rt, outputExperimentFolder, false);
             long finish = System.currentTimeMillis();
             double time = (double) (finish - start) / 1000;
@@ -178,6 +178,18 @@ public class ExperimentMojo
         }
     }
 
+    private PrioritizationConfig getPrioritizationConfig(String technique, String projectFolder, String projectName, boolean generateFaultsFile, boolean calcAPFD){
+        PrioritizationConfig config = new PrioritizationConfig();
+        config.setGranularity(this.getGranularity());
+        config.setTechnique(technique);
+        config.setProjectFolder(projectFolder);
+        config.setDbPath(this.getDbPath());
+        config.setProjectName(projectName);
+        config.setCalcAPFD(calcAPFD);
+        config.setGenerateFaultsFile(generateFaultsFile);
+        return config;
+    }
+    
     private void invokeProcess(Runtime rt, File folder, boolean clean) {
         try {
             String mvnInvokation;

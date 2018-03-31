@@ -50,4 +50,9 @@ public class TestClass extends AbstractTest
     {
         return getTestName();
     }
+    
+    @Override
+    public String toString(){
+        return this.getTestName();
+    }
 }

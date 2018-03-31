@@ -29,126 +29,124 @@ import org.twdata.maven.mojoexecutor.MojoExecutor;
  *
  * @author helenocampos
  */
-public class PomManager
-{
+public class PomManager {
 
-    public static void setupPrioritizationPlugin(String granularity, String technique, String projectFolder, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD)
-    {
+    /**
+     * @return the excludes
+     */
+    public Xpp3Dom[] getExcludes() {
+        return excludes;
+    }
+
+    private Model originalPom;
+    private Xpp3Dom[] excludes;
+
+    public PomManager(String projectFolder) {
+        this.originalPom = readPom(projectFolder);
+        this.excludes = getSurefireExcludesConfig(originalPom);
+    }
+
+    public Model readPom(String projectFolder) {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         File newProjectDir = new File(projectFolder);
-        if (newProjectDir.exists())
-        {
+        Model pomModel = null;
+        if (newProjectDir.exists()) {
             File pom = new File(newProjectDir, "pom.xml");
-            if (pom.exists())
-            {
-                try
-                {
-                    Model model = reader.read(new FileReader(pom));
-                    Build build = model.getBuild();
-                    addJacocoPlugin(build.getPlugins());
-                    addPrioritizationPlugin(build.getPlugins(), granularity, technique, dbPath, projectName, generateFaultsFile, calcAPFD);
-                    MavenXpp3Writer writer = new MavenXpp3Writer();
-                    OutputStream output = new FileOutputStream(pom);
-                    writer.write(output, model);
-                    output.close();
-                } catch (FileNotFoundException ex)
-                {
+            if (pom.exists()) {
+                try {
+                    pomModel = reader.read(new FileReader(pom));
+
+                } catch (FileNotFoundException ex) {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex)
-                {
+                } catch (IOException ex) {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (XmlPullParserException ex)
-                {
+                } catch (XmlPullParserException ex) {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
+        return pomModel;
+    }
+
+    public void writePom(Model model, String projectFolder) {
+        File newProjectDir = new File(projectFolder);
+        if (newProjectDir.exists()) {
+            File pom = new File(newProjectDir, "pom.xml");
+            if (pom.exists()) {
+                try {
+                    MavenXpp3Writer writer = new MavenXpp3Writer();
+                    OutputStream output = new FileOutputStream(pom);
+                    writer.write(output, model);
+                    output.close();
+                } catch (FileNotFoundException ex) {
+//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+
+    public void setupPrioritizationPlugin(PrioritizationConfig config) {
+        Model model = readPom(config.getProjectFolder());
+        Build build = model.getBuild();
+        addJacocoPlugin(build.getPlugins());
+        addPrioritizationPlugin(build.getPlugins(), config);
+        writePom(model, config.getProjectFolder());
+    }
+
+    private Xpp3Dom[] getSurefireExcludesConfig(Model model) {
+        if (model != null) {
+            Build build = model.getBuild();
+            if (build != null) {
+                Plugin surefire = getPluginByArtifactId(build.getPlugins(), "maven-surefire-plugin");
+                if (surefire != null) {
+                    Xpp3Dom configuration = (Xpp3Dom) surefire.getConfiguration();
+                    return configuration.getChildren("excludes");
+                }
+            }
+        }
+        return null;
+    }
+
+    private Plugin getPluginByArtifactId(List<Plugin> plugins, String artifactId) {
+        for (Plugin plugin : plugins) {
+            if (plugin.getArtifactId().equals(artifactId)) {
+                return plugin;
+            }
+        }
+        return null;
     }
 
     //a tests run to gather coverage data only
-    public static void setupFirstRun(String projectFolder)
-    {
-        MavenXpp3Reader reader = new MavenXpp3Reader();
-        File newProjectDir = new File(projectFolder);
-        if (newProjectDir.exists())
-        {
-            File pom = new File(newProjectDir, "pom.xml");
-            if (pom.exists())
-            {
-                try
-                {
-                    Model model = reader.read(new FileReader(pom));
-                    Build build = model.getBuild();
-                    addJacocoPlugin(build.getPlugins());
-                    MavenXpp3Writer writer = new MavenXpp3Writer();
-                    OutputStream output = new FileOutputStream(pom);
-                    writer.write(output, model);
-                    output.close();
-                } catch (FileNotFoundException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (XmlPullParserException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
+    public void setupFirstRun(String projectFolder) {
+        Model model = readPom(projectFolder);
+        Build build = model.getBuild();
+        addJacocoPlugin(build.getPlugins());
+        writePom(model, projectFolder);
     }
 
-    public static void removeFramework(String projectFolder)
-    {
-        MavenXpp3Reader reader = new MavenXpp3Reader();
-        File newProjectDir = new File(projectFolder);
-        if (newProjectDir.exists())
-        {
-            File pom = new File(newProjectDir, "pom.xml");
-            if (pom.exists())
-            {
-                try
-                {
-                    Model model = reader.read(new FileReader(pom));
-                    Build build = model.getBuild();
-                    build.setPlugins(removePlugin("optimus-framework", build.getPlugins()));
-                    build.setPlugins(removePlugin("jacoco-maven-plugin", build.getPlugins()));
-                    build.setPlugins(removePlugin("maven-surefire-plugin", build.getPlugins()));
-                    MavenXpp3Writer writer = new MavenXpp3Writer();
-                    OutputStream output = new FileOutputStream(pom);
-                    writer.write(output, model);
-                    output.close();
-                } catch (FileNotFoundException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (XmlPullParserException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-
+    public void removeFramework(String projectFolder) {
+        Model model = readPom(projectFolder);
+        Build build = model.getBuild();
+        build.setPlugins(removePlugin("optimus-framework", build.getPlugins()));
+        build.setPlugins(removePlugin("jacoco-maven-plugin", build.getPlugins()));
+        build.setPlugins(removePlugin("maven-surefire-plugin", build.getPlugins()));
+        writePom(model, projectFolder);
     }
 
-    private static List<Plugin> removePlugin(String artifactId, List<Plugin> plugins)
-    {
+    private List<Plugin> removePlugin(String artifactId, List<Plugin> plugins) {
         Iterator<Plugin> pluginsIterator = plugins.iterator();
-        while (pluginsIterator.hasNext())
-        {
+        while (pluginsIterator.hasNext()) {
             Plugin plugin = pluginsIterator.next();
-            if (plugin.getArtifactId().equals(artifactId))
-            {
+            if (plugin.getArtifactId().equals(artifactId)) {
                 pluginsIterator.remove();
             }
         }
         return plugins;
     }
 
-    private static void addPrioritizationPlugin(List<Plugin> plugins, String granularity, String technique, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD)
-    {
+    private void addPrioritizationPlugin(List<Plugin> plugins, PrioritizationConfig config) {
         Dependency dep = new Dependency();
         dep.setGroupId("io.github.helenocampos.surefire");
         dep.setArtifactId("optimus-test");
@@ -163,67 +161,18 @@ public class PomManager
         dependencies.add(dep);
         assembly.setDependencies(dependencies);
 
-        assembly.setConfiguration(getPrioritizationProperties(granularity, technique, dbPath, projectName, generateFaultsFile, calcAPFD));
+        assembly.setConfiguration(getPrioritizationProperties(config));
         plugins.add(assembly);
 
     }
-    
-    public static Model getPom(String projectFolder){
-        Model model = null;
-        MavenXpp3Reader reader = new MavenXpp3Reader();
-        File newProjectDir = new File(projectFolder);
-        if (newProjectDir.exists())
-        {
-            File pom = new File(newProjectDir, "pom.xml");
-            if (pom.exists())
-            {
-                try
-                {
-                    model = reader.read(new FileReader(pom));
-                   
-                } catch (FileNotFoundException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (XmlPullParserException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-        return model;
-    }
-    
-    public static void writePom(String projectFolder, Model model){
-        File newProjectDir = new File(projectFolder);
-        if (newProjectDir.exists())
-        {
-            File pom = new File(newProjectDir, "pom.xml");
-            if (pom.exists())
-            {
-                try
-                {
-                    MavenXpp3Writer writer = new MavenXpp3Writer();
-                    OutputStream output = new FileOutputStream(pom);
-                    writer.write(output, model);
-                    output.close();
-                   
-                } catch (FileNotFoundException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
-    }
 
-    private static Xpp3Dom getPrioritizationProperties(String granularity, String prioritization, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD)
-    {
+    private Xpp3Dom getPrioritizationProperties(PrioritizationConfig config) {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
+        if (getExcludes() != null) {
+            for (Xpp3Dom tag : getExcludes()) {
+                configuration.addChild(tag);
+            }
+        }
         configuration.addChild(createConfigurationNode("argLine", "@{argLine}"));
         configuration.addChild(createConfigurationNode("reuseForks", "true"));
         configuration.addChild(createConfigurationNode("forkCount", "1"));
@@ -232,28 +181,26 @@ public class PomManager
         configuration.addChild(createConfigurationNode("parallelOptimized", "false"));
         Xpp3Dom properties = new Xpp3Dom("properties");
         configuration.addChild(properties);
-        properties.addChild(createPropertyNode("granularity", granularity));
-        properties.addChild(createPropertyNode("prioritization", prioritization));
-        properties.addChild(createPropertyNode("apfd", Boolean.toString(calcAPFD)));
-        properties.addChild(createPropertyNode("faultsFile", Boolean.toString(generateFaultsFile)));
+        properties.addChild(createPropertyNode("granularity", config.getGranularity()));
+        properties.addChild(createPropertyNode("prioritization", config.getTechnique()));
+        properties.addChild(createPropertyNode("apfd", Boolean.toString(config.isCalcAPFD())));
+        properties.addChild(createPropertyNode("faultsFile", Boolean.toString(config.isGenerateFaultsFile())));
 
-        if (!dbPath.equals(""))
-        {
-            properties.addChild(createPropertyNode("dbPath", dbPath));
-            properties.addChild(createPropertyNode("projectName", projectName));
+        if (!config.getDbPath().equals("")) {
+            properties.addChild(createPropertyNode("dbPath", config.getDbPath()));
+            properties.addChild(createPropertyNode("projectName", config.getProjectName()));
         }
 
         return configuration;
     }
 
-    private static Xpp3Dom createConfigurationNode(String nodeName, String nodeValue){
+    private Xpp3Dom createConfigurationNode(String nodeName, String nodeValue) {
         Xpp3Dom node = new Xpp3Dom(nodeName);
         node.setValue(nodeValue);
         return node;
     }
-    
-    private static Xpp3Dom createPropertyNode(String propertyName, String propertyValue)
-    {
+
+    private Xpp3Dom createPropertyNode(String propertyName, String propertyValue) {
         Xpp3Dom property = new Xpp3Dom("property");
         Xpp3Dom name = new Xpp3Dom("name");
         name.setValue(propertyName);
@@ -264,8 +211,7 @@ public class PomManager
         return property;
     }
 
-    private static void addJacocoPlugin(List<Plugin> plugins)
-    {
+    private void addJacocoPlugin(List<Plugin> plugins) {
         Plugin plugin = MojoExecutor.plugin(
                 "org.jacoco",
                 "jacoco-maven-plugin",
