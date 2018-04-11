@@ -17,8 +17,8 @@ public class JavaTestClass extends JavaClass {
 
     private HashMap<String,ClassMethod> methods = null;
     
-    public JavaTestClass(String className, String path, String projectBasePath, String packageName) {
-        super(className, path, projectBasePath, packageName);
+    public JavaTestClass(String className, String path, String packageName) {
+        super(className, path, packageName);
         this.methods = AttributesExtractor.parseClass(path).getMethods();
     }
     

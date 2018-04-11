@@ -98,17 +98,32 @@ public class ProjectData
         {
             List<String> xmlFile = Files.readAllLines(file);
             StringBuilder sb = new StringBuilder();
+            boolean firstLine = true;
+            boolean validFile = false;
             for (String s : xmlFile)
             {
+                if(firstLine){
+                    firstLine = false;
+                    validFile = validateProjectData(s);
+                }
                 sb.append(s);
             }
-            XStream xstream = new XStream();
-            loadedProjectData = (ProjectData) xstream.fromXML(sb.toString());
+            if(validFile){
+                XStream xstream = new XStream();
+                loadedProjectData = (ProjectData) xstream.fromXML(sb.toString());
+            }
         } catch (IOException ex)
         {
 
         }
         return loadedProjectData;
+    }
+    
+    private static boolean validateProjectData(String firstLine){
+        if(firstLine.equals("<io.github.helenocampos.surefire.extractor.model.ProjectData>")){
+            return true;
+        }
+        return false;
     }
 
     public JavaSourceCodeClass getClassByName(String className)

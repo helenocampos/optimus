@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -52,7 +53,7 @@ public class AttributesExtractor extends VoidVisitorAdapter
             }
         }
         //junit 3 test has "Test" in its name
-        return declaration.getNameAsString().contains("Test");
+        return StringUtils.containsIgnoreCase(declaration.getNameAsString(),"Test");
     }
 
     @Override

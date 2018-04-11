@@ -234,6 +234,7 @@ public class OptimusProvider extends AbstractProvider
                 globalResult.aggregate(invokeExecutor(toRun));
             }
             long finishTime = System.currentTimeMillis();
+            broadcastTestFinished();
             if (this.calculateAPFD)
             {
                 ExecutionData executionData;
@@ -273,6 +274,24 @@ public class OptimusProvider extends AbstractProvider
             }
         }
         return null;
+    }
+    
+    private CoverageListener getCoverageListener(){
+        for (org.junit.runner.notification.RunListener listener : this.customRunListeners)
+        {
+            if (listener instanceof CoverageListener)
+            {
+                return (CoverageListener) listener;
+            }
+        }
+        return null;
+    }
+    
+    private void broadcastTestFinished(){
+        CoverageListener coverageListener = getCoverageListener();
+        if(coverageListener != null){
+            coverageListener.writeProjectDataFile();
+        }
     }
 
     private RunResult invokeExecutor(AbstractTest toRun) throws TestSetFailedException

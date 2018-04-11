@@ -333,17 +333,19 @@ public class CoverageAnalyzer implements Analyzer
             if (test.getTestGranularity().equals(Granularity.METHOD))
             {
                 ClassMethod method = testClass.getMethodByName(test.getTestName());
-                switch (granularity)
-                {
-                    case "statement":
-                        testCoverage.putAll(method.getCoverage().getStatements());
-                        break;
-                    case "method":
-                        testCoverage.putAll(method.getCoverage().getMethods());
-                        break;
-                    case "branch":
-                        testCoverage.putAll(method.getCoverage().getBranches());
-                        break;
+                if(method!=null){
+                    switch (granularity)
+                    {
+                        case "statement":
+                            testCoverage.putAll(method.getCoverage().getStatements());
+                            break;
+                        case "method":
+                            testCoverage.putAll(method.getCoverage().getMethods());
+                            break;
+                        case "branch":
+                            testCoverage.putAll(method.getCoverage().getBranches());
+                            break;
+                    }
                 }
             } else if (test.getTestGranularity().equals(Granularity.CLASS))
             {

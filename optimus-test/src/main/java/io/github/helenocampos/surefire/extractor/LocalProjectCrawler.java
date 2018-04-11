@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FilenameUtils;
@@ -37,7 +38,7 @@ public class LocalProjectCrawler
         testFiles = new HashMap<String, JavaTestClass>();
         classFilesPaths = new HashMap<String, String>();
         this.projectPath = projectPath;
-        crawl(new File(projectPath), "");
+        crawl(new File(projectPath));
         resolveClassFilesLocation();
         ProjectData data = ProjectData.getProjectDataFromFile();
         if (data != null)
@@ -76,44 +77,40 @@ public class LocalProjectCrawler
         
     }
     
-    private void crawl(File f, String packageName)
+    private void crawl(File f)
     {
-        if (f.isDirectory())
-        {
-            File[] subFiles = f.listFiles();
-            for (File subFile : subFiles)
-            {
-                if (subFile.isDirectory())
-                {
-                    if (packageName.equals(""))
-                    {
-                        packageName = subFile.getName();
-                    } else
-                    {
-                        packageName = packageName.concat("." + subFile.getName());
-                    }
+        Stack<File> fileStack = new Stack<>();
+        fileStack.push(f);
+        while(!fileStack.isEmpty()){
+            File child = fileStack.pop();
+            if(child.isDirectory()){
+                for(File subFile: child.listFiles()){
+                    fileStack.push(subFile);
                 }
-                crawl(subFile, packageName);
+            }else{
+                processFile(child);
             }
-        } else
-        {
-            String fileExtension = FilenameUtils.getExtension(f.getName());
-            if (fileExtension.equals(".java"))
+        }
+    }
+    
+    private void processFile(File f){
+        String fileExtension = FilenameUtils.getExtension(f.getName());
+            if (fileExtension.equals("java"))
             {
                 String packageNameSource = getPackageFromSourceFile(f.getPath());
                 if (isTestClass(f.getAbsolutePath()))
                 {
-                    JavaTestClass cls = new JavaTestClass(f.getName(), f.getPath(), this.projectPath, packageNameSource);
+                    JavaTestClass cls = new JavaTestClass(f.getName(), f.getPath(), packageNameSource);
                     testFiles.put(cls.getQualifiedName(), cls);
                 } else
                 {
-                    if (fileExtension.equals(".java"))
+                    if (fileExtension.equals("java"))
                     {
-                        JavaSourceCodeClass cls = new JavaSourceCodeClass(f.getName(), f.getPath(), this.projectPath, packageNameSource);
+                        JavaSourceCodeClass cls = new JavaSourceCodeClass(f.getName(), f.getPath(), packageNameSource);
                         javaFiles.put(cls.getQualifiedName(), cls);
                     }
                 }
-            } else if (fileExtension.equals(".class"))
+            } else if (fileExtension.equals("class"))
             {
                 try
                 {
@@ -128,7 +125,6 @@ public class LocalProjectCrawler
                 }
                 
             }
-        }
     }
     
     private String getPackageFromSourceFile(String file)

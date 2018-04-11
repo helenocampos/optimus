@@ -11,8 +11,8 @@ package io.github.helenocampos.surefire.extractor.model;
  */
 public class JavaSourceCodeClass extends JavaClass{
     
-    public JavaSourceCodeClass(String className, String path, String projectBasePath, String packageName) {
-        super(className, path, projectBasePath, packageName);
+    public JavaSourceCodeClass(String className, String path, String packageName) {
+        super(className, path, packageName);
         
     }
 

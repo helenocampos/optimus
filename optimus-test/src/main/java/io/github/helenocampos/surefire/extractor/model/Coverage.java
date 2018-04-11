@@ -14,58 +14,92 @@ import java.util.HashMap;
 public class Coverage
 {
 
-    private HashMap<String, boolean[]> statements;
-    private HashMap<String, boolean[]> methods;
-    private HashMap<String, boolean[]> branches;
+    private HashMap<String, String> statements;
+    private HashMap<String, String> methods;
+    private HashMap<String, String> branches;
 
     public Coverage(){
-        this.statements = new HashMap<String, boolean[]>();
-        this.methods = new HashMap<String, boolean[]>();
-        this.branches = new HashMap<String, boolean[]>();
+        this.statements = new HashMap<String, String>();
+        this.methods = new HashMap<String, String>();
+        this.branches = new HashMap<String, String>();
     }
     
     public HashMap<String, boolean[]> getStatements()
     {
-        return statements;
+        
+        return stringToArrayCoverage(statements);
     }
 
-    public void setStatements(HashMap<String, boolean[]> statements)
+    private HashMap<String,boolean[]> stringToArrayCoverage(HashMap<String,String> stringCoverageMap){
+        HashMap<String,boolean[]> booleanCoverageMap = new HashMap<String, boolean[]>();
+        for(String coverageKey: stringCoverageMap.keySet()){
+            String coverageString = stringCoverageMap.get(coverageKey);
+            if(coverageString!=null){
+                boolean[] coverageArray = new boolean[coverageString.length()];
+                for(int a=0; a<coverageString.length(); a++){
+                    char coverage = coverageString.charAt(a);
+                    if(coverage == '1'){
+                        coverageArray[a] = true;
+                    }else if(coverage=='0'){
+                        coverageArray[a] = false;
+                    }
+                }
+                booleanCoverageMap.put(coverageKey, coverageArray);
+            }
+        }
+        return booleanCoverageMap;
+    }
+    
+    public void setStatements(HashMap<String, String> statements)
     {
         this.statements = statements;
     }
 
     public HashMap<String, boolean[]> getMethods()
     {
-        return methods;
+        
+        return stringToArrayCoverage(methods);
     }
 
-    public void setMethods(HashMap<String, boolean[]> methods)
+    public void setMethods(HashMap<String, String> methods)
     {
         this.methods = methods;
     }
 
     public HashMap<String, boolean[]> getBranches()
     {
-        return branches;
+        return stringToArrayCoverage(branches);
     }
 
-    public void setBranches(HashMap<String, boolean[]> branches)
+    public void setBranches(HashMap<String, String> branches)
     {
         this.branches = branches;
+    }
+    
+    private String getCoverageString(boolean[] coverageArray){
+        String coverageString = "";
+        for(int a=0; a<coverageArray.length; a++){
+            String coverage = "0";
+            if(coverageArray[a]){
+                coverage = "1";
+            }
+            coverageString = coverageString + coverage;
+        }
+        return coverageString;
     }
 
     public void addStatementCoverage(String className, boolean[] coverageData)
     {
-        this.statements.put(className, coverageData);
+        this.statements.put(className, getCoverageString(coverageData));
     }
 
     public void addMethodCoverage(String className, boolean[] coverageData)
     {
-        this.methods.put(className, coverageData);
+        this.methods.put(className, getCoverageString(coverageData));
     }
 
     public void addBranchCoverage(String className, boolean[] coverageData)
     {
-        this.branches.put(className, coverageData);
+        this.branches.put(className, getCoverageString(coverageData));
     }
 }

@@ -26,10 +26,14 @@ import io.github.helenocampos.surefire.api.DefaultOrderer;
  */
 public class TotalMethodCoverage extends DefaultOrderer<AbstractTest>
 {
-
+    CoverageAnalyzer analyzer;
+    
+    public TotalMethodCoverage(){
+        analyzer = new CoverageAnalyzer();
+    }
+    
     public int compare(AbstractTest o1, AbstractTest o2)
     {
-        CoverageAnalyzer analyzer = new CoverageAnalyzer();
         float thiz = analyzer.getTestScore(o1, "method","total");
         float that = analyzer.getTestScore(o2, "method","total");
         return Float.compare(thiz, that);

@@ -36,17 +36,18 @@ public class CoverageListener extends RunListener
 {
 
     private String projectPath;
+    private ProjectData projectData;
 
     public CoverageListener(String projectPath)
     {
         super();
         this.projectPath = projectPath;
+        this.projectData = ProjectData.getProjectDataFromFile();
     }
 
     public void testFinished(Description description) throws Exception
     {
         super.testFinished(description);
-        ProjectData projectData = ProjectData.getProjectDataFromFile();
         JavaTestClass testClass = projectData.getTestClassByName(description.getClassName());
         if (testClass != null)
         {
@@ -133,8 +134,12 @@ public class CoverageListener extends RunListener
                     }
                 }.setParams(projectData, testMethod));
                 reader.read();
-                projectData.writeProjectDataFile();
+                
             }
         }
+    }
+    
+    public void writeProjectDataFile(){
+        projectData.writeProjectDataFile();
     }
 }

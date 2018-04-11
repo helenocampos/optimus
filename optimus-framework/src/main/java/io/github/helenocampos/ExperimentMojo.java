@@ -167,7 +167,8 @@ public class ExperimentMojo
         }
         for (int i = 0; i < executionsAmount; i++) {
             long start = System.currentTimeMillis();
-            logMessage("Executing tests with " + technique + " prioritization technique");
+            String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
+            logMessage("Executing tests with " + technique + " prioritization technique. Started at: "+timeStamp);
             Runtime rt = Runtime.getRuntime();
             pomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
             pomManager.setupPrioritizationPlugin(getPrioritizationConfig(technique, outputExperimentFolder.getAbsolutePath(), outputExperimentFolder.getName(), generateFaultsFile, calcAPFD));

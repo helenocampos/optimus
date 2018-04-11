@@ -27,9 +27,14 @@ import io.github.helenocampos.surefire.api.DefaultOrderer;
 public class TotalBranchCoverage extends DefaultOrderer<AbstractTest>
 {
 
+    CoverageAnalyzer analyzer;
+    
+    public TotalBranchCoverage(){
+        analyzer = new CoverageAnalyzer();
+    }
+    
     public int compare(AbstractTest o1, AbstractTest o2)
     {
-        CoverageAnalyzer analyzer = new CoverageAnalyzer();
         float thiz = analyzer.getTestScore(o1, "branch","total");
         float that = analyzer.getTestScore(o2, "branch","total");
         return Float.compare(thiz, that);

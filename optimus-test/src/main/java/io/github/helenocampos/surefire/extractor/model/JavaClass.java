@@ -13,15 +13,13 @@ public abstract class JavaClass{
 
     private String classFileName;
     private String path;
-    private String projectBasePath;
     private String packageName;
     private String classFilePath;
 
 
-    public JavaClass(String className, String path, String projectBasePath, String packageName) {
+    public JavaClass(String className, String path, String packageName) {
         this.classFileName = className;
         this.path = path;
-        this.projectBasePath = projectBasePath;
         this.packageName = packageName;
     }
     
@@ -52,14 +50,6 @@ public abstract class JavaClass{
     
     public String toString(){
         return this.getClassName();
-    }
-
-    public String getProjectBasePath() {
-        return projectBasePath;
-    }
-
-    public void setProjectBasePath(String projectBasePath) {
-        this.projectBasePath = projectBasePath;
     }
 
     public String getPackageName() {

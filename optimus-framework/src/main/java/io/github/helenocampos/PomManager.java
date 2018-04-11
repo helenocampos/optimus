@@ -11,16 +11,19 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.Normalizer;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.maven.model.Build;
+import org.apache.maven.model.Contributor;
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Developer;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
+import org.apache.maven.model.io.DefaultModelWriter;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.twdata.maven.mojoexecutor.MojoExecutor;
@@ -55,13 +58,12 @@ public class PomManager {
             if (pom.exists()) {
                 try {
                     pomModel = reader.read(new FileReader(pom));
-
                 } catch (FileNotFoundException ex) {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (IOException ex) {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (XmlPullParserException ex) {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
+//                    Logger.getLogger(PomManager.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -74,9 +76,10 @@ public class PomManager {
             File pom = new File(newProjectDir, "pom.xml");
             if (pom.exists()) {
                 try {
-                    MavenXpp3Writer writer = new MavenXpp3Writer();
+                    DefaultModelWriter writer = new DefaultModelWriter();
                     OutputStream output = new FileOutputStream(pom);
-                    writer.write(output, model);
+                    replaceSpecialCharacters(model);
+                    writer.write(output, null, model);
                     output.close();
                 } catch (FileNotFoundException ex) {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
@@ -87,6 +90,23 @@ public class PomManager {
         }
     }
 
+    private void replaceSpecialCharacters(Model model){
+        List<Contributor> contributors = model.getContributors();
+        if(contributors!=null){
+            for(Contributor contributor: contributors){
+                String name = contributor.getName();
+                contributor.setName(Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}", ""));
+            }
+        }
+        List<Developer> developers = model.getDevelopers();
+        if(developers!=null){
+            for(Developer developer: developers){
+                String name = developer.getName();
+                developer.setName(Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}", ""));
+            }
+        }
+    }
+    
     public void setupPrioritizationPlugin(PrioritizationConfig config) {
         Model model = readPom(config.getProjectFolder());
         Build build = model.getBuild();
