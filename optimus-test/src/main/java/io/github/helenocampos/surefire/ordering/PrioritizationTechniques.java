@@ -10,6 +10,7 @@ import io.github.helenocampos.surefire.ordering.techniques.AdditionalBranchCover
 import io.github.helenocampos.surefire.ordering.techniques.AdditionalMethodCoverage;
 import io.github.helenocampos.surefire.ordering.techniques.AdditionalStatementCoverage;
 import io.github.helenocampos.surefire.ordering.techniques.AlphabeticalOrder;
+import io.github.helenocampos.surefire.ordering.techniques.MostExecutedLinesOrder;
 import io.github.helenocampos.surefire.ordering.techniques.MostFailuresFirstOrder;
 import io.github.helenocampos.surefire.ordering.techniques.OptimalOrder;
 import io.github.helenocampos.surefire.ordering.techniques.RandomPrioritization;
@@ -36,6 +37,7 @@ public enum PrioritizationTechniques
     ADDITIONAL_STATEMENT_COVERAGE("additional statement coverage", AdditionalStatementCoverage.class),
     ADDITIONAL_METHOD_COVERAGE("additional method coverage", AdditionalMethodCoverage.class),
     ADDITIONAL_BRANCH_COVERAGE("additional branch coverage", AdditionalBranchCoverage.class),
+    MOST_EXECUTED_LINES("most executed lines", MostExecutedLinesOrder.class),
     MOST_FAILURES_FIRST("most failures first", MostFailuresFirstOrder.class);
 
     PrioritizationTechniques(String name, Class orderer)

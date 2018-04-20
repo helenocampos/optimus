@@ -5,7 +5,8 @@
  */
 package io.github.helenocampos.surefire;
 
-import io.github.helenocampos.surefire.ordering.Granularity;
+import io.github.helenocampos.testing.AbstractTest;
+import io.github.helenocampos.testing.Granularity;
 import java.lang.reflect.Method;
 import java.util.List;
 

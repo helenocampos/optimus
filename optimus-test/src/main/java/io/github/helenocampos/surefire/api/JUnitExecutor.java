@@ -15,7 +15,7 @@
  */
 package io.github.helenocampos.surefire.api;
 
-import io.github.helenocampos.surefire.AbstractTest;
+import io.github.helenocampos.testing.AbstractTest;
 import org.apache.maven.surefire.suite.RunResult;
 import org.apache.maven.surefire.testset.TestSetFailedException;
 

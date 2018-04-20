@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package io.github.helenocampos.surefire.extractor.model;
+package io.github.helenocampos.extractor.model;
 
-import io.github.helenocampos.surefire.extractor.AttributesExtractor;
+import io.github.helenocampos.extractor.AttributesExtractor;
 import java.util.HashMap;
 
 /**

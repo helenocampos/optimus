@@ -15,7 +15,7 @@
  */
 package io.github.helenocampos.surefire.junit4;
 
-import io.github.helenocampos.surefire.AbstractTest;
+import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.api.JUnitExecutor;
 import java.lang.reflect.Method;
 import java.util.List;

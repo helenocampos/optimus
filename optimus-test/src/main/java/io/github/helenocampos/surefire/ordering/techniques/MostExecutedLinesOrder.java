@@ -15,8 +15,8 @@
  */
 package io.github.helenocampos.surefire.ordering.techniques;
 
+import io.github.helenocampos.executiontraceanalyzer.ExecutionTraceAnalyzer;
 import io.github.helenocampos.testing.AbstractTest;
-import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
 import io.github.helenocampos.surefire.ordering.Strategy;
 import io.github.helenocampos.surefire.api.DefaultOrderer;
 
@@ -24,21 +24,30 @@ import io.github.helenocampos.surefire.api.DefaultOrderer;
  *
  * @author helenocampos
  */
-public class TotalStatementCoverage extends DefaultOrderer<AbstractTest>
+public class MostExecutedLinesOrder extends DefaultOrderer<AbstractTest>
 {
-    CoverageAnalyzer analyzer;
-    
-    public TotalStatementCoverage(){
-        analyzer = new CoverageAnalyzer();
+
+    private ExecutionTraceAnalyzer analyzer;
+
+    public MostExecutedLinesOrder()
+    {
+        analyzer = new ExecutionTraceAnalyzer();
     }
-    
+
     public int compare(AbstractTest o1, AbstractTest o2)
     {
-        float thiz = analyzer.getTestScore(o1, "statement","total");
-        float that = analyzer.getTestScore(o2, "statement","total");
-        return Float.compare(thiz, that);
+        if (analyzer != null)
+        {
+            float thiz = analyzer.getTestExecutionScore(o1);
+            float that = analyzer.getTestExecutionScore(o2);
+            return Float.compare(thiz, that);
+        } else
+        {
+            return 0;
+        }
+
     }
-    
+
     @Override
     public String getStrategy()
     {

@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package io.github.helenocampos.surefire;
+package io.github.helenocampos.testing;
 
-import io.github.helenocampos.surefire.ordering.Granularity;
+import io.github.helenocampos.testing.Granularity;
 
 /**
  *

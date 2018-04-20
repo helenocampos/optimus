@@ -1,7 +1,8 @@
 package io.github.helenocampos.surefire;
 
+import io.github.helenocampos.testing.AbstractTest;
+import io.github.helenocampos.extractor.LocalProjectCrawler;
 import io.github.helenocampos.surefire.api.JUnitExecutor;
-import io.github.helenocampos.surefire.extractor.LocalProjectCrawler;
 import io.github.helenocampos.surefire.junit4.APFDListener;
 import io.github.helenocampos.surefire.junit4.ClassAPFDListener;
 import io.github.helenocampos.surefire.junit4.MethodAPFDListener;
@@ -9,7 +10,7 @@ import io.github.helenocampos.surefire.junit4.CoverageListener;
 import io.github.helenocampos.surefire.junit4.FaultsListener;
 import io.github.helenocampos.surefire.junit4.HistoricalDataListener;
 import io.github.helenocampos.surefire.junit4.JUnit4Executor;
-import io.github.helenocampos.surefire.ordering.Granularity;
+import io.github.helenocampos.testing.Granularity;
 import io.github.helenocampos.surefire.ordering.TestsSorter;
 import io.github.helenocampos.surefire.report.ExecutionData;
 import io.github.helenocampos.surefire.util.JUnit4TestChecker;

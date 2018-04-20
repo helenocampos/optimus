@@ -13,5 +13,7 @@
         <module>optimus-framework</module>
         <module>fault-injection-plugin</module>
         <module>OptimusHistoricalAnalyzer</module>
+        <module>OptimusExecutionTraceAnalyzer</module>
+        <module>Optimus-common</module>
     </modules>
 </project>

@@ -1,13 +1,13 @@
-package io.github.helenocampos.surefire.extractor;
+package io.github.helenocampos.extractor;
 
-import io.github.helenocampos.surefire.extractor.model.JavaSourceCodeClass;
-import io.github.helenocampos.surefire.extractor.model.JavaTestClass;
+import io.github.helenocampos.extractor.model.JavaSourceCodeClass;
+import io.github.helenocampos.extractor.model.JavaTestClass;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
-import io.github.helenocampos.surefire.extractor.model.ProjectData;
+import io.github.helenocampos.extractor.model.ProjectData;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

@@ -48,25 +48,10 @@
             <classifier>runtime</classifier>
         </dependency>
         <dependency>
-            <groupId>com.github.javaparser</groupId>
-            <artifactId>javaparser-core</artifactId>
-            <version>3.5.18</version>
-        </dependency>
-        <dependency>
-            <groupId>com.thoughtworks.xstream</groupId>
-            <artifactId>xstream</artifactId>
-            <version>1.4.9</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.maven.surefire</groupId>
             <artifactId>surefire-providers</artifactId>
             <version>2.20.1</version>
             <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.7</version>
         </dependency>
         <dependency>
             <groupId>io.github.helenocampos</groupId>
@@ -74,14 +59,14 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.bcel</groupId>
-            <artifactId>bcel</artifactId>
-            <version>6.2</version>
+            <groupId>io.github.helenocampos</groupId>
+            <artifactId>OptimusExecutionTraceAnalyzer</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
+         <dependency>
+            <groupId>io.github.helenocampos</groupId>
+            <artifactId>Optimus-common</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

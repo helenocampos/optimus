@@ -1,5 +1,6 @@
 package io.github.helenocampos.surefire;
 
+import io.github.helenocampos.testing.AbstractTest;
 import java.lang.annotation.Annotation;
 import java.util.Iterator;
 import java.util.LinkedList;

@@ -5,10 +5,11 @@
  */
 package io.github.helenocampos.surefire.junit4;
 
-import io.github.helenocampos.surefire.extractor.model.ClassMethod;
-import io.github.helenocampos.surefire.extractor.model.JavaClass;
-import io.github.helenocampos.surefire.extractor.model.JavaTestClass;
-import io.github.helenocampos.surefire.extractor.model.ProjectData;
+
+import io.github.helenocampos.extractor.model.ClassMethod;
+import io.github.helenocampos.extractor.model.JavaClass;
+import io.github.helenocampos.extractor.model.JavaTestClass;
+import io.github.helenocampos.extractor.model.ProjectData;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import org.jacoco.agent.rt.RT;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IClassCoverage;
+import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.analysis.ILine;
 import org.jacoco.core.analysis.IMethodCoverage;
 import org.jacoco.core.data.ExecutionData;
@@ -25,7 +27,6 @@ import org.jacoco.core.data.IExecutionDataVisitor;
 import org.jacoco.core.data.ISessionInfoVisitor;
 import org.jacoco.core.data.SessionInfo;
 import org.junit.runner.Description;
-import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 
 /**
@@ -94,6 +95,7 @@ public class CoverageListener extends RunListener
                                 analyzer.analyzeAll(new File(clazz.getClassFilePath()));
                                 for (IClassCoverage classCoverage : coverageBuilder.getClasses())
                                 {
+                                    testMethod.getCoverage().addLinesCovered(data.getName(), getLineCoverageString(classCoverage));
                                     boolean[] branchProbes = new boolean[classCoverage.getBranchCounter().getTotalCount()];
                                     int currentBranchIndex = 0;
                                     if (branchProbes.length != 0)
@@ -126,6 +128,20 @@ public class CoverageListener extends RunListener
 
                     }
 
+                    public String getLineCoverageString(IClassCoverage classCoverage)
+                    {
+                        String linesCoveredString = "";
+                        for (int x = 0; x < classCoverage.getLastLine(); x++)
+                        {
+                            ILine line = classCoverage.getLine(x);
+                            if ((line.getStatus() == ICounter.PARTLY_COVERED) || (line.getStatus() == ICounter.FULLY_COVERED))
+                            {
+                                linesCoveredString = linesCoveredString + Integer.toString(x) + ",";
+                            }
+                        }
+                        return linesCoveredString;
+                    }
+
                     public IExecutionDataVisitor setParams(ProjectData projectData, ClassMethod testMethod)
                     {
                         this.projectData = projectData;
@@ -134,12 +150,13 @@ public class CoverageListener extends RunListener
                     }
                 }.setParams(projectData, testMethod));
                 reader.read();
-                
+
             }
         }
     }
-    
-    public void writeProjectDataFile(){
+
+    public void writeProjectDataFile()
+    {
         projectData.writeProjectDataFile();
     }
 }

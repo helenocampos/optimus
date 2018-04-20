@@ -3,15 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package io.github.helenocampos.surefire.api;
+package io.github.helenocampos.executiontraceanalyzer.cobertura;
 
-import io.github.helenocampos.surefire.AbstractTest;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 /**
  *
  * @author helenocampos
  */
-public interface Analyzer
+@XStreamAlias("condition")
+public class CoberturaCondition
 {
-    public float getTestScore(AbstractTest test, String... arguments);
+    
 }

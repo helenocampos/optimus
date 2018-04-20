@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package io.github.helenocampos.surefire.extractor.model;
+package io.github.helenocampos.extractor.model;
 
 /**
  *

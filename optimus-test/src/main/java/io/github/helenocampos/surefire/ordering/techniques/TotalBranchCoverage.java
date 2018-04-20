@@ -15,7 +15,7 @@
  */
 package io.github.helenocampos.surefire.ordering.techniques;
 
-import io.github.helenocampos.surefire.AbstractTest;
+import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
 import io.github.helenocampos.surefire.ordering.Strategy;
 import io.github.helenocampos.surefire.api.DefaultOrderer;

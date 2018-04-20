@@ -1,4 +1,4 @@
-package io.github.helenocampos.surefire.extractor;
+package io.github.helenocampos.extractor;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
@@ -7,7 +7,7 @@ import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import io.github.helenocampos.surefire.extractor.model.ClassMethod;
+import io.github.helenocampos.extractor.model.ClassMethod;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;

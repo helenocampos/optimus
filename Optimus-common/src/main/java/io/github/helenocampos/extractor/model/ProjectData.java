@@ -1,4 +1,4 @@
-package io.github.helenocampos.surefire.extractor.model;
+package io.github.helenocampos.extractor.model;
 
 import com.thoughtworks.xstream.XStream;
 import java.io.IOException;
@@ -120,7 +120,7 @@ public class ProjectData
     }
     
     private static boolean validateProjectData(String firstLine){
-        if(firstLine.equals("<io.github.helenocampos.surefire.extractor.model.ProjectData>")){
+        if(firstLine.equals("<io.github.helenocampos.extractor.model.ProjectData>")){
             return true;
         }
         return false;

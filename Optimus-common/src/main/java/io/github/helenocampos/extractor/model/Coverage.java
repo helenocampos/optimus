@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package io.github.helenocampos.surefire.extractor.model;
+package io.github.helenocampos.extractor.model;
 
 import java.util.HashMap;
 
@@ -17,11 +17,13 @@ public class Coverage
     private HashMap<String, String> statements;
     private HashMap<String, String> methods;
     private HashMap<String, String> branches;
+    private HashMap<String, String> coveredLines;
 
     public Coverage(){
         this.statements = new HashMap<String, String>();
         this.methods = new HashMap<String, String>();
         this.branches = new HashMap<String, String>();
+        this.coveredLines = new HashMap<String, String>();
     }
     
     public HashMap<String, boolean[]> getStatements()
@@ -88,6 +90,10 @@ public class Coverage
         return coverageString;
     }
 
+    public void addLinesCovered(String className, String coveredLinesString){
+        this.getCoveredLines().put(className, coveredLinesString);
+    }
+        
     public void addStatementCoverage(String className, boolean[] coverageData)
     {
         this.statements.put(className, getCoverageString(coverageData));
@@ -101,5 +107,15 @@ public class Coverage
     public void addBranchCoverage(String className, boolean[] coverageData)
     {
         this.branches.put(className, getCoverageString(coverageData));
+    }
+
+    public HashMap<String, String> getCoveredLines()
+    {
+        return coveredLines;
+    }
+
+    public void setCoveredLines(HashMap<String, String> coveredLines)
+    {
+        this.coveredLines = coveredLines;
     }
 }

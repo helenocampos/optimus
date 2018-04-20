@@ -18,7 +18,7 @@ package io.github.helenocampos.surefire.junit3;
  * specific language governing permissions and limitations
  * under the License.
  */
-import io.github.helenocampos.surefire.AbstractTest;
+import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.api.JUnitExecutor;
 import org.apache.maven.surefire.common.junit3.JUnit3Reflector;
 import org.apache.maven.surefire.common.junit3.JUnit3TestChecker;

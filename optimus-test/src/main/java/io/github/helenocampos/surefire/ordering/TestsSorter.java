@@ -5,7 +5,7 @@
  */
 package io.github.helenocampos.surefire.ordering;
 
-import io.github.helenocampos.surefire.AbstractTest;
+import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.api.AdditionalOrderer;
 import io.github.helenocampos.surefire.api.DefaultOrderer;
 import io.github.helenocampos.surefire.api.Orderer;

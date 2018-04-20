@@ -5,13 +5,13 @@
  */
 package io.github.helenocampos.surefire.analyzer.coverage;
 
-import io.github.helenocampos.surefire.AbstractTest;
-import io.github.helenocampos.surefire.api.Analyzer;
-import io.github.helenocampos.surefire.extractor.model.ClassMethod;
-import io.github.helenocampos.surefire.extractor.model.Coverage;
-import io.github.helenocampos.surefire.extractor.model.JavaTestClass;
-import io.github.helenocampos.surefire.extractor.model.ProjectData;
-import io.github.helenocampos.surefire.ordering.Granularity;
+import io.github.helenocampos.extractor.model.ClassMethod;
+import io.github.helenocampos.extractor.model.Coverage;
+import io.github.helenocampos.extractor.model.JavaTestClass;
+import io.github.helenocampos.extractor.model.ProjectData;
+import io.github.helenocampos.testing.AbstractTest;
+import io.github.helenocampos.testing.Analyzer;
+import io.github.helenocampos.testing.Granularity;
 import java.util.HashMap;
 import java.util.Map;
 

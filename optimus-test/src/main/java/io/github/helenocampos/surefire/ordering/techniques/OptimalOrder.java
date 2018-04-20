@@ -15,11 +15,11 @@
  */
 package io.github.helenocampos.surefire.ordering.techniques;
 
-import io.github.helenocampos.surefire.AbstractTest;
+import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.ordering.Strategy;
 import io.github.helenocampos.surefire.api.DefaultOrderer;
 import io.github.helenocampos.surefire.junit4.FaultRevealingTest;
-import io.github.helenocampos.surefire.ordering.Granularity;
+import io.github.helenocampos.testing.Granularity;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
