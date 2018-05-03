@@ -16,7 +16,7 @@ package io.github.helenocampos;
  * limitations under the License.
  */
 import com.sun.javafx.PlatformUtil;
-import io.github.helenocampos.surefire.ordering.PrioritizationTechniques;
+import io.github.helenocampos.surefire.ordering.techniques.PrioritizationTechniques;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;

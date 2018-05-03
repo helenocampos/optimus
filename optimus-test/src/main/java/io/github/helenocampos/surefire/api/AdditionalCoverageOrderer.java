@@ -15,14 +15,32 @@
  */
 package io.github.helenocampos.surefire.api;
 
+import java.util.HashMap;
 import java.util.List;
 
 /**
  *
  * @author helenocampos
  */
-public abstract class AdditionalOrderer<T> implements Orderer{
+public abstract class AdditionalCoverageOrderer<T> extends AdditionalOrderer<T>{
+    private HashMap<String, boolean[]> coveredCode;
     
-    public abstract T getNextTest(List<T> tests, List<T> alreadyOrderedTests);
+    @Override
+    public T getNextTest(List<T> tests, List<T> alreadyOrderedTests){
+        return getHighestCoverageTest(tests);
+    }
+    public abstract T getHighestCoverageTest(List<T> tests);
+    
+    public HashMap<String,boolean[]> getCoveredCode(){
+        return this.coveredCode;
+    }
+    
+    public void setCoveredCode(HashMap<String,boolean[]> coveredCode){
+        this.coveredCode = coveredCode;
+    }
+    
+    public void updateCoveredCode(HashMap<String, boolean[]> newCoveredCode){
+        this.coveredCode.putAll(newCoveredCode);
+    }
     
 }

@@ -2,9 +2,11 @@ package io.github.helenocampos.surefire;
 
 import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.extractor.LocalProjectCrawler;
+import io.github.helenocampos.extractor.model.ProjectData;
 import io.github.helenocampos.surefire.api.JUnitExecutor;
 import io.github.helenocampos.surefire.junit4.APFDListener;
 import io.github.helenocampos.surefire.junit4.ClassAPFDListener;
+import io.github.helenocampos.surefire.junit4.CoberturaListener;
 import io.github.helenocampos.surefire.junit4.MethodAPFDListener;
 import io.github.helenocampos.surefire.junit4.CoverageListener;
 import io.github.helenocampos.surefire.junit4.FaultsListener;
@@ -55,6 +57,9 @@ public class OptimusProvider extends AbstractProvider
     private String dbPath;
     private String projectName;
     private boolean generateFaultsFile = false;
+    private boolean collectCoberturaData = false;
+    private ProjectData projectData;
+    private boolean collectCoverageData = true;
 
     public OptimusProvider(ProviderParameters booterParameters)
     {
@@ -70,6 +75,7 @@ public class OptimusProvider extends AbstractProvider
 
         this.junit4TestChecker = new JUnit4TestChecker(testClassLoader);
         LocalProjectCrawler crawler = new LocalProjectCrawler(this.projectPath);
+        this.projectData = crawler.getProjectData();
 
         String exampleTestClassName = providerParameters.getProviderProperties().get("tc.0");
         if (exampleTestClassName != null)
@@ -95,7 +101,10 @@ public class OptimusProvider extends AbstractProvider
                 setupProperties();
                 if (!integrationTests)
                 {
-                    this.customRunListeners.add(new CoverageListener(this.projectPath));
+                    if (collectCoverageData)
+                    {
+                        this.customRunListeners.add(new CoverageListener(this.projectPath, this.projectData));
+                    }
                     if (this.calculateAPFD)
                     {
                         if (this.testGranularity.equals(Granularity.METHOD.getName()))
@@ -117,6 +126,10 @@ public class OptimusProvider extends AbstractProvider
                     {
                         this.customRunListeners.add(new FaultsListener(getAPFDListener()));
                     }
+                }
+                if (this.collectCoberturaData)
+                {
+                    this.customRunListeners.add(new CoberturaListener(this.projectPath, this.projectData));
                 }
             }
         }
@@ -152,7 +165,8 @@ public class OptimusProvider extends AbstractProvider
         this.testGranularity = properties.getProperty("granularity");
         this.prioritizationTechnique = properties.getProperty("prioritization");
         this.dbPath = properties.getProperty("dbPath");
-
+        this.collectCoverageData = Boolean.valueOf(properties.getProperty("collectCoverageData", "true"));
+        this.collectCoberturaData = Boolean.valueOf(properties.getProperty("collectCoberturaData", "false"));
         if (this.testGranularity == null && this.prioritizationTechnique == null)
         {
             this.testGranularity = getProviderProperties("granularity", "class");
@@ -167,10 +181,10 @@ public class OptimusProvider extends AbstractProvider
             properties.setProperty("dbPath", this.dbPath);
         }
         this.projectName = getProviderProperties("projectName", null);
-        if(this.projectName!=null){
-                    properties.setProperty("projectName", this.projectName);
+        if (this.projectName != null)
+        {
+            properties.setProperty("projectName", this.projectName);
         }
-
 
     }
 
@@ -215,7 +229,7 @@ public class OptimusProvider extends AbstractProvider
         {
             tests.add((AbstractTest) test);
         }
-        if (!integrationTests)
+        if (!integrationTests && tests.size() > 0)
         {
             TestsSorter sorter = new TestsSorter(consoleStream, projectName);
             tests = sorter.sort(tests, prioritizationTechnique, testGranularity);
@@ -230,26 +244,31 @@ public class OptimusProvider extends AbstractProvider
             RunResult globalResult = new RunResult(0, 0, 0, 0);
             long startTime = System.currentTimeMillis();
             Iterable<AbstractTest> testsToRun = orderTests(getSuites());
+            boolean hasExecutableTests = false;
             for (AbstractTest toRun : testsToRun)
             {
+                hasExecutableTests = true;
                 globalResult.aggregate(invokeExecutor(toRun));
             }
             long finishTime = System.currentTimeMillis();
-            broadcastTestFinished();
-            if (this.calculateAPFD)
+            if (hasExecutableTests)
             {
-                ExecutionData executionData;
-                APFDListener listener = getAPFDListener();
-                executionData = listener.calculateAPFD();
-                if (executionData != null)
+                broadcastTestFinished();
+                if (this.calculateAPFD)
                 {
-                    executionData.setTechnique(prioritizationTechnique);
-                    executionData.setTestGranularity(testGranularity);
-                    executionData.setProjectPath(projectPath);
-                    float executionTime = (float) (finishTime - startTime) / 1000;
-                    executionData.setExecutionTime(executionTime);
-                    executionData.setExecutionDate(new SimpleDateFormat("HH:mm:ss MM/dd/yyyy").format(new Date()));
-                    executionData.writeExecutionData();
+                    ExecutionData executionData;
+                    APFDListener listener = getAPFDListener();
+                    executionData = listener.calculateAPFD();
+                    if (executionData != null)
+                    {
+                        executionData.setTechnique(prioritizationTechnique);
+                        executionData.setTestGranularity(testGranularity);
+                        executionData.setProjectPath(projectPath);
+                        float executionTime = (float) (finishTime - startTime) / 1000;
+                        executionData.setExecutionTime(executionTime);
+                        executionData.setExecutionDate(new SimpleDateFormat("HH:mm:ss MM/dd/yyyy").format(new Date()));
+                        executionData.writeExecutionData();
+                    }
                 }
             }
             return globalResult;
@@ -276,8 +295,9 @@ public class OptimusProvider extends AbstractProvider
         }
         return null;
     }
-    
-    private CoverageListener getCoverageListener(){
+
+    private CoverageListener getCoverageListener()
+    {
         for (org.junit.runner.notification.RunListener listener : this.customRunListeners)
         {
             if (listener instanceof CoverageListener)
@@ -287,12 +307,22 @@ public class OptimusProvider extends AbstractProvider
         }
         return null;
     }
-    
-    private void broadcastTestFinished(){
-        CoverageListener coverageListener = getCoverageListener();
-        if(coverageListener != null){
-            coverageListener.writeProjectDataFile();
+
+    private CoberturaListener getCoberturaListener()
+    {
+        for (org.junit.runner.notification.RunListener listener : this.customRunListeners)
+        {
+            if (listener instanceof CoberturaListener)
+            {
+                return (CoberturaListener) listener;
+            }
         }
+        return null;
+    }
+
+    private void broadcastTestFinished()
+    {
+        this.projectData.writeProjectDataFile();
     }
 
     private RunResult invokeExecutor(AbstractTest toRun) throws TestSetFailedException

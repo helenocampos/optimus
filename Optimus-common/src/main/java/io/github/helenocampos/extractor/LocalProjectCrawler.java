@@ -31,6 +31,7 @@ public class LocalProjectCrawler
     private HashMap<String, JavaTestClass> testFiles;
     private HashMap<String, String> classFilesPaths;
     private String projectPath;
+    private ProjectData projectData;
     
     public LocalProjectCrawler(String projectPath)
     {
@@ -40,19 +41,17 @@ public class LocalProjectCrawler
         this.projectPath = projectPath;
         crawl(new File(projectPath));
         resolveClassFilesLocation();
-        ProjectData data = ProjectData.getProjectDataFromFile();
-        if (data != null)
+        projectData = ProjectData.getProjectDataFromFile();
+        if (projectData != null)
         {
-            data.updateClasses(javaFiles);
-            data.updateTests(testFiles);
+            projectData.updateClasses(javaFiles);
+            projectData.updateTests(testFiles);
         } else
         {
-            data = new ProjectData(projectPath);
-            data.setClasses(javaFiles);
-            data.setTests(testFiles);
+            projectData = new ProjectData(projectPath);
+            projectData.setClasses(javaFiles);
+            projectData.setTests(testFiles);
         }
-        
-        data.writeProjectDataFile();
     }
     
     private void resolveClassFilesLocation()
@@ -110,7 +109,7 @@ public class LocalProjectCrawler
                         javaFiles.put(cls.getQualifiedName(), cls);
                     }
                 }
-            } else if (fileExtension.equals("class"))
+            } else if (fileExtension.equals("class") && f.getPath().contains("target"))
             {
                 try
                 {
@@ -216,5 +215,10 @@ public class LocalProjectCrawler
         final List<JavaTestClass> javaTestClasses = new ArrayList();
         javaTestClasses.addAll(this.testFiles.values());
         return javaTestClasses;
+    }
+
+    public ProjectData getProjectData()
+    {
+        return projectData;
     }
 }

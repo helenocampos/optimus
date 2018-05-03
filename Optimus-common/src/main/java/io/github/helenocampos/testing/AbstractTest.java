@@ -5,8 +5,6 @@
  */
 package io.github.helenocampos.testing;
 
-import io.github.helenocampos.testing.Granularity;
-
 /**
  *
  * @author helenocampos

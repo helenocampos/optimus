@@ -39,11 +39,11 @@ public class CoverageListener extends RunListener
     private String projectPath;
     private ProjectData projectData;
 
-    public CoverageListener(String projectPath)
+    public CoverageListener(String projectPath, ProjectData projectData)
     {
         super();
         this.projectPath = projectPath;
-        this.projectData = ProjectData.getProjectDataFromFile();
+        this.projectData = projectData;
     }
 
     public void testFinished(Description description) throws Exception

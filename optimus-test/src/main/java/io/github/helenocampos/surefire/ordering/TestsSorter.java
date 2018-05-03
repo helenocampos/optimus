@@ -5,6 +5,7 @@
  */
 package io.github.helenocampos.surefire.ordering;
 
+import io.github.helenocampos.surefire.ordering.techniques.PrioritizationTechniques;
 import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.api.AdditionalOrderer;
 import io.github.helenocampos.surefire.api.DefaultOrderer;
@@ -53,9 +54,9 @@ public class TestsSorter
     public List<AbstractTest> sortAdditional(List<AbstractTest> tests, AdditionalOrderer<AbstractTest> testsOrderer){
         List<AbstractTest> sortedTests = new LinkedList<AbstractTest>();
         while(!tests.isEmpty()){
-            AbstractTest highestCoverageTest = testsOrderer.getHighestCoverageTest(tests);
-            sortedTests.add(highestCoverageTest);
-            tests.remove(highestCoverageTest);
+            AbstractTest nextTest = testsOrderer.getNextTest(tests, sortedTests);
+            sortedTests.add(nextTest);
+            tests.remove(nextTest);
         }
         return sortedTests;
     }

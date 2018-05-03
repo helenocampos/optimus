@@ -6,8 +6,6 @@
 package io.github.helenocampos.executiontraceanalyzer;
 
 import com.sun.javafx.PlatformUtil;
-import io.github.helenocampos.executiontraceanalyzer.cobertura.CoberturaCoverage;
-import io.github.helenocampos.executiontraceanalyzer.cobertura.CoberturaParser;
 import io.github.helenocampos.extractor.model.ClassMethod;
 import io.github.helenocampos.extractor.model.JavaTestClass;
 import io.github.helenocampos.extractor.model.ProjectData;
@@ -30,70 +28,72 @@ public class ExecutionTraceAnalyzer
 {
 
     private ProjectData projectData;
-    private CoberturaCoverage coberturaData;
     private HashMap<String, TestExecutionProfile> testsProfiles;
 
     public ExecutionTraceAnalyzer()
+    {
+        initializeAnalyzer();
+    }
+
+    private void initializeAnalyzer()
     {
         this.projectData = ProjectData.getProjectDataFromFile();
         this.testsProfiles = new HashMap<>();
         if (this.projectData != null)
         {
-            //execute cobertura plugin
             executeCoberturaPlugin(new File(projectData.getProjectPath()));
-
-            parseCoberturaReport();
-            coberturaData.indexClasses();
+            this.projectData = ProjectData.getProjectDataFromFile();
             HashMap<String, JavaTestClass> tests = projectData.getTests();
-            for(String testClassName: tests.keySet()){
+            for (String testClassName : tests.keySet())
+            {
                 JavaTestClass testClass = tests.get(testClassName);
-                HashMap<String,ClassMethod> testMethods = testClass.getMethods();
-                for(String testMethodName: testMethods.keySet()){
+                HashMap<String, ClassMethod> testMethods = testClass.getMethods();
+                for (String testMethodName : testMethods.keySet())
+                {
                     ClassMethod classMethod = testMethods.get(testMethodName);
-                    TestExecutionProfile executionProfile = new TestExecutionProfile(classMethod, coberturaData.getClassesIndex());
-                    testsProfiles.put(testClassName+"."+testMethodName, executionProfile);
+                    TestExecutionProfile executionProfile = new TestExecutionProfile(classMethod, projectData.getClasses());
+                    testsProfiles.put(testClassName + "." + testMethodName, executionProfile);
                 }
             }
         }
     }
-    
-    public float getTestExecutionScore(AbstractTest test){
+
+    public float getTestExecutionScore(AbstractTest test)
+    {
         float score = 0;
-        if(test.getTestGranularity().equals(Granularity.METHOD)){
+        if (test.getTestGranularity().equals(Granularity.METHOD))
+        {
             score = getTestExecutionCount(test.getQualifiedName());
-        }else if(test.getTestGranularity().equals(Granularity.CLASS)){
+        } else if (test.getTestGranularity().equals(Granularity.CLASS))
+        {
             JavaTestClass testClass = projectData.getTestClassByName(test.getQualifiedName());
-            for(ClassMethod method: testClass.getMethods().values()){
-                score+=getTestExecutionCount(testClass.getQualifiedName()+"."+method.getName());
+            for (ClassMethod method : testClass.getMethods().values())
+            {
+                score += getTestExecutionCount(testClass.getQualifiedName() + "." + method.getName());
             }
         }
         return score;
     }
-    
-    private float getTestExecutionCount(String testName){
-        TestExecutionProfile testProfile = testsProfiles.get(testName);
-        return testProfile.getTotalLinesExecuted();
-    }
 
-    //parse cobertura report  /target/site/cobertura/coverage.xml
-    private void parseCoberturaReport()
+    private float getTestExecutionCount(String testName)
     {
-        Path coverageReport = Paths.get(projectData.getProjectPath(), "target", "site", "cobertura", "coverage.xml");
-        File reportFile = coverageReport.toFile();
-        if (reportFile.exists())
+        float score = 0;
+        TestExecutionProfile testProfile = testsProfiles.get(testName);
+        if (testProfile != null)
         {
-            this.coberturaData = CoberturaParser.parse(reportFile);
+            score = testProfile.getTotalLinesExecuted();
         }
+        return score;
     }
-
     private void executeCoberturaPlugin(File projectFolder)
     {
         deleteExistingCoberturaFile();
         Runtime rt = Runtime.getRuntime();
         invokeProcess(rt, projectFolder);
     }
-    
-    private void deleteExistingCoberturaFile(){
+
+    private void deleteExistingCoberturaFile()
+    {
         Path coberturaFilePath = Paths.get(projectData.getProjectPath(), "target", "cobertura", "cobertura.ser");
         File coberturaFile = coberturaFilePath.toFile();
         if (coberturaFile.exists())
@@ -106,7 +106,7 @@ public class ExecutionTraceAnalyzer
     {
         try
         {
-            String mvnInvokation = "mvn cobertura:cobertura -Dcobertura.report.format=xml";
+            String mvnInvokation = "mvn cobertura:cobertura -Dcobertura.report.format=xml -Dprioritization=default -Dgranularity=method -Dmaven.test.skip=false -DskipTests=false -Dskip=false -Dmaven.surefire.skip=false -DcollectCoverageData=false -DcollectCoberturaData=true";
 
             if (PlatformUtil.isWindows())
             {
@@ -130,5 +130,45 @@ public class ExecutionTraceAnalyzer
         {
             Logger.getLogger(ExecutionTraceAnalyzer.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public String getTestOrderedSequence(AbstractTest test)
+    {
+        String orderedSequence = "";
+        if (test.getTestGranularity().equals(Granularity.METHOD))
+        {
+            orderedSequence = getTestOrderedSequence(test.getQualifiedName());
+        } else if (test.getTestGranularity().equals(Granularity.CLASS))
+        {
+            JavaTestClass testClass = projectData.getTestClassByName(test.getQualifiedName());
+            String frequencyProfile = "";
+            for (ClassMethod method : testClass.getMethods().values())
+            {
+                frequencyProfile += getTestFrequencyProfile(testClass.getQualifiedName() + "." + method.getName());
+            }
+                orderedSequence = TestExecutionProfile.getOrderedSequence(frequencyProfile);
+        }
+        return orderedSequence;
+    }
+
+    private String getTestOrderedSequence(String testName)
+    {
+        String orderedSequence = "";
+        TestExecutionProfile testProfile = testsProfiles.get(testName);
+        if (testProfile != null)
+        {
+            orderedSequence = testProfile.getOrderedSequence();
+        }
+        return orderedSequence;
+    }
+    
+    private String getTestFrequencyProfile(String testName){
+        String frequencyProfile = "";
+        TestExecutionProfile testProfile = testsProfiles.get(testName);
+        if (testProfile != null)
+        {
+            frequencyProfile = testProfile.getFrequencyProfile();
+        }
+        return frequencyProfile;
     }
 }

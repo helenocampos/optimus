@@ -3,20 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package io.github.helenocampos.surefire.ordering;
+package io.github.helenocampos.surefire.ordering.techniques;
 
 import io.github.helenocampos.surefire.api.Orderer;
-import io.github.helenocampos.surefire.ordering.techniques.AdditionalBranchCoverage;
-import io.github.helenocampos.surefire.ordering.techniques.AdditionalMethodCoverage;
-import io.github.helenocampos.surefire.ordering.techniques.AdditionalStatementCoverage;
-import io.github.helenocampos.surefire.ordering.techniques.AlphabeticalOrder;
-import io.github.helenocampos.surefire.ordering.techniques.MostExecutedLinesOrder;
-import io.github.helenocampos.surefire.ordering.techniques.MostFailuresFirstOrder;
-import io.github.helenocampos.surefire.ordering.techniques.OptimalOrder;
-import io.github.helenocampos.surefire.ordering.techniques.RandomPrioritization;
-import io.github.helenocampos.surefire.ordering.techniques.TotalBranchCoverage;
-import io.github.helenocampos.surefire.ordering.techniques.TotalMethodCoverage;
-import io.github.helenocampos.surefire.ordering.techniques.TotalStatementCoverage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.maven.surefire.report.ConsoleStream;
@@ -38,6 +27,7 @@ public enum PrioritizationTechniques
     ADDITIONAL_METHOD_COVERAGE("additional method coverage", AdditionalMethodCoverage.class),
     ADDITIONAL_BRANCH_COVERAGE("additional branch coverage", AdditionalBranchCoverage.class),
     MOST_EXECUTED_LINES("most executed lines", MostExecutedLinesOrder.class),
+    FARTHEST_FIRST_ORDERED_SEQUENCE("farthest first ordered sequence", FarthestFirstOrderedSequence.class),
     MOST_FAILURES_FIRST("most failures first", MostFailuresFirstOrder.class);
 
     PrioritizationTechniques(String name, Class orderer)

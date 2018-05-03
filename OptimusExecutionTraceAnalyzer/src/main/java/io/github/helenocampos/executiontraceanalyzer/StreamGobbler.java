@@ -9,6 +9,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.StreamHandler;
 
 /**
  *
@@ -29,12 +33,15 @@ public class StreamGobbler extends Thread {
     // empties buffers
     public void run() {
         try {
+            Logger log = Logger.getLogger(StreamGobbler.class.getName());
+            log.addHandler(new StreamHandler(System.out, new SimpleFormatter()));
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr);
             String line = null;
             while ((line = br.readLine()) != null) {
                 if(printLogs){
-                    System.out.println("[DEBUG - INNER PROCESS] [" +this.type+"]"+  line);
+                    log.log(Level.INFO, "[DEBUG - INNER PROCESS] [" +this.type+"]"+  line);
+//                    System.out.println("[DEBUG - INNER PROCESS] [" +this.type+"]"+  line);
                 }
             }
             isr.close();

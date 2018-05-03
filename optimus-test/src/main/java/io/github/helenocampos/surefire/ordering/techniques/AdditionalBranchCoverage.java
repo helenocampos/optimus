@@ -18,7 +18,7 @@ package io.github.helenocampos.surefire.ordering.techniques;
 
 import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
-import io.github.helenocampos.surefire.api.AdditionalOrderer;
+import io.github.helenocampos.surefire.api.AdditionalCoverageOrderer;
 import io.github.helenocampos.surefire.ordering.Strategy;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author helenocampos
  */
-public class AdditionalBranchCoverage extends AdditionalOrderer<AbstractTest>
+public class AdditionalBranchCoverage extends AdditionalCoverageOrderer<AbstractTest>
 {
 
     private CoverageAnalyzer analyzer;

@@ -18,12 +18,14 @@ public class Coverage
     private HashMap<String, String> methods;
     private HashMap<String, String> branches;
     private HashMap<String, String> coveredLines;
-
+    private HashMap<String,String> linesHit;
+    
     public Coverage(){
         this.statements = new HashMap<String, String>();
         this.methods = new HashMap<String, String>();
         this.branches = new HashMap<String, String>();
         this.coveredLines = new HashMap<String, String>();
+        this.linesHit = new HashMap<String, String>();
     }
     
     public HashMap<String, boolean[]> getStatements()
@@ -97,6 +99,21 @@ public class Coverage
     public void addStatementCoverage(String className, boolean[] coverageData)
     {
         this.statements.put(className, getCoverageString(coverageData));
+    }
+    
+    public void addLinesHit(String className, String lines)
+    {
+        if(this.linesHit==null){
+            this.linesHit = new HashMap<>();
+        }
+        this.linesHit.put(className, lines);
+    }
+    
+    public String getLinesHit(String className){
+        if(this.linesHit==null){
+            this.linesHit = new HashMap<>();
+        }
+        return this.linesHit.get(className);
     }
 
     public void addMethodCoverage(String className, boolean[] coverageData)

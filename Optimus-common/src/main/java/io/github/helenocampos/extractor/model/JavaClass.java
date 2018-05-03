@@ -15,6 +15,7 @@ public abstract class JavaClass{
     private String path;
     private String packageName;
     private String classFilePath;
+    private int executableLines;
 
 
     public JavaClass(String className, String path, String packageName) {
@@ -75,5 +76,15 @@ public abstract class JavaClass{
     public void setClassFilePath(String classFilePath)
     {
         this.classFilePath = classFilePath;
+    }
+
+    public int getExecutableLines()
+    {
+        return executableLines;
+    }
+
+    public void setExecutableLines(int executableLines)
+    {
+        this.executableLines = executableLines;
     }
 }
