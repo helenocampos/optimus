@@ -185,7 +185,7 @@ public class OptimusProvider extends AbstractProvider
         {
             properties.setProperty("projectName", this.projectName);
         }
-
+        properties.setProperty("clustersAmount", getProviderProperties("clustersAmount", null));
     }
 
     private String getProviderProperties(String property, String defaultValue)

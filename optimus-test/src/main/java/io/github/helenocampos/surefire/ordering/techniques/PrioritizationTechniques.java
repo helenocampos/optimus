@@ -27,7 +27,8 @@ public enum PrioritizationTechniques
     ADDITIONAL_METHOD_COVERAGE("additional method coverage", AdditionalMethodCoverage.class),
     ADDITIONAL_BRANCH_COVERAGE("additional branch coverage", AdditionalBranchCoverage.class),
     MOST_EXECUTED_LINES("most executed lines", MostExecutedLinesOrder.class),
-    FARTHEST_FIRST_ORDERED_SEQUENCE("farthest first ordered sequence", FarthestFirstOrderedSequence.class),
+    FOS("farthest first ordered sequence", FarthestFirstOrderedSequence.class),
+    GOS("greed-aided-clustering ordered sequence", GreedAidedClusteringOrderedSequence.class),
     MOST_FAILURES_FIRST("most failures first", MostFailuresFirstOrder.class);
 
     PrioritizationTechniques(String name, Class orderer)
@@ -44,11 +45,18 @@ public enum PrioritizationTechniques
         {
             if (technique.getName().equals(name))
             {
-                out.println("Ordering tests at the " + granularity + " level, using the " + name + " prioritization technique. \n");
+                if (out != null)
+                {
+                    out.println("Ordering tests at the " + granularity + " level, using the " + name + " prioritization technique. \n");
+                }
+
                 return technique.getOrderer();
             }
         }
-        out.println("Using default tests ordering at the " + granularity + " level. \n");
+        if (out != null)
+        {
+            out.println("Using default tests ordering at the " + granularity + " level. \n");
+        }
         return null;
     }
 

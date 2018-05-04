@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -85,6 +86,7 @@ public class ExecutionTraceAnalyzer
         }
         return score;
     }
+
     private void executeCoberturaPlugin(File projectFolder)
     {
         deleteExistingCoberturaFile();
@@ -132,6 +134,27 @@ public class ExecutionTraceAnalyzer
         }
     }
 
+    public String getTestOrderedSequence(List<AbstractTest> tests)
+    {
+        String frequencyProfile = "";
+        for (AbstractTest test : tests)
+        {
+            if (test.getTestGranularity().equals(Granularity.METHOD))
+            {
+                frequencyProfile += getTestFrequencyProfile(test.getQualifiedName());
+            } else if (test.getTestGranularity().equals(Granularity.CLASS))
+            {
+                JavaTestClass testClass = projectData.getTestClassByName(test.getQualifiedName());
+                
+                for (ClassMethod method : testClass.getMethods().values())
+                {
+                    frequencyProfile += getTestFrequencyProfile(testClass.getQualifiedName() + "." + method.getName());
+                }
+            }
+        }
+        return TestExecutionProfile.getOrderedSequence(frequencyProfile);
+    }
+
     public String getTestOrderedSequence(AbstractTest test)
     {
         String orderedSequence = "";
@@ -146,7 +169,7 @@ public class ExecutionTraceAnalyzer
             {
                 frequencyProfile += getTestFrequencyProfile(testClass.getQualifiedName() + "." + method.getName());
             }
-                orderedSequence = TestExecutionProfile.getOrderedSequence(frequencyProfile);
+            orderedSequence = TestExecutionProfile.getOrderedSequence(frequencyProfile);
         }
         return orderedSequence;
     }
@@ -161,8 +184,9 @@ public class ExecutionTraceAnalyzer
         }
         return orderedSequence;
     }
-    
-    private String getTestFrequencyProfile(String testName){
+
+    private String getTestFrequencyProfile(String testName)
+    {
         String frequencyProfile = "";
         TestExecutionProfile testProfile = testsProfiles.get(testName);
         if (testProfile != null)
