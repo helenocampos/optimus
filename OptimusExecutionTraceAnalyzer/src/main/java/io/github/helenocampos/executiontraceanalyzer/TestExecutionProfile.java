@@ -5,7 +5,7 @@
  */
 package io.github.helenocampos.executiontraceanalyzer;
 
-import io.github.helenocampos.extractor.model.ClassMethod;
+import io.github.helenocampos.extractor.model.TestMethod;
 import io.github.helenocampos.extractor.model.Coverage;
 import io.github.helenocampos.extractor.model.JavaClass;
 import io.github.helenocampos.extractor.model.JavaSourceCodeClass;
@@ -23,7 +23,7 @@ public class TestExecutionProfile
     private HashMap<String, String> executionTraces;
     private int totalLinesExecuted;
 
-    public TestExecutionProfile(ClassMethod testMethod, HashMap<String, JavaSourceCodeClass> projectClasses)
+    public TestExecutionProfile(TestMethod testMethod, HashMap<String, JavaSourceCodeClass> projectClasses)
     {
         this.executionTraces = new HashMap<>();
         this.totalLinesExecuted = 0;
@@ -47,7 +47,7 @@ public class TestExecutionProfile
         return stringHits;
     }
 
-    private void processExecutionTraces(ClassMethod testMethod, HashMap<String, JavaSourceCodeClass> projectClasses)
+    private void processExecutionTraces(TestMethod testMethod, HashMap<String, JavaSourceCodeClass> projectClasses)
     {
         Coverage coverage = testMethod.getCoverage();
         for (String classKey : projectClasses.keySet())

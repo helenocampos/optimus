@@ -29,6 +29,15 @@ public enum PrioritizationTechniques
     MOST_EXECUTED_LINES("most executed lines", MostExecutedLinesOrder.class),
     FOS("farthest first ordered sequence", FarthestFirstOrderedSequence.class),
     GOS("greed-aided-clustering ordered sequence", GreedAidedClusteringOrderedSequence.class),
+    MAXMIN_STATEMENT_ART("maxmin statement ART", MaxMinStatementART.class),
+    MAXMIN_BRANCH_ART("maxmin branch ART", MaxMinBranchART.class),
+    MAXMIN_METHOD_ART("maxmin method ART", MaxMinMethodART.class),
+    MAXAVG_STATEMENT_ART("maxavg statement ART", MaxAvgStatementART.class),
+    MAXAVG_BRANCH_ART("maxavg branch ART", MaxAvgBranchART.class),
+    MAXAVG_METHOD_ART("maxavg method ART", MaxAvgMethodART.class),
+    MAXMAX_STATEMENT_ART("maxmax statement ART", MaxMaxStatementART.class),
+    MAXMAX_BRANCH_ART("maxmax branch ART", MaxMaxBranchART.class),
+    MAXMAX_METHOD_ART("maxmax method ART", MaxMaxMethodART.class),
     MOST_FAILURES_FIRST("most failures first", MostFailuresFirstOrder.class);
 
     PrioritizationTechniques(String name, Class orderer)
@@ -43,7 +52,7 @@ public enum PrioritizationTechniques
     {
         for (PrioritizationTechniques technique : values())
         {
-            if (technique.getName().equals(name))
+            if (technique.getName().equalsIgnoreCase(name))
             {
                 if (out != null)
                 {

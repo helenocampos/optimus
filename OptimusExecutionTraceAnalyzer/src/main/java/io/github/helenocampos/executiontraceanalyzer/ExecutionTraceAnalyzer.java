@@ -6,7 +6,7 @@
 package io.github.helenocampos.executiontraceanalyzer;
 
 import com.sun.javafx.PlatformUtil;
-import io.github.helenocampos.extractor.model.ClassMethod;
+import io.github.helenocampos.extractor.model.TestMethod;
 import io.github.helenocampos.extractor.model.JavaTestClass;
 import io.github.helenocampos.extractor.model.ProjectData;
 import io.github.helenocampos.testing.AbstractTest;
@@ -48,10 +48,10 @@ public class ExecutionTraceAnalyzer
             for (String testClassName : tests.keySet())
             {
                 JavaTestClass testClass = tests.get(testClassName);
-                HashMap<String, ClassMethod> testMethods = testClass.getMethods();
+                HashMap<String, TestMethod> testMethods = testClass.getMethods();
                 for (String testMethodName : testMethods.keySet())
                 {
-                    ClassMethod classMethod = testMethods.get(testMethodName);
+                    TestMethod classMethod = testMethods.get(testMethodName);
                     TestExecutionProfile executionProfile = new TestExecutionProfile(classMethod, projectData.getClasses());
                     testsProfiles.put(testClassName + "." + testMethodName, executionProfile);
                 }
@@ -68,7 +68,7 @@ public class ExecutionTraceAnalyzer
         } else if (test.getTestGranularity().equals(Granularity.CLASS))
         {
             JavaTestClass testClass = projectData.getTestClassByName(test.getQualifiedName());
-            for (ClassMethod method : testClass.getMethods().values())
+            for (TestMethod method : testClass.getMethods().values())
             {
                 score += getTestExecutionCount(testClass.getQualifiedName() + "." + method.getName());
             }
@@ -146,7 +146,7 @@ public class ExecutionTraceAnalyzer
             {
                 JavaTestClass testClass = projectData.getTestClassByName(test.getQualifiedName());
                 
-                for (ClassMethod method : testClass.getMethods().values())
+                for (TestMethod method : testClass.getMethods().values())
                 {
                     frequencyProfile += getTestFrequencyProfile(testClass.getQualifiedName() + "." + method.getName());
                 }
@@ -165,7 +165,7 @@ public class ExecutionTraceAnalyzer
         {
             JavaTestClass testClass = projectData.getTestClassByName(test.getQualifiedName());
             String frequencyProfile = "";
-            for (ClassMethod method : testClass.getMethods().values())
+            for (TestMethod method : testClass.getMethods().values())
             {
                 frequencyProfile += getTestFrequencyProfile(testClass.getQualifiedName() + "." + method.getName());
             }

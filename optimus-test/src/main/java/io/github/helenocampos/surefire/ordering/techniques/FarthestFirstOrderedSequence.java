@@ -16,6 +16,7 @@
 package io.github.helenocampos.surefire.ordering.techniques;
 
 import io.github.helenocampos.executiontraceanalyzer.ExecutionTraceAnalyzer;
+import io.github.helenocampos.extractor.model.CoverageGranularity;
 import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
 import io.github.helenocampos.surefire.api.AdditionalOrderer;
 import io.github.helenocampos.testing.AbstractTest;
@@ -84,7 +85,7 @@ public class FarthestFirstOrderedSequence extends AdditionalOrderer<AbstractTest
         AbstractTest biggestCoverageTest = null;
         float biggestCoverage = Float.NEGATIVE_INFINITY;
         for(AbstractTest test: tests){
-            float score =coverageAnalyzer.getTestScore(test, "statement", "total");
+            float score =coverageAnalyzer.getTotalTestCoverage(test, CoverageGranularity.STATEMENT);
             if(score > biggestCoverage){
                 biggestCoverage = score;
                 biggestCoverageTest = test;

@@ -77,6 +77,7 @@ public class ProjectData
 
     public void writeProjectDataFile()
     {
+        normalizeCoverageData();
         XStream xstream = new XStream();
         List<String> lines = Arrays.asList(xstream.toXML(this));
         Path file = Paths.get("projectData.xml");
@@ -192,10 +193,10 @@ public class ProjectData
     {
         // adds new methods if they didnt exist in previous class
         JavaTestClass tcExistent = this.tests.get(tcNewKey);
-        HashMap<String, ClassMethod> newMethods = tcNew.getMethods();
+        HashMap<String, TestMethod> newMethods = tcNew.getMethods();
         if (tcExistent != null)
         {
-            HashMap<String, ClassMethod> previousMethods = tcExistent.getMethods();
+            HashMap<String, TestMethod> previousMethods = tcExistent.getMethods();
             for (String key : newMethods.keySet())
             {
                 previousMethods.putIfAbsent(key, newMethods.get(key));
@@ -226,5 +227,15 @@ public class ProjectData
     public JavaTestClass getTestClassByName(String testClassName)
     {
         return tests.get(testClassName);
+    }
+    
+    private void normalizeCoverageData(){
+        for(JavaTestClass testClass: tests.values()){
+            for(TestMethod testMethod: testClass.getMethods().values()){
+                for(JavaClass clazz: classes.values()){
+                    testMethod.getCoverage().includeRemainingClassesData(clazz);
+                }
+            }
+        }
     }
 }

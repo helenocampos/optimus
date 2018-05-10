@@ -15,7 +15,7 @@ import java.util.HashMap;
  */
 public class JavaTestClass extends JavaClass {
 
-    private HashMap<String,ClassMethod> methods = null;
+    private HashMap<String,TestMethod> methods = null;
     
     public JavaTestClass(String className, String path, String packageName) {
         super(className, path, packageName);
@@ -32,12 +32,12 @@ public class JavaTestClass extends JavaClass {
         return this.getClassName();
     }
 
-    public ClassMethod getMethodByName(String methodName)
+    public TestMethod getMethodByName(String methodName)
     {
         return this.methods.get(methodName);
     }
     
-    public HashMap<String, ClassMethod> getMethods(){
+    public HashMap<String, TestMethod> getMethods(){
         return this.methods;
     }
 }

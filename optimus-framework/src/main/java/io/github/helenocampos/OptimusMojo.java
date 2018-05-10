@@ -112,6 +112,9 @@ public abstract class OptimusMojo
     @Parameter(property = "", defaultValue = "false")
     private String printLogs = "";
     
+    @Parameter(property = "", defaultValue = "")
+    private String clustersAmount = "";
+    
     private final String jacocoVersion = "0.7.9";
     
     protected PomManager pomManager;
@@ -265,6 +268,9 @@ public abstract class OptimusMojo
             properties.addChild(createPropertyNode("dbPath", this.dbPath));
             properties.addChild(createPropertyNode("projectName", this.mavenProject.getName()));
         }
+        if(!clustersAmount.equals("")){
+            properties.addChild(createPropertyNode("clustersAmount", this.getClustersAmount()));
+        }
         
         return configuration;
     }
@@ -349,5 +355,15 @@ public abstract class OptimusMojo
     public void setVersionsFolder(String versionsFolder)
     {
         this.versionsFolder = versionsFolder;
+    }
+
+    public String getClustersAmount()
+    {
+        return clustersAmount;
+    }
+
+    public void setClustersAmount(String clustersAmount)
+    {
+        this.clustersAmount = clustersAmount;
     }
 }

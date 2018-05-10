@@ -5,21 +5,18 @@
  */
 package io.github.helenocampos.extractor.model;
 
-import java.util.HashMap;
-
 /**
  *
- * @author helenocampos This class is used to represent a method of a class from
- * the source code being tested. It is intended to be created when extracting
+ * @author helenocampos This class is used to represent a JUnit test method. It is intended to be created when extracting
  * info from the source code.
  */
-public class ClassMethod
+public class TestMethod
 {
 
     private String name;
     private Coverage coverage;
 
-    public ClassMethod(String methodDeclaration)
+    public TestMethod(String methodDeclaration)
     {
         this.name = methodDeclaration;
         this.coverage = new Coverage();

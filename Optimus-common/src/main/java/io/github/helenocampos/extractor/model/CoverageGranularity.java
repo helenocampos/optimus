@@ -3,13 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package io.github.helenocampos.testing;
+package io.github.helenocampos.extractor.model;
 
 /**
  *
  * @author helenocampos
  */
-public interface Analyzer
+public enum CoverageGranularity
 {
-    public float getTestScore(AbstractTest test, String... arguments);
+    STATEMENT,
+    BRANCH,
+    METHOD;
+   
 }

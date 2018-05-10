@@ -205,12 +205,13 @@ public class PomManager {
         properties.addChild(createPropertyNode("prioritization", config.getTechnique()));
         properties.addChild(createPropertyNode("apfd", Boolean.toString(config.isCalcAPFD())));
         properties.addChild(createPropertyNode("faultsFile", Boolean.toString(config.isGenerateFaultsFile())));
-
+        properties.addChild(createPropertyNode("collectCoverageData", Boolean.toString(config.isCollectCoverageData())));
+        properties.addChild(createPropertyNode("clustersAmount", config.getClustersAmount()));
+        
         if (!config.getDbPath().equals("")) {
             properties.addChild(createPropertyNode("dbPath", config.getDbPath()));
             properties.addChild(createPropertyNode("projectName", config.getProjectName()));
         }
-
         return configuration;
     }
 

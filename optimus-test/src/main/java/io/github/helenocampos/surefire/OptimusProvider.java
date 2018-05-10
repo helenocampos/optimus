@@ -165,7 +165,7 @@ public class OptimusProvider extends AbstractProvider
         this.testGranularity = properties.getProperty("granularity");
         this.prioritizationTechnique = properties.getProperty("prioritization");
         this.dbPath = properties.getProperty("dbPath");
-        this.collectCoverageData = Boolean.valueOf(properties.getProperty("collectCoverageData", "true"));
+        this.collectCoverageData = Boolean.valueOf(getProviderProperties("collectCoverageData", "true"));
         this.collectCoberturaData = Boolean.valueOf(properties.getProperty("collectCoberturaData", "false"));
         if (this.testGranularity == null && this.prioritizationTechnique == null)
         {
@@ -185,7 +185,7 @@ public class OptimusProvider extends AbstractProvider
         {
             properties.setProperty("projectName", this.projectName);
         }
-        properties.setProperty("clustersAmount", getProviderProperties("clustersAmount", null));
+        properties.setProperty("clustersAmount", getProviderProperties("clustersAmount", ""));
     }
 
     private String getProviderProperties(String property, String defaultValue)

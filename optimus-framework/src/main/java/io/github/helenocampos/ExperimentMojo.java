@@ -54,7 +54,7 @@ public class ExperimentMojo
 
     private final String MVN_CLEAN_TEST = "mvn clean test";
     private final String MVN_TEST = "mvn test";
-
+    
     public void execute()
             throws MojoExecutionException {
         pomManager = new PomManager(this.getMavenProject().getBasedir().getAbsolutePath());
@@ -108,22 +108,22 @@ public class ExperimentMojo
     private void executeTechniques(File projectFolder, boolean generateFaultsFile) throws MojoExecutionException {
         if (this.getPrioritizationTechniques() != null) {
             for (String technique : this.getPrioritizationTechniques()) {
-                invokePrioritization(technique, projectFolder, generateFaultsFile, true);
+                invokePrioritization(technique, projectFolder, generateFaultsFile, true, false);
             }
         } else {
             if (this.getPrioritization().equals("all")) {
                 for (String technique : PrioritizationTechniques.getAllTechniquesNames()) {
-                    invokePrioritization(technique, projectFolder, generateFaultsFile, true);
+                    invokePrioritization(technique, projectFolder, generateFaultsFile, true, false);
                 }
             } else {
-                invokePrioritization(this.getPrioritization(), projectFolder, generateFaultsFile, true);
+                invokePrioritization(this.getPrioritization(), projectFolder, generateFaultsFile, true, false);
             }
 
         }
     }
 
     private void collectCoverageAndGenerateFaultsFile(File projectFolder) throws MojoExecutionException {
-        invokePrioritization("default", projectFolder, true, false);
+        invokePrioritization("default", projectFolder, true, false, true);
     }
 
     private void executeMutationExperiment() throws MojoExecutionException {
@@ -139,7 +139,7 @@ public class ExperimentMojo
             File outputExperimentFolder = new File(new File(getExperimentOutputDirectory(), timeStamp).getAbsolutePath(), Integer.toString(x));
             outputExperimentFolder = new File(outputExperimentFolder, getMavenProject().getName());
             logMessage("Collecting coverage data");
-            collectCoverageData(outputExperimentFolder);
+            collectCoverageAndGenerateFaultsFile(outputExperimentFolder);
             executeTechniques(outputExperimentFolder, true);
         }
         logMessage("Generating reports");
@@ -160,7 +160,7 @@ public class ExperimentMojo
         System.out.println("-------------------------");
     }
 
-    private void invokePrioritization(String technique, File outputExperimentFolder, boolean generateFaultsFile, boolean calcAPFD) throws MojoExecutionException {
+    private void invokePrioritization(String technique, File outputExperimentFolder, boolean generateFaultsFile, boolean calcAPFD, boolean collectCoverage) throws MojoExecutionException {
         int executionsAmount = 1;
         if(technique.equals("random")){
             executionsAmount = Integer.valueOf(randomRepeat);
@@ -171,7 +171,7 @@ public class ExperimentMojo
             logMessage("Executing tests with " + technique + " prioritization technique. Started at: "+timeStamp);
             Runtime rt = Runtime.getRuntime();
             pomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
-            pomManager.setupPrioritizationPlugin(getPrioritizationConfig(technique, outputExperimentFolder.getAbsolutePath(), outputExperimentFolder.getName(), generateFaultsFile, calcAPFD));
+            pomManager.setupPrioritizationPlugin(getPrioritizationConfig(technique, outputExperimentFolder.getAbsolutePath(), outputExperimentFolder.getName(), generateFaultsFile, calcAPFD, collectCoverage));
             invokeProcess(rt, outputExperimentFolder, false);
             long finish = System.currentTimeMillis();
             double time = (double) (finish - start) / 1000;
@@ -179,7 +179,7 @@ public class ExperimentMojo
         }
     }
 
-    private PrioritizationConfig getPrioritizationConfig(String technique, String projectFolder, String projectName, boolean generateFaultsFile, boolean calcAPFD){
+    private PrioritizationConfig getPrioritizationConfig(String technique, String projectFolder, String projectName, boolean generateFaultsFile, boolean calcAPFD, boolean collectCoverage){
         PrioritizationConfig config = new PrioritizationConfig();
         config.setGranularity(this.getGranularity());
         config.setTechnique(technique);
@@ -188,6 +188,8 @@ public class ExperimentMojo
         config.setProjectName(projectName);
         config.setCalcAPFD(calcAPFD);
         config.setGenerateFaultsFile(generateFaultsFile);
+        config.setClustersAmount(this.getClustersAmount());
+        config.setCollectCoverageData(collectCoverage);
         return config;
     }
     

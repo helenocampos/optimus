@@ -5,109 +5,32 @@
  */
 package io.github.helenocampos.surefire.analyzer.coverage;
 
-import io.github.helenocampos.extractor.model.ClassMethod;
+import io.github.helenocampos.extractor.model.TestMethod;
 import io.github.helenocampos.extractor.model.Coverage;
+import io.github.helenocampos.extractor.model.CoverageGranularity;
 import io.github.helenocampos.extractor.model.JavaTestClass;
 import io.github.helenocampos.extractor.model.ProjectData;
 import io.github.helenocampos.testing.AbstractTest;
-import io.github.helenocampos.testing.Analyzer;
 import io.github.helenocampos.testing.Granularity;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  *
  * @author helenocampos
  */
-public class CoverageAnalyzer implements Analyzer
+public class CoverageAnalyzer
 {
 
-    private HashMap<String, boolean[]> coveredStatements;
-    private HashMap<String, boolean[]> coveredBranches;
-    private HashMap<String, boolean[]> coveredMethods;
     private ProjectData projectData;
 
     public CoverageAnalyzer()
     {
         this.projectData = ProjectData.getProjectDataFromFile();
-        initializeCoveredCode();
     }
 
-    private void initializeCoveredCode()
-    {
-        this.setCoveredStatements(new HashMap<String, boolean[]>());
-        this.setCoveredMethods(new HashMap<String, boolean[]>());
-        this.setCoveredBranches(new HashMap<String, boolean[]>());
-        if (this.projectData != null)
-        {
-            for (JavaTestClass testClass : projectData.getTests().values())
-            {
-                for (ClassMethod testMethod : testClass.getMethods().values())
-                {
-                    this.getCoveredStatements().putAll(testMethod.getCoverage().getStatements());
-                    this.getCoveredMethods().putAll(testMethod.getCoverage().getMethods());
-                    this.getCoveredBranches().putAll(testMethod.getCoverage().getBranches());
-                }
-            }
-
-        }
-        clearCoveredCode();
-    }
-
-    //set all coveredCode to false
-    private void clearCoveredCode()
-    {
-        this.getCoveredStatements().putAll(getClearStatementCoverage());
-        this.getCoveredMethods().putAll(getClearMethodCoverage());
-        this.getCoveredBranches().putAll(getClearBranchCoverage());
-    }
-
-    public HashMap<String, boolean[]> getClearStatementCoverage()
-    {
-        HashMap<String, boolean[]> statementCoverage = new HashMap<String, boolean[]>();
-        for (Map.Entry<String, boolean[]> coveredClass : this.getCoveredStatements().entrySet())
-        {
-            statementCoverage.put(coveredClass.getKey(), new boolean[coveredClass.getValue().length]);
-        }
-        return statementCoverage;
-    }
-
-    public HashMap<String, boolean[]> getClearMethodCoverage()
-    {
-        HashMap<String, boolean[]> methodCoverage = new HashMap<String, boolean[]>();
-        for (Map.Entry<String, boolean[]> coveredClass : this.getCoveredMethods().entrySet())
-        {
-            methodCoverage.put(coveredClass.getKey(), new boolean[coveredClass.getValue().length]);
-        }
-        return methodCoverage;
-    }
-
-    public HashMap<String, boolean[]> getClearBranchCoverage()
-    {
-        HashMap<String, boolean[]> branchCoverage = new HashMap<String, boolean[]>();
-        for (Map.Entry<String, boolean[]> coveredClass : this.getCoveredBranches().entrySet())
-        {
-            branchCoverage.put(coveredClass.getKey(), new boolean[coveredClass.getValue().length]);
-        }
-        return branchCoverage;
-    }
-
-    //argument 0 = coverage granularity (method, branch, statement)
-    //argument 1 = coverage variant (total, additional)
-    @Override
-    public float getTestScore(AbstractTest test, String... arguments)
-    {
-        float score = 0;
-        if (arguments.length == 2)
-        {
-            String granularity = arguments[0];
-            String variant = arguments[1];
-            score = getTestScore(test, granularity, variant);
-        }
-        return score;
-    }
-
-    private float getTestScore(AbstractTest test, String granularity, String variant)
+    public float getTotalTestCoverage(AbstractTest test, CoverageGranularity granularity)
     {
         float score = 0;
 
@@ -118,11 +41,14 @@ public class CoverageAnalyzer implements Analyzer
             {
                 if (test.getTestGranularity().equals(Granularity.METHOD))
                 {
-                    ClassMethod method = testClass.getMethodByName(test.getTestName());
-                    score = getTestMethodScore(method, granularity, variant);
+                    TestMethod method = testClass.getMethodByName(test.getTestName());
+                    score = getTestMethodTotalCoverage(method, granularity);
                 } else if (test.getTestGranularity().equals(Granularity.CLASS))
                 {
-                    score = getTestClassScore(testClass, granularity, variant);
+                    for (TestMethod method : testClass.getMethods().values())
+                    {
+                        score += getTestMethodTotalCoverage(method, granularity);
+                    }
                 }
             }
         }
@@ -130,290 +56,175 @@ public class CoverageAnalyzer implements Analyzer
         return score;
     }
 
-    private float getTestMethodScore(ClassMethod method, String granularity, String variant)
+    public float getAdditionalTestCoverage(AbstractTest test, CoverageGranularity granularity, List<AbstractTest> currentCandidateTests)
     {
         float score = 0;
 
+        if (this.projectData != null)
+        {
+            JavaTestClass testClass = this.projectData.getTestClassByName(test.getTestClass().getName());
+            if (testClass != null)
+            {
+                Coverage coveredCode = getCoverageFromTests(currentCandidateTests);
+                if (test.getTestGranularity().equals(Granularity.METHOD))
+                {
+                    TestMethod method = testClass.getMethodByName(test.getTestName());
+                    score = getTestMethodAdditionalCoverage(method, granularity, coveredCode);
+                } else if (test.getTestGranularity().equals(Granularity.CLASS))
+                {
+                    for (TestMethod method : testClass.getMethods().values())
+                    {
+                        score += getTestMethodAdditionalCoverage(method, granularity, coveredCode);
+                    }
+                }
+            }
+        }
+
+        return score;
+    }
+
+    private float getTestMethodTotalCoverage(TestMethod method, CoverageGranularity granularity)
+    {
+        float score = 0;
         if (method != null)
         {
-            switch (variant)
+            if (method.getCoverage() != null)
             {
-                case "total":
-                    switch (granularity)
+                for (String data : method.getCoverage().getCoverage(granularity).values())
+                {
+                    for (int x = 0; x < data.length(); x++)
                     {
-                        case "statement":
-                            score = getTotalStatementCoverageScore(method.getCoverage());
-                            break;
-                        case "method":
-                            score = getTotalMethodCoverageScore(method.getCoverage());
-                            break;
-                        case "branch":
-                            score = getTotalBranchCoverageScore(method.getCoverage());
-                            break;
+                        if (data.charAt(x) == '1')
+                        {
+                            score++;
+                        }
                     }
-                    break;
-                case "additional":
-                    switch (granularity)
-                    {
-                        case "statement":
-                            score = getAdditionalStatementCoverageScore(method.getCoverage());
-                            break;
-                        case "method":
-                            score = getAdditionalMethodCoverageScore(method.getCoverage());
-                            break;
-                        case "branch":
-                            score = getAdditionalBranchCoverageScore(method.getCoverage());
-                            break;
-                    }
-                    break;
+                }
             }
-        }
 
-        return score;
-    }
-
-    private float getTestClassScore(JavaTestClass test, String granularity, String variant)
-    {
-        float score = 0;
-        if (test != null)
-        {
-            for (ClassMethod method : test.getMethods().values())
-            {
-                score += getTestMethodScore(method, granularity, variant);
-            }
         }
         return score;
     }
 
-    //compares current coveredCode (coveredCode attribute) with this test coverage to return notYetCoveredScore
-    private float getAdditionalStatementCoverageScore(Coverage coverage)
+    private float getTestMethodAdditionalCoverage(TestMethod method, CoverageGranularity granularity, Coverage candidatesCoveredCode)
     {
         float additionalScore = 0;
-        for (String className : coverage.getStatements().keySet())
+        if (method != null)
         {
-            boolean[] coveredStatements = coverage.getStatements().get(className); //statements covered by the test contained in className
-            boolean[] alreadyCoveredStatements = this.getCoveredStatements().get(className);
-            for (int x = 0; x < coveredStatements.length; x++)
+            if (method.getCoverage() != null)
             {
-                if (coveredStatements[x])
+                Coverage coverage = method.getCoverage();
+                for (String className : coverage.getCoverage(granularity).keySet())
                 {
-                    //check if it is already covered by other tests in className
-                    if (alreadyCoveredStatements != null)
-                    {
-                        if (!alreadyCoveredStatements[x])
-                        {
-                            //statement not yet covered by other tests, compute one Score
-                            alreadyCoveredStatements[x] = true;
-                            additionalScore++;
+                    String coveredElements = coverage.getCoverage(granularity).get(className); //statements really covered by the test contained in className
+                    String candidatesCoveredElements = candidatesCoveredCode.getCoverage(granularity).get(className);
 
+                    if (candidatesCoveredElements == null)
+                    {
+                        candidatesCoveredElements = getClearedCoverage(coveredElements.length());
+                    }
+
+                    for (int x = 0; x < coveredElements.length(); x++)
+                    {
+                        if (coveredElements.charAt(x) == '1')
+                        {
+                            if (candidatesCoveredElements.charAt(x) == '0')
+                            {
+                                //element not yet covered by candidates tests, compute one Score
+                                candidatesCoveredElements = replaceCoverage(x, candidatesCoveredElements, '1');
+                                additionalScore++;
+
+                            }
                         }
                     }
+                    candidatesCoveredCode.getCoverage(granularity).put(className, candidatesCoveredElements);
                 }
             }
-            this.getCoveredStatements().put(className, alreadyCoveredStatements);
         }
-
-        return additionalScore;
-    }
-    
-    private float getAdditionalBranchCoverageScore(Coverage coverage)
-    {
-        float additionalScore = 0;
-        for (String className : coverage.getBranches().keySet())
-        {
-            boolean[] coveredBranches = coverage.getBranches().get(className); //branches covered by the test contained in className
-            boolean[] alreadyCoveredBranches = this.getCoveredBranches().get(className);
-            for (int x = 0; x < coveredBranches.length; x++)
-            {
-                if (coveredBranches[x])
-                {
-                    //check if it is already covered by other tests in className
-                    if (alreadyCoveredBranches != null)
-                    {
-                        if (!alreadyCoveredBranches[x])
-                        {
-                            //branch not yet covered by other tests, compute one Score
-                            alreadyCoveredBranches[x] = true;
-                            additionalScore++;
-
-                        }
-                    }
-                }
-            }
-            this.getCoveredBranches().put(className, alreadyCoveredBranches);
-        }
-
         return additionalScore;
     }
 
-    private float getAdditionalMethodCoverageScore(Coverage coverage)
+    private String getClearedCoverage(int size)
     {
-        float additionalScore = 0;
-        for (String className : coverage.getMethods().keySet())
+        String clearedCoverage = "";
+        for (int i = 0; i < size; i++)
         {
-            boolean[] coveredMethods = coverage.getMethods().get(className); //methods covered by the test contained in className
-            boolean[] alreadyCoveredMethods = this.getCoveredMethods().get(className);
-            for (int x = 0; x < coveredMethods.length; x++)
-            {
-                if (coveredMethods[x])
-                {
-                    //check if it is already covered by other tests in className
-                    if (alreadyCoveredMethods != null)
-                    {
-                        if (!alreadyCoveredMethods[x])
-                        {
-                            //method not yet covered by other tests, compute one Score
-                            alreadyCoveredMethods[x] = true;
-                            additionalScore++;
-
-                        }
-                    }
-                }
-            }
-            this.getCoveredMethods().put(className, alreadyCoveredMethods);
+            clearedCoverage += "0";
         }
-
-        return additionalScore;
+        return clearedCoverage;
     }
 
-    private float getTotalStatementCoverageScore(Coverage coverage)
+    private String replaceCoverage(int index, String coverageString, char newValue)
     {
-        float coveredStatementsTotal = 0;
-        for (boolean[] data : coverage.getStatements().values())
-        {
-            for (int x = 0; x < data.length; x++)
-            {
-                if (data[x])
-                {
-                    coveredStatementsTotal++;
-                }
-            }
-        }
-        return coveredStatementsTotal;
+        char[] stringChars = coverageString.toCharArray();
+        stringChars[index] = newValue;
+        return String.valueOf(stringChars);
     }
 
-    private float getTotalMethodCoverageScore(Coverage coverage)
+    private Coverage getCoverageFromTests(List<AbstractTest> tests)
     {
-        float coveredStatementsTotal = 0;
-        for (boolean[] data : coverage.getMethods().values())
+        Coverage testsCoverage = new Coverage();
+        for (AbstractTest test : tests)
         {
-            for (int x = 0; x < data.length; x++)
-            {
-                if (data[x])
-                {
-                    coveredStatementsTotal++;
-                }
-            }
+            Coverage testCoverage = new Coverage();
+            testCoverage.setStatements(getTestCoverage(test, CoverageGranularity.STATEMENT));
+            testCoverage.setMethods(getTestCoverage(test, CoverageGranularity.METHOD));
+            testCoverage.setBranches(getTestCoverage(test, CoverageGranularity.BRANCH));
+            testsCoverage = Coverage.merge(testsCoverage, testCoverage);
         }
-        return coveredStatementsTotal;
+        return testsCoverage;
     }
 
-    private float getTotalBranchCoverageScore(Coverage coverage)
-    {
-        float coveredStatementsTotal = 0;
-        for (boolean[] data : coverage.getBranches().values())
-        {
-            for (int x = 0; x < data.length; x++)
-            {
-                if (data[x])
-                {
-                    coveredStatementsTotal++;
-                }
-            }
-        }
-        return coveredStatementsTotal;
-    }
-
-    public HashMap<String, boolean[]> getTestCoverage(AbstractTest test, String granularity)
+    public LinkedHashMap<String, String> getTestCoverage(AbstractTest test, CoverageGranularity granularity)
     {
         JavaTestClass testClass = this.projectData.getTestClassByName(test.getTestClass().getName());
-        HashMap<String, boolean[]> testCoverage = new HashMap<String, boolean[]>();
+        LinkedHashMap<String, String> testCoverage = new LinkedHashMap<>();
         if (testClass != null)
         {
             if (test.getTestGranularity().equals(Granularity.METHOD))
             {
-                ClassMethod method = testClass.getMethodByName(test.getTestName());
-                if(method!=null){
-                    switch (granularity)
-                    {
-                        case "statement":
-                            testCoverage.putAll(method.getCoverage().getStatements());
-                            break;
-                        case "method":
-                            testCoverage.putAll(method.getCoverage().getMethods());
-                            break;
-                        case "branch":
-                            testCoverage.putAll(method.getCoverage().getBranches());
-                            break;
-                    }
+                TestMethod method = testClass.getMethodByName(test.getTestName());
+                if (method != null)
+                {
+                    testCoverage.putAll(method.getCoverage().getCoverage(granularity));
                 }
             } else if (test.getTestGranularity().equals(Granularity.CLASS))
             {
-                for (ClassMethod method : testClass.getMethods().values())
+                for (TestMethod method : testClass.getMethods().values())
                 {
-                    switch (granularity)
-                    {
-                        case "statement":
-                            testCoverage.putAll(method.getCoverage().getStatements());
-                            break;
-                        case "method":
-                            testCoverage.putAll(method.getCoverage().getMethods());
-                            break;
-                        case "branch":
-                            testCoverage.putAll(method.getCoverage().getBranches());
-                            break;
-                    }
+                    LinkedHashMap<String,String> methodCoverage = method.getCoverage().getCoverage(granularity);
+                    testCoverage = Coverage.merge(methodCoverage, testCoverage);
                 }
             }
         }
         return testCoverage;
     }
 
-    public HashMap<String, boolean[]> getCoveredStatements()
+    public String getTestCoverageString(AbstractTest test, CoverageGranularity coverageGranularity)
     {
-        return coveredStatements;
-    }
-
-    public void setCoveredStatements(HashMap<String, boolean[]> coveredStatements)
-    {
-        this.coveredStatements = coveredStatements;
-    }
-
-    public HashMap<String, boolean[]> getCoveredBranches()
-    {
-        return coveredBranches;
-    }
-
-    public void setCoveredBranches(HashMap<String, boolean[]> coveredBranches)
-    {
-        this.coveredBranches = coveredBranches;
-    }
-
-    public HashMap<String, boolean[]> getCoveredMethods()
-    {
-        return coveredMethods;
-    }
-
-    public void setCoveredMethods(HashMap<String, boolean[]> coveredMethods)
-    {
-        this.coveredMethods = coveredMethods;
-    }
-
-    public void updateCoveredStatements(HashMap<String, boolean[]> newCoveredCode)
-    {
-        this.coveredStatements.putAll(newCoveredCode);
-    }
-
-    public static HashMap<String, boolean[]> copyCoverageData(HashMap<String, boolean[]> oldData)
-    {
-        HashMap<String, boolean[]> newData = new HashMap<String, boolean[]>();
-        for (Map.Entry<String, boolean[]> entry : oldData.entrySet())
+        String coverageString = "";
+        JavaTestClass testClass = projectData.getTestClassByName(test.getTestClass().getCanonicalName());
+        if (testClass != null)
         {
-            boolean[] newProbe = new boolean[entry.getValue().length];
-            System.arraycopy(entry.getValue(), 0, newProbe, 0, newProbe.length);
-            newData.put(entry.getKey(), newProbe);
+            if (test.getTestGranularity().equals(Granularity.CLASS))
+            {
+                LinkedHashMap<String, String> testClassCoverage = new LinkedHashMap<>();
+                for (TestMethod method : testClass.getMethods().values())
+                {
+                    LinkedHashMap<String,String> testMethodCoverage = method.getCoverage().getCoverage(coverageGranularity);
+                    testClassCoverage = Coverage.merge(testMethodCoverage, testClassCoverage);
+                }
+                coverageString = Coverage.getCoverageString(coverageGranularity, testClassCoverage);
+            } else
+            {
+                TestMethod method = testClass.getMethodByName(test.getTestName());
+                if (method != null && method.getCoverage() != null)
+                {
+                    coverageString = method.getCoverage().getCoverageString(coverageGranularity);
+                }
+            }
         }
-        return newData;
-    }
 
+        return coverageString;
+    }
 }

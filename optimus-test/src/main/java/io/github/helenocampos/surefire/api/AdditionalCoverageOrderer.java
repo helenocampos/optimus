@@ -16,31 +16,56 @@
 package io.github.helenocampos.surefire.api;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
  *
  * @author helenocampos
  */
-public abstract class AdditionalCoverageOrderer<T> extends AdditionalOrderer<T>{
+public abstract class AdditionalCoverageOrderer<T> extends AdditionalOrderer<T>
+{
+
     private HashMap<String, boolean[]> coveredCode;
-    
+    private List<T> currentCoverageSet = new LinkedList<>();
+
     @Override
-    public T getNextTest(List<T> tests, List<T> alreadyOrderedTests){
-        return getHighestCoverageTest(tests);
+    public T getNextTest(List<T> tests, List<T> alreadyOrderedTests)
+    {
+        T nextTest = getNextTest(tests);
+        this.currentCoverageSet.add(nextTest);
+        return nextTest;
     }
-    public abstract T getHighestCoverageTest(List<T> tests);
-    
-    public HashMap<String,boolean[]> getCoveredCode(){
+
+    public abstract T getNextTest(List<T> tests);
+
+    public HashMap<String, boolean[]> getCoveredCode()
+    {
         return this.coveredCode;
     }
-    
-    public void setCoveredCode(HashMap<String,boolean[]> coveredCode){
+
+    public void setCoveredCode(HashMap<String, boolean[]> coveredCode)
+    {
         this.coveredCode = coveredCode;
     }
-    
-    public void updateCoveredCode(HashMap<String, boolean[]> newCoveredCode){
+
+    public void updateCoveredCode(HashMap<String, boolean[]> newCoveredCode)
+    {
         this.coveredCode.putAll(newCoveredCode);
     }
-    
+
+    public void addTestToCurrentCoverage(T test)
+    {
+        this.currentCoverageSet.add(test);
+    }
+
+    public void resetCurrentCoverage()
+    {
+        this.currentCoverageSet = new LinkedList<>();
+    }
+
+    public List<T> getCurrentCoverageSet()
+    {
+        return this.currentCoverageSet;
+    }
 }

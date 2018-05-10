@@ -15,33 +15,17 @@
  */
 package io.github.helenocampos.surefire.ordering.techniques;
 
-import io.github.helenocampos.testing.AbstractTest;
-import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
-import io.github.helenocampos.surefire.ordering.Strategy;
-import io.github.helenocampos.surefire.api.DefaultOrderer;
+import io.github.helenocampos.extractor.model.CoverageGranularity;
 
 /**
  *
  * @author helenocampos
  */
-public class TotalMethodCoverage extends DefaultOrderer<AbstractTest>
+public class TotalMethodCoverage extends TotalCoverage
 {
-    CoverageAnalyzer analyzer;
-    
-    public TotalMethodCoverage(){
-        analyzer = new CoverageAnalyzer();
-    }
-    
-    public int compare(AbstractTest o1, AbstractTest o2)
-    {
-        float thiz = analyzer.getTestScore(o1, "method","total");
-        float that = analyzer.getTestScore(o2, "method","total");
-        return Float.compare(thiz, that);
-    }
-    
     @Override
-    public String getStrategy()
+    public CoverageGranularity getCoverageGranularity()
     {
-        return Strategy.DEFAULT.getName();
+        return CoverageGranularity.METHOD;
     }
 }

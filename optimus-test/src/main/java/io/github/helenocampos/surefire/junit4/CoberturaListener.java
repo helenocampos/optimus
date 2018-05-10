@@ -5,7 +5,7 @@
  */
 package io.github.helenocampos.surefire.junit4;
 
-import io.github.helenocampos.extractor.model.ClassMethod;
+import io.github.helenocampos.extractor.model.TestMethod;
 import io.github.helenocampos.extractor.model.JavaClass;
 import io.github.helenocampos.extractor.model.JavaTestClass;
 import io.github.helenocampos.extractor.model.ProjectData;
@@ -46,7 +46,7 @@ public class CoberturaListener extends RunListener
         JavaTestClass testClass = projectData.getTestClassByName(description.getClassName());
         if (testClass != null)
         {
-            ClassMethod testMethod = testClass.getMethodByName(description.getMethodName());
+            TestMethod testMethod = testClass.getMethodByName(description.getMethodName());
             if (testMethod != null)
             {
                 Path coberturaFilePath = Paths.get(projectPath, "target", "cobertura", "cobertura.ser");

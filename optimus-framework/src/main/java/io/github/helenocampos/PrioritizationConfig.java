@@ -15,8 +15,10 @@ public class PrioritizationConfig {
     private String technique;
     private String projectFolder;
     private String dbPath;
+    private String clustersAmount;
     private String projectName;
     private boolean generateFaultsFile;
+    private boolean collectCoverageData;
     private boolean calcAPFD;
     
     public PrioritizationConfig(String granularity, String technique, String projectFolder, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD) {
@@ -128,5 +130,25 @@ public class PrioritizationConfig {
      */
     public void setCalcAPFD(boolean calcAPFD) {
         this.calcAPFD = calcAPFD;
+    }
+
+    public String getClustersAmount()
+    {
+        return clustersAmount;
+    }
+
+    public void setClustersAmount(String clustersAmount)
+    {
+        this.clustersAmount = clustersAmount;
+    }
+
+    public boolean isCollectCoverageData()
+    {
+        return collectCoverageData;
+    }
+
+    public void setCollectCoverageData(boolean collectCoverageData)
+    {
+        this.collectCoverageData = collectCoverageData;
     }
 }

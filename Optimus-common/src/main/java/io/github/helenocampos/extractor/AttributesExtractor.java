@@ -7,7 +7,7 @@ import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import io.github.helenocampos.extractor.model.ClassMethod;
+import io.github.helenocampos.extractor.model.TestMethod;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,12 +23,12 @@ import org.apache.commons.lang3.StringUtils;
 public class AttributesExtractor extends VoidVisitorAdapter
 {
 
-    private HashMap<String, ClassMethod> testMethods;
+    private HashMap<String, TestMethod> testMethods;
     private List<ImportDeclaration> importEntry;
 
     public AttributesExtractor()
     {
-        testMethods = new HashMap<String, ClassMethod>();
+        testMethods = new HashMap<String, TestMethod>();
         importEntry = new ArrayList<ImportDeclaration>();
     }
 
@@ -37,7 +37,7 @@ public class AttributesExtractor extends VoidVisitorAdapter
     {
         if (isTestMethod(declaration))
         {
-            this.testMethods.put(declaration.getNameAsString(), new ClassMethod(declaration.getNameAsString()));
+            this.testMethods.put(declaration.getNameAsString(), new TestMethod(declaration.getNameAsString()));
         }
         super.visit(declaration, arg);
     }
@@ -63,12 +63,12 @@ public class AttributesExtractor extends VoidVisitorAdapter
         super.visit(importEntry, arg);
     }
 
-    public HashMap<String, ClassMethod> getMethods()
+    public HashMap<String, TestMethod> getMethods()
     {
         return testMethods;
     }
 
-    public void setMethods(HashMap<String, ClassMethod> methods)
+    public void setMethods(HashMap<String, TestMethod> methods)
     {
         this.testMethods = methods;
     }

@@ -16,6 +16,8 @@ public abstract class JavaClass{
     private String packageName;
     private String classFilePath;
     private int executableLines;
+    private int executableBranches;
+    private int executableMethods;
 
 
     public JavaClass(String className, String path, String packageName) {
@@ -86,5 +88,25 @@ public abstract class JavaClass{
     public void setExecutableLines(int executableLines)
     {
         this.executableLines = executableLines;
+    }
+
+    public int getExecutableBranches()
+    {
+        return executableBranches;
+    }
+
+    public void setExecutableBranches(int executableBranches)
+    {
+        this.executableBranches = executableBranches;
+    }
+
+    public int getExecutableMethods()
+    {
+        return executableMethods;
+    }
+
+    public void setExecutableMethods(int executableMethods)
+    {
+        this.executableMethods = executableMethods;
     }
 }

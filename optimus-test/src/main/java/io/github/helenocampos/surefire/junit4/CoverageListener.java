@@ -6,7 +6,7 @@
 package io.github.helenocampos.surefire.junit4;
 
 
-import io.github.helenocampos.extractor.model.ClassMethod;
+import io.github.helenocampos.extractor.model.TestMethod;
 import io.github.helenocampos.extractor.model.JavaClass;
 import io.github.helenocampos.extractor.model.JavaTestClass;
 import io.github.helenocampos.extractor.model.ProjectData;
@@ -52,7 +52,7 @@ public class CoverageListener extends RunListener
         JavaTestClass testClass = projectData.getTestClassByName(description.getClassName());
         if (testClass != null)
         {
-            ClassMethod testMethod = testClass.getMethodByName(description.getMethodName());
+            TestMethod testMethod = testClass.getMethodByName(description.getMethodName());
             if (testMethod != null)
             {
                 final ByteArrayInputStream buffer = new ByteArrayInputStream(RT.getAgent().getExecutionData(true));
@@ -77,7 +77,7 @@ public class CoverageListener extends RunListener
                 reader.setExecutionDataVisitor(new IExecutionDataVisitor()
                 {
                     ProjectData projectData;
-                    ClassMethod testMethod;
+                    TestMethod testMethod;
 
                     public void visitClassExecution(final ExecutionData data)
                     {
@@ -85,6 +85,7 @@ public class CoverageListener extends RunListener
                         if (clazz != null)
                         {
                             testMethod.getCoverage().addStatementCoverage(data.getName(), data.getProbes());
+                            clazz.setExecutableLines(data.getProbes().length);
                             final CoverageBuilder coverageBuilder = new CoverageBuilder();
                             ExecutionDataStore store = new ExecutionDataStore();
                             store.put(data);
@@ -110,7 +111,7 @@ public class CoverageListener extends RunListener
                                         }
                                     }
                                     testMethod.getCoverage().addBranchCoverage(data.getName(), branchProbes);
-
+                                    clazz.setExecutableBranches(branchProbes.length);
                                     boolean[] methodProbes = new boolean[classCoverage.getMethodCounter().getTotalCount()];
                                     int currentMethodIndex = 0;
                                     for (IMethodCoverage methodCoverage : classCoverage.getMethods())
@@ -118,7 +119,7 @@ public class CoverageListener extends RunListener
                                         methodProbes[currentMethodIndex++] = methodCoverage.getMethodCounter().getCoveredCount() != 0;
                                     }
                                     testMethod.getCoverage().addMethodCoverage(data.getName(), methodProbes);
-
+                                    clazz.setExecutableMethods(methodProbes.length);
                                 }
                             } catch (IOException ex)
                             {
@@ -142,7 +143,7 @@ public class CoverageListener extends RunListener
                         return linesCoveredString;
                     }
 
-                    public IExecutionDataVisitor setParams(ProjectData projectData, ClassMethod testMethod)
+                    public IExecutionDataVisitor setParams(ProjectData projectData, TestMethod testMethod)
                     {
                         this.projectData = projectData;
                         this.testMethod = testMethod;

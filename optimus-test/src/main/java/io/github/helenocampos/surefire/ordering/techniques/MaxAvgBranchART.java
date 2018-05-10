@@ -21,11 +21,17 @@ import io.github.helenocampos.extractor.model.CoverageGranularity;
  *
  * @author helenocampos
  */
-public class AdditionalStatementCoverage extends AdditionalCoverage
+public class MaxAvgBranchART extends ART
 {
     @Override
     public CoverageGranularity getCoverageGranularity()
     {
-        return CoverageGranularity.STATEMENT;
+        return CoverageGranularity.BRANCH;
+    }
+
+    @Override
+    public SelectionFunction getSelectionFunction()
+    {
+        return SelectionFunction.MAXAVG;
     }
 }
