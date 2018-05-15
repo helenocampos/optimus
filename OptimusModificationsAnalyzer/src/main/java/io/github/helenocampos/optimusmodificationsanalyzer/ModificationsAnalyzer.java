@@ -20,7 +20,6 @@ import java.util.Set;
 public class ModificationsAnalyzer
 {
 
-    private String projectPath;
     private String sourceBackupPath;
     private ProjectData projectData;
 
@@ -29,17 +28,15 @@ public class ModificationsAnalyzer
         this.projectData = ProjectData.getProjectDataFromFile();
         if (projectData != null)
         {
-            this.projectPath = projectData.getProjectPath();
             this.sourceBackupPath = projectData.getSourceBackupPath();
         }
     }
-    
+
     public ModificationsAnalyzer(ProjectData projectData)
     {
         this.projectData = projectData;
         if (projectData != null)
         {
-            this.projectPath = projectData.getProjectPath();
             this.sourceBackupPath = projectData.getSourceBackupPath();
         }
     }
@@ -60,7 +57,7 @@ public class ModificationsAnalyzer
                     ProgramElement element = new ProgramElement(method, oldVersion, currentVersion, modificationsGranularity);
                     if (element.getDeltas().size() > 0)
                     {
-                        modifiedElements.add(key+"."+method);
+                        modifiedElements.add(key + "." + method);
                     }
                 }
             } else
@@ -100,9 +97,7 @@ public class ModificationsAnalyzer
                 {
                     element = new ProgramElement(key, oldVersion, currentVersion, modificationsGranularity);
                 }
-
             }
-
         }
         if (element != null)
         {
