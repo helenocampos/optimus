@@ -15,9 +15,11 @@
  */
 package io.github.helenocampos.surefire.api;
 
+import io.github.helenocampos.testing.AbstractTest;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 /**
  *
@@ -67,5 +69,11 @@ public abstract class AdditionalCoverageOrderer<T> extends AdditionalOrderer<T>
     public List<T> getCurrentCoverageSet()
     {
         return this.currentCoverageSet;
+    }
+    
+    protected AbstractTest resolveTies(List<AbstractTest> tiedTests){
+        Random randomizer = new Random();
+        int random = randomizer.nextInt(tiedTests.size());
+        return tiedTests.get(random);
     }
 }

@@ -31,6 +31,7 @@ public class PrioritizationMojo
         pomManager = new PomManager(this.getMavenProject().getBasedir().getAbsolutePath());
         addJacocoPlugin();
         runPrioritizationPlugin(this.getReports() != null);
+        manageSourceCodeBackup();
     }
 
 }

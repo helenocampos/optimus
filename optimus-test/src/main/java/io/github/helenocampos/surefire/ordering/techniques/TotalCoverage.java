@@ -10,6 +10,7 @@ import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
 import io.github.helenocampos.surefire.api.DefaultOrderer;
 import io.github.helenocampos.surefire.ordering.Strategy;
 import io.github.helenocampos.testing.AbstractTest;
+import java.util.Random;
 
 /**
  *
@@ -30,7 +31,7 @@ public abstract class TotalCoverage extends DefaultOrderer<AbstractTest>
     {
         float thiz = analyzer.getTotalTestCoverage(o1, getCoverageGranularity());
         float that = analyzer.getTotalTestCoverage(o2, getCoverageGranularity());
-        return Float.compare(thiz, that);
+        return compare(thiz,that);
     }
     
     @Override

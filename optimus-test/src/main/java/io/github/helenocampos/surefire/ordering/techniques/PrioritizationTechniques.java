@@ -38,7 +38,11 @@ public enum PrioritizationTechniques
     MAXMAX_STATEMENT_ART("maxmax statement ART", MaxMaxStatementART.class),
     MAXMAX_BRANCH_ART("maxmax branch ART", MaxMaxBranchART.class),
     MAXMAX_METHOD_ART("maxmax method ART", MaxMaxMethodART.class),
-    MOST_FAILURES_FIRST("most failures first", MostFailuresFirstOrder.class);
+    MOST_FAILURES_FIRST("most failures first", MostFailuresFirstOrder.class),
+    TOTAL_DIFF_METHOD_COVERAGE("total diff method coverage", TotalDiffMethodCoverage.class),
+    ADDITIONAL_DIFF_METHOD_COVERAGE("additional diff method coverage", AdditionalDiffMethodCoverage.class),
+    TOTAL_DIFF_CLASS_COVERAGE("total diff class coverage", TotalDiffClassCoverage.class),
+    ADDITIONAL_DIFF_CLASS_COVERAGE("additional diff class coverage", AdditionalDiffClassCoverage.class);
 
     PrioritizationTechniques(String name, Class orderer)
     {

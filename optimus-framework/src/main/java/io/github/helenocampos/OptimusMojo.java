@@ -15,7 +15,10 @@ package io.github.helenocampos;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import io.github.helenocampos.extractor.model.ProjectData;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -27,6 +30,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.FileUtils;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
@@ -45,14 +49,16 @@ public abstract class OptimusMojo
     /**
      * @return the printLogs
      */
-    public String getPrintLogs() {
+    public String getPrintLogs()
+    {
         return printLogs;
     }
 
     /**
      * @param printLogs the printLogs to set
      */
-    public void setPrintLogs(String printLogs) {
+    public void setPrintLogs(String printLogs)
+    {
         this.printLogs = printLogs;
     }
 
@@ -84,41 +90,47 @@ public abstract class OptimusMojo
      */
     @Component
     private BuildPluginManager pluginManager;
-    
+
     @Parameter(defaultValue = "", readonly = true)
     private String prioritization;
-    
+
     @Parameter(defaultValue = "", readonly = true)
     private List<String> prioritizationTechniques;
-    
+
     @Parameter(defaultValue = "", readonly = true)
     private List<String> reports;
-    
+
     @Parameter(defaultValue = "", readonly = true)
     private String granularity;
-    
+
     @Parameter(defaultValue = "", readonly = true)
     private String dbPath = "";
-    
+
     @Parameter(property = "experimentOutputDirectory", defaultValue = "")
     private String experimentOutputDirectory = "";
-    
+
     @Parameter(property = "mutation", defaultValue = "")
     private String experimentType = "";
-    
+
     @Parameter(property = "", defaultValue = "")
     private String versionsFolder = "";
-    
+
     @Parameter(property = "", defaultValue = "false")
     private String printLogs = "";
-    
+
     @Parameter(property = "", defaultValue = "")
     private String clustersAmount = "";
-    
+
+    @Parameter(property = "", defaultValue = "false")
+    private String backupSourceCode = "";
+
+    @Parameter(property = "", defaultValue = "")
+    private String backupPath = "";
+
     private final String jacocoVersion = "0.7.9";
-    
+
     protected PomManager pomManager;
-    
+
     protected void addJacocoPlugin() throws MojoExecutionException
     {
         if (!hasJacocoAgentSet())
@@ -136,26 +148,29 @@ public abstract class OptimusMojo
                             mavenSession,
                             pluginManager
                     )
-            );            
+            );
         }
     }
-    
+
     private boolean hasJacocoAgentSet()
     {
         //only returns true if has jacoco set and it is allowed version
         final Properties projectProperties = mavenProject.getProperties();
         String argLine = projectProperties.getProperty("argLine");
-        if(argLine!=null && argLine.contains("jacoco")){
-            if(!argLine.contains(jacocoVersion)){
+        if (argLine != null && argLine.contains("jacoco"))
+        {
+            if (!argLine.contains(jacocoVersion))
+            {
                 projectProperties.setProperty("argLine", "");
                 return false;
-            }else{
+            } else
+            {
                 return true;
             }
         }
         return false;
     }
-    
+
     protected void runPitestPlugin()
     {
         Plugin assembly = MojoExecutor.plugin(
@@ -181,10 +196,10 @@ public abstract class OptimusMojo
             Logger.getLogger(OptimusMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     protected void runFaultInjectionPlugin(String experimentFolder, String injectionId) throws MojoExecutionException
     {
-        
+
         File outputExperimentFolder = new File(new File(getExperimentOutputDirectory(), experimentFolder).getAbsolutePath(), injectionId);
         executeMojo(
                 plugin(
@@ -203,26 +218,26 @@ public abstract class OptimusMojo
                 )
         );
     }
-    
+
     protected void runPrioritizationPlugin(boolean generateReport)
     {
         Dependency dep = new Dependency();
         dep.setGroupId("io.github.helenocampos.surefire");
         dep.setArtifactId("optimus-test");
         dep.setVersion("2.20.1");
-        
+
         Plugin assembly = MojoExecutor.plugin(
                 "org.apache.maven.plugins",
                 "maven-surefire-plugin",
                 "2.20.1");
-        
+
         List<Dependency> dependencies = new LinkedList<Dependency>();
         dependencies.add(dep);
         assembly.setDependencies(dependencies);
         boolean exit = false;
         try
         {
-            
+
             MojoExecutor.executeMojo(assembly, goal("test"),
                     getPrioritizationProperties(generateReport),
                     executionEnvironment(
@@ -231,27 +246,35 @@ public abstract class OptimusMojo
                             pluginManager
                     )
             );
-            
+
         } catch (MojoExecutionException ex)
         {
             exit = true;
-        }finally{
-            if(generateReport){
+        } finally
+        {
+            if (generateReport)
+            {
 //                PrioritizationReport report = new PrioritizationReport(this.getMavenProject().getName(), this.getMavenProject().getBasedir());
-                ReportsController reports = new ReportsController(this.getMavenProject().getName(), this.getMavenProject().getBasedir(), Arrays.asList(new String[]{"raw"}), "single");
+                ReportsController reports = new ReportsController(this.getMavenProject().getName(), this.getMavenProject().getBasedir(), Arrays.asList(new String[]
+                {
+                    "raw"
+                }), "single");
             }
-            if(exit){
+            if (exit)
+            {
                 System.exit(1);
             }
         }
     }
-    
+
     private Xpp3Dom getPrioritizationProperties(boolean generateReport)
     {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
         Xpp3Dom[] excludes = pomManager.getExcludes();
-        if(excludes!=null){
-            for(Xpp3Dom tag: excludes){
+        if (excludes != null)
+        {
+            for (Xpp3Dom tag : excludes)
+            {
                 configuration.addChild(tag);
             }
         }
@@ -259,22 +282,25 @@ public abstract class OptimusMojo
         configuration.addChild(properties);
         properties.addChild(createPropertyNode("granularity", this.granularity));
         properties.addChild(createPropertyNode("prioritization", this.prioritization));
-        if(generateReport){
+        if (generateReport)
+        {
             properties.addChild(createPropertyNode("apfd", "true"));
             properties.addChild(createPropertyNode("faultsFile", "true"));
         }
-        
-        if(!dbPath.equals("")){
+
+        if (!dbPath.equals(""))
+        {
             properties.addChild(createPropertyNode("dbPath", this.dbPath));
             properties.addChild(createPropertyNode("projectName", this.mavenProject.getName()));
         }
-        if(!clustersAmount.equals("")){
+        if (!clustersAmount.equals(""))
+        {
             properties.addChild(createPropertyNode("clustersAmount", this.getClustersAmount()));
         }
-        
+
         return configuration;
     }
-    
+
     private Xpp3Dom createPropertyNode(String propertyName, String propertyValue)
     {
         Xpp3Dom property = new Xpp3Dom("property");
@@ -286,42 +312,88 @@ public abstract class OptimusMojo
         property.addChild(value);
         return property;
     }
-    
+
+    protected void manageSourceCodeBackup()
+    {
+        String projectPath = this.getMavenProject().getBasedir().getAbsolutePath();
+        File srcFolder = Paths.get(projectPath, "src").toFile();
+        File backupFolder = new File(getBackupPath());
+        try
+        {
+            if (srcFolder.exists())
+            {
+                if (backupFolder.exists())
+                {
+                    FileUtils.deleteDirectory(backupFolder);
+                }
+                if (this.backupSourceCode.equalsIgnoreCase("true"))
+                {
+                    backupFolder.mkdir();
+                    FileUtils.copyDirectory(srcFolder, backupFolder);
+                }
+            }
+        } catch (IOException ex)
+        {
+            Logger.getLogger(OptimusMojo.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    protected String getBackupPath()
+    {
+        String path;
+        ProjectData projectData = ProjectData.getProjectDataFromFile();
+        if (backupPath.equals(""))
+        {
+            if (projectData.getSourceBackupPath().equals(""))
+            {
+                path = Paths.get(this.getMavenProject().getBasedir().getAbsolutePath(), "previousVersionCode").toString();
+            }else{
+                path = projectData.getSourceBackupPath();
+            }
+        } else
+        {
+            path = backupPath;
+        }
+        projectData.setSourceBackupPath(path);
+        projectData.writeProjectDataFile();
+        return path;
+    }
+
     public String getPrioritization()
     {
         return prioritization;
     }
-    
+
     public String getGranularity()
     {
         return granularity;
     }
-    
+
     public String getExperimentOutputDirectory()
     {
         return experimentOutputDirectory;
     }
-    
+
     public MavenProject getMavenProject()
     {
         return this.mavenProject;
     }
-    
+
     public List<String> getPrioritizationTechniques()
     {
         return prioritizationTechniques;
     }
-    
+
     public void setPrioritizationTechniques(List<String> prioritizationTechniques)
     {
         this.prioritizationTechniques = prioritizationTechniques;
     }
-    
+
     public List<String> getReports()
     {
         return reports;
     }
-    
+
     public void setReports(List<String> reports)
     {
         this.reports = reports;
@@ -365,5 +437,10 @@ public abstract class OptimusMojo
     public void setClustersAmount(String clustersAmount)
     {
         this.clustersAmount = clustersAmount;
+    }
+
+    public String getBackupSourceCode()
+    {
+        return backupSourceCode;
     }
 }

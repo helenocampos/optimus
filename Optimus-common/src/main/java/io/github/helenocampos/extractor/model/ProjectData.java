@@ -21,6 +21,7 @@ public class ProjectData
 {
 
     private String projectPath;
+    private String sourceBackupPath;
     private HashMap<String, JavaSourceCodeClass> classes;
     private HashMap<String, JavaTestClass> tests;
 
@@ -29,6 +30,7 @@ public class ProjectData
         classes = new HashMap<String, JavaSourceCodeClass>();
         tests = new HashMap<String, JavaTestClass>();
         this.projectPath = projectPath;
+        this.sourceBackupPath = "";
     }
 
     public List<JavaClass> getAllClasses()
@@ -237,5 +239,15 @@ public class ProjectData
                 }
             }
         }
+    }
+
+    public String getSourceBackupPath()
+    {
+        return sourceBackupPath;
+    }
+
+    public void setSourceBackupPath(String sourceBackupPath)
+    {
+        this.sourceBackupPath = sourceBackupPath;
     }
 }

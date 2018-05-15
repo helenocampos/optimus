@@ -15,11 +15,11 @@ import java.util.HashMap;
  */
 public class JavaTestClass extends JavaClass {
 
-    private HashMap<String,TestMethod> methods = null;
+    private HashMap<String,TestMethod> testMethods = null;
     
     public JavaTestClass(String className, String path, String packageName) {
         super(className, path, packageName);
-        this.methods = AttributesExtractor.parseClass(path).getMethods();
+        this.testMethods = AttributesExtractor.parseClass(path).getTestMethods();
     }
     
     @Override
@@ -34,10 +34,10 @@ public class JavaTestClass extends JavaClass {
 
     public TestMethod getMethodByName(String methodName)
     {
-        return this.methods.get(methodName);
+        return this.testMethods.get(methodName);
     }
     
     public HashMap<String, TestMethod> getMethods(){
-        return this.methods;
+        return this.testMethods;
     }
 }

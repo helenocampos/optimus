@@ -1,9 +1,9 @@
 package io.github.helenocampos.extractor;
 
 import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
@@ -11,8 +11,8 @@ import io.github.helenocampos.extractor.model.TestMethod;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,12 +24,14 @@ public class AttributesExtractor extends VoidVisitorAdapter
 {
 
     private HashMap<String, TestMethod> testMethods;
+    private List<String> methodsNames;
     private List<ImportDeclaration> importEntry;
 
     public AttributesExtractor()
     {
         testMethods = new HashMap<String, TestMethod>();
-        importEntry = new ArrayList<ImportDeclaration>();
+        importEntry = new LinkedList<ImportDeclaration>();
+        methodsNames = new LinkedList<>();
     }
 
     @Override
@@ -39,6 +41,14 @@ public class AttributesExtractor extends VoidVisitorAdapter
         {
             this.testMethods.put(declaration.getNameAsString(), new TestMethod(declaration.getNameAsString()));
         }
+        this.getMethodsNames().add(declaration.getNameAsString());
+        super.visit(declaration, arg);
+    }
+    
+    @Override
+    public void visit(ConstructorDeclaration declaration, Object arg)
+    {
+        this.getMethodsNames().add(declaration.getNameAsString());
         super.visit(declaration, arg);
     }
 
@@ -63,7 +73,7 @@ public class AttributesExtractor extends VoidVisitorAdapter
         super.visit(importEntry, arg);
     }
 
-    public HashMap<String, TestMethod> getMethods()
+    public HashMap<String, TestMethod> getTestMethods()
     {
         return testMethods;
     }
@@ -115,5 +125,10 @@ public class AttributesExtractor extends VoidVisitorAdapter
             cu.accept(extractor, cu);
         }
         return extractor;
+    }
+
+    public List<String> getMethodsNames()
+    {
+        return methodsNames;
     }
 }

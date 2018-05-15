@@ -15,5 +15,6 @@
         <module>OptimusHistoricalAnalyzer</module>
         <module>OptimusExecutionTraceAnalyzer</module>
         <module>Optimus-common</module>
+        <module>OptimusModificationsAnalyzer</module>
     </modules>
 </project>
