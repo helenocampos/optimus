@@ -15,6 +15,7 @@
  */
 package io.github.helenocampos.surefire.ordering.techniques;
 
+import io.github.helenocampos.extractor.model.Coverage;
 import io.github.helenocampos.extractor.model.CoverageGranularity;
 import io.github.helenocampos.extractor.model.ModificationsGranularity;
 import io.github.helenocampos.optimusmodificationsanalyzer.ModificationsAnalyzer;
@@ -54,12 +55,17 @@ public abstract class AdditionalDiffCoverage extends AdditionalCoverageOrderer<A
     @Override
     public AbstractTest getNextTest(List<AbstractTest> tests)
     {
+        if(this.modifiedElements.isEmpty()){
+            return getNextAdditionalTest(tests);
+        }
+        
         List<AbstractTest> candidateTests = new LinkedList<>();
         AbstractTest highestCoverageTest = null;
         float highestCoverageScore = Integer.MIN_VALUE;
+        Coverage alreadyCoveredCode = analyzer.getCoverageFromTests(getCurrentCoverageSet());
         for (AbstractTest test : tests)
         {
-            float testScore = analyzer.getAdditionalDiffTestCoverage(test, getModificationsGranularity(), getCurrentCoverageSet(), this.modifiedElements);
+            float testScore = analyzer.getAdditionalDiffTestCoverage(test, getModificationsGranularity(), alreadyCoveredCode, this.modifiedElements);
             if (testScore > highestCoverageScore)
             {
                 highestCoverageTest = test;
@@ -91,16 +97,17 @@ public abstract class AdditionalDiffCoverage extends AdditionalCoverageOrderer<A
         List<AbstractTest> candidateTests = new LinkedList<>();
         AbstractTest highestCoverageTest = null;
         float highestCoverageScore = Integer.MIN_VALUE;
+        Coverage alreadyCoveredCode = analyzer.getCoverageFromTests(getCurrentCoverageSet());
         for (AbstractTest test : tests)
         {
-            float testScore = analyzer.getAdditionalTestCoverage(test, CoverageGranularity.METHOD, getCurrentCoverageSet());
+            float testScore = analyzer.getAdditionalTestCoverage(test, CoverageGranularity.METHOD, alreadyCoveredCode);
             if (testScore > highestCoverageScore)
             {
                 highestCoverageTest = test;
                 highestCoverageScore = testScore;
                 candidateTests = new LinkedList<>();
             }
-            if (testScore == highestCoverageScore)
+            if (testScore == highestCoverageScore  && testScore!=0)
             {
                 candidateTests.add(test);
             }
@@ -109,8 +116,15 @@ public abstract class AdditionalDiffCoverage extends AdditionalCoverageOrderer<A
         {
             // no tests in the list add any coverage to current covered set
             //in this case, we reset coverage data and start again
-            resetCurrentCoverage();
-            return getNextTest(tests);
+            if (!isRecursiveLocked())
+            {
+                resetCurrentCoverage();
+                setRecursiveLocked(true);
+                return getNextAdditionalTest(tests);
+            } else
+            {
+                highestCoverageTest = resolveTies(tests);
+            }
         } else
         {
             if (candidateTests.size() > 1)

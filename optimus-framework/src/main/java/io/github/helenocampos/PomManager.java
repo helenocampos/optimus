@@ -43,10 +43,12 @@ public class PomManager {
 
     private Model originalPom;
     private Xpp3Dom[] excludes;
+    private Xpp3Dom[] includes;
 
     public PomManager(String projectFolder) {
         this.originalPom = readPom(projectFolder);
         this.excludes = getSurefireExcludesConfig(originalPom);
+        this.includes = getSurefireIncludesConfig(originalPom);
     }
 
     public Model readPom(String projectFolder) {
@@ -128,6 +130,20 @@ public class PomManager {
         }
         return null;
     }
+    
+    private Xpp3Dom[] getSurefireIncludesConfig(Model model) {
+        if (model != null) {
+            Build build = model.getBuild();
+            if (build != null) {
+                Plugin surefire = getPluginByArtifactId(build.getPlugins(), "maven-surefire-plugin");
+                if (surefire != null) {
+                    Xpp3Dom configuration = (Xpp3Dom) surefire.getConfiguration();
+                    return configuration.getChildren("includes");
+                }
+            }
+        }
+        return null;
+    }
 
     private Plugin getPluginByArtifactId(List<Plugin> plugins, String artifactId) {
         for (Plugin plugin : plugins) {
@@ -193,6 +209,12 @@ public class PomManager {
                 configuration.addChild(tag);
             }
         }
+        if(getIncludes() !=null){
+            for (Xpp3Dom tag : getIncludes()) {
+                configuration.addChild(tag);
+            }
+        }
+        
         configuration.addChild(createConfigurationNode("argLine", "@{argLine}"));
         configuration.addChild(createConfigurationNode("reuseForks", "true"));
         configuration.addChild(createConfigurationNode("forkCount", "1"));
@@ -207,6 +229,7 @@ public class PomManager {
         properties.addChild(createPropertyNode("faultsFile", Boolean.toString(config.isGenerateFaultsFile())));
         properties.addChild(createPropertyNode("collectCoverageData", Boolean.toString(config.isCollectCoverageData())));
         properties.addChild(createPropertyNode("clustersAmount", config.getClustersAmount()));
+        properties.addChild(createPropertyNode("simulateExecution", Boolean.toString(config.isSimulateExecution())));
         
         if (!config.getDbPath().equals("")) {
             properties.addChild(createPropertyNode("dbPath", config.getDbPath()));
@@ -242,5 +265,10 @@ public class PomManager {
         execution.addGoal("prepare-agent");
         plugin.addExecution(execution);
         plugins.add(plugin);
+    }
+
+    public Xpp3Dom[] getIncludes()
+    {
+        return includes;
     }
 }

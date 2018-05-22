@@ -5,6 +5,8 @@
  */
 package io.github.helenocampos.optimushistoricalanalyzer.domain;
 
+import io.github.helenocampos.testing.TestGranularity;
+
 /**
  *
  * @author helenocampos

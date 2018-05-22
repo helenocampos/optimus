@@ -16,7 +16,6 @@
 package io.github.helenocampos.surefire.api;
 
 import io.github.helenocampos.testing.AbstractTest;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -28,33 +27,19 @@ import java.util.Random;
 public abstract class AdditionalCoverageOrderer<T> extends AdditionalOrderer<T>
 {
 
-    private HashMap<String, boolean[]> coveredCode;
     private List<T> currentCoverageSet = new LinkedList<>();
+    private boolean recursiveLocked = false;
 
     @Override
     public T getNextTest(List<T> tests, List<T> alreadyOrderedTests)
     {
+        setRecursiveLocked(false);
         T nextTest = getNextTest(tests);
         this.currentCoverageSet.add(nextTest);
         return nextTest;
     }
 
     public abstract T getNextTest(List<T> tests);
-
-    public HashMap<String, boolean[]> getCoveredCode()
-    {
-        return this.coveredCode;
-    }
-
-    public void setCoveredCode(HashMap<String, boolean[]> coveredCode)
-    {
-        this.coveredCode = coveredCode;
-    }
-
-    public void updateCoveredCode(HashMap<String, boolean[]> newCoveredCode)
-    {
-        this.coveredCode.putAll(newCoveredCode);
-    }
 
     public void addTestToCurrentCoverage(T test)
     {
@@ -70,10 +55,21 @@ public abstract class AdditionalCoverageOrderer<T> extends AdditionalOrderer<T>
     {
         return this.currentCoverageSet;
     }
-    
-    protected AbstractTest resolveTies(List<AbstractTest> tiedTests){
+
+    protected AbstractTest resolveTies(List<AbstractTest> tiedTests)
+    {
         Random randomizer = new Random();
         int random = randomizer.nextInt(tiedTests.size());
         return tiedTests.get(random);
+    }
+
+    public boolean isRecursiveLocked()
+    {
+        return recursiveLocked;
+    }
+
+    public void setRecursiveLocked(boolean recursiveLock)
+    {
+        this.recursiveLocked = recursiveLock;
     }
 }

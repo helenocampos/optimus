@@ -6,7 +6,7 @@
 package io.github.helenocampos.surefire;
 
 import io.github.helenocampos.testing.AbstractTest;
-import io.github.helenocampos.testing.Granularity;
+import io.github.helenocampos.testing.TestGranularity;
 
 /**
  *
@@ -17,9 +17,9 @@ public class TestMethod extends AbstractTest
     private String methodName;
     
     @Override
-    public Granularity getTestGranularity()
+    public TestGranularity getTestGranularity()
     {
-        return Granularity.METHOD;
+        return TestGranularity.METHOD;
     }
 
     public String getMethodName()

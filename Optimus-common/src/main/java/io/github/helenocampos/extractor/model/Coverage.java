@@ -5,8 +5,10 @@
  */
 package io.github.helenocampos.extractor.model;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -47,17 +49,18 @@ public class Coverage
 
     private String getCoverageString(boolean[] coverageArray)
     {
-        String coverageString = "";
+        StringBuilder coverageString = new StringBuilder();
         for (int a = 0; a < coverageArray.length; a++)
         {
-            String coverage = "0";
             if (coverageArray[a])
             {
-                coverage = "1";
+                coverageString.append("1");
+            } else
+            {
+                coverageString.append("0");
             }
-            coverageString = coverageString + coverage;
         }
-        return coverageString;
+        return coverageString.toString();
     }
 
     public void addLinesCovered(String className, String coveredLinesString)
@@ -108,24 +111,26 @@ public class Coverage
         this.coveredLines = coveredLines;
     }
 
-    public String getCoverageString(CoverageGranularity coverageGranularity){
-        String coverageString = "";
-        for (String coverage : this.getCoverage(coverageGranularity).values())
+    public String getCoverageString(CoverageGranularity coverageGranularity)
+    {
+        StringBuilder coverageString = new StringBuilder();
+        for (String coverage : this.getCoverage(coverageGranularity, true).values())
         {
-            coverageString += coverage;
+            coverageString.append(coverage);
         }
-        return coverageString;
+        return coverageString.toString();
     }
-    
-    public static String getCoverageString(CoverageGranularity coverageGranularity, LinkedHashMap<String,String> coverageData){
-        String coverageString = "";
+
+    public static String getCoverageString(LinkedHashMap<String, String> coverageData)
+    {
+        StringBuilder coverageString = new StringBuilder();
         for (String coverage : coverageData.values())
         {
-            coverageString += coverage;
+            coverageString.append(coverage);
         }
-        return coverageString;
+        return coverageString.toString();
     }
-    
+
     public static Coverage merge(Coverage coverage1, Coverage coverage2)
     {
         Coverage newCoverage = new Coverage();
@@ -153,71 +158,90 @@ public class Coverage
 
         for (String key : coverage2.keySet())
         {
-            String coverage1String = coverage1.get(key);
-            String coverage2String = coverage2.get(key);
-            if (coverage1String == null)
+            if (merged.get(key) == null)
             { //coverage1 doesn't have the element from 2. just add it to the merged map
-                merged.put(key, coverage2String);
-            } else
-            {
-                merged.put(key, merge(coverage1String, coverage2String));
+                merged.put(key, coverage2.get(key));
             }
         }
-
         return merged;
     }
 
     public static String merge(String coverageString1, String coverageString2)
     {
-        String mergedString = "";
+        StringBuilder mergedString = new StringBuilder(coverageString1);
         if (coverageString1.length() == coverageString2.length())
         {
+            if (coverageString1.equals(coverageString2))
+            {
+                return coverageString1;
+            }
+
             for (int i = 0; i < coverageString1.length(); i++)
             {
-                char coverage1 = coverageString1.charAt(i);
-                char coverage2 = coverageString2.charAt(i);
-                if (coverage1 == '1' || coverage2 == '1')
+                if (coverageString2.charAt(i) == '1' && coverageString1.charAt(i) == '0')
                 {
-                    mergedString += "1";
-                } else
-                {
-                    mergedString += "0";
+                    mergedString.setCharAt(i, '1');
                 }
             }
         }
+        return mergedString.toString();
+    }
 
-        return mergedString;
-    }
-    
-    public LinkedHashMap<String, String> getCoverage(CoverageGranularity coverageGranularity){
-        switch(coverageGranularity){
-            case STATEMENT: return this.statements;
-            case BRANCH: return this.branches;
-            case METHOD: return this.methods;
-            default: return new LinkedHashMap<String, String>();
+    public LinkedHashMap<String, String> getCoverage(CoverageGranularity coverageGranularity, boolean includeNotCoveredClasses)
+    {
+        LinkedHashMap<String, String> coverage = new LinkedHashMap();
+
+        switch (coverageGranularity)
+        {
+            case STATEMENT:
+                coverage = this.statements;
+                break;
+            case BRANCH:
+                coverage = this.branches;
+                break;
+            case METHOD:
+                coverage = this.methods;
+                break;
         }
-    }
-    
-    public static String getEmptyCoverageString(int size){
-        String coverageString = "";
-        for(int i=0; i<size; i++){
-            coverageString+="0";
+
+        if (includeNotCoveredClasses)
+        {
+            ProjectData projectData = ProjectData.getProjectData();
+            for (String className : projectData.getClasses().keySet())
+            {
+                JavaSourceCodeClass clazz = projectData.getClassByName(className);
+                if (!coverage.containsKey(clazz.getCoverageName()))
+                {
+                    coverage.put(clazz.getCoverageName(), getEmptyCoverageString(clazz.getExecutableElements(coverageGranularity)));
+                }
+            }
         }
-        return coverageString;
+        return coverage;
     }
-    
-    public void includeRemainingClassesData(JavaClass clazz){
+
+    public static String getEmptyCoverageString(int size)
+    {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < size; i++)
+        {
+            builder.append("0");
+        }
+        return builder.toString();
+    }
+
+    public void includeRemainingClassesData(JavaClass clazz)
+    {
         includeClassData(clazz.getCoverageName(), statements, clazz.getExecutableLines());
         includeClassData(clazz.getCoverageName(), branches, clazz.getExecutableBranches());
         includeClassData(clazz.getCoverageName(), methods, clazz.getExecutableMethods());
     }
-    
-    private void includeClassData(String className, HashMap<String,String> coverageData, int coverageSize){
+
+    private void includeClassData(String className, HashMap<String, String> coverageData, int coverageSize)
+    {
         String coverage = coverageData.get(className);
-        if(coverage==null){
+        if (coverage == null)
+        {
             coverageData.put(className, getEmptyCoverageString(coverageSize));
         }
     }
-    
-    
 }

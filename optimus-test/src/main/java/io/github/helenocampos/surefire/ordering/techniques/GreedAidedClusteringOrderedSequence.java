@@ -45,7 +45,7 @@ public class GreedAidedClusteringOrderedSequence extends AdditionalOrderer<Abstr
     {
         analyzer = new ExecutionTraceAnalyzer();
         testCaseClusters = new LinkedList<>();
-        sorter = new TestsSorter(null, "");
+        sorter = new TestsSorter(null);
         testGranularity = "class";
 //        coverageAnalyzer = new CoverageAnalyzer();
         Properties properties = System.getProperties();

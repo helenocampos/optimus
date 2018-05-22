@@ -126,6 +126,9 @@ public abstract class OptimusMojo
 
     @Parameter(property = "", defaultValue = "")
     private String backupPath = "";
+    
+    @Parameter(property = "", defaultValue = "false")
+    private String simulateExecution = "";
 
     private final String jacocoVersion = "0.7.9";
 
@@ -442,5 +445,10 @@ public abstract class OptimusMojo
     public String getBackupSourceCode()
     {
         return backupSourceCode;
+    }
+
+    public String getSimulateExecution()
+    {
+        return simulateExecution;
     }
 }

@@ -7,8 +7,7 @@ package io.github.helenocampos.surefire.junit4;
 
 import io.github.helenocampos.optimushistoricalanalyzer.HistoricalAnalyzer;
 import io.github.helenocampos.optimushistoricalanalyzer.domain.TestExecution;
-import io.github.helenocampos.optimushistoricalanalyzer.domain.TestGranularity;
-import io.github.helenocampos.testing.Granularity;
+import io.github.helenocampos.testing.TestGranularity;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
@@ -22,7 +21,7 @@ public class HistoricalDataListener extends RunListener
 {
 
     private HistoricalAnalyzer analyzer;
-    private Granularity granualarity;
+    private TestGranularity granualarity;
     private String projectName;
     private String lastClass;
     private TestExecution currentTest;
@@ -31,7 +30,7 @@ public class HistoricalDataListener extends RunListener
     {
         super();
         this.analyzer = new HistoricalAnalyzer(dbPath);
-        this.granualarity = Granularity.getGranularityByName(granularity);
+        this.granualarity = TestGranularity.getGranularityByName(granularity);
         this.lastClass = "";
         this.currentTest = null;
         this.projectName = projectName;
@@ -41,7 +40,7 @@ public class HistoricalDataListener extends RunListener
     public void testStarted(Description description) throws Exception
     {
         super.testStarted(description);
-        if (this.granualarity.equals(Granularity.CLASS))
+        if (this.granualarity.equals(TestGranularity.CLASS))
         {
             if (!description.getClassName().equals(lastClass))
             {
@@ -87,7 +86,7 @@ public class HistoricalDataListener extends RunListener
     private String getTestName(Description description)
     {
         String testName = description.getClassName();
-        if (this.granualarity.equals(Granularity.METHOD))
+        if (this.granualarity.equals(TestGranularity.METHOD))
         {
             testName = testName + "." + description.getMethodName();
         }
@@ -107,7 +106,7 @@ public class HistoricalDataListener extends RunListener
 
     private void setGranularity(TestExecution execution)
     {
-        if (this.granualarity.equals(Granularity.METHOD))
+        if (this.granualarity.equals(TestGranularity.METHOD))
         {
             execution.setGranularity(TestGranularity.METHOD);
         } else

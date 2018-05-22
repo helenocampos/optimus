@@ -12,7 +12,8 @@ import io.github.helenocampos.surefire.junit4.CoverageListener;
 import io.github.helenocampos.surefire.junit4.FaultsListener;
 import io.github.helenocampos.surefire.junit4.HistoricalDataListener;
 import io.github.helenocampos.surefire.junit4.JUnit4Executor;
-import io.github.helenocampos.testing.Granularity;
+import io.github.helenocampos.surefire.junit4.TestExecutorSimulation;
+import io.github.helenocampos.testing.TestGranularity;
 import io.github.helenocampos.surefire.ordering.TestsSorter;
 import io.github.helenocampos.surefire.report.ExecutionData;
 import io.github.helenocampos.surefire.util.JUnit4TestChecker;
@@ -23,7 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.surefire.common.junit3.JUnit3TestChecker;
 import org.apache.maven.surefire.common.junit4.JUnit4RunListenerFactory;
 import org.apache.maven.surefire.providerapi.AbstractProvider;
 import org.apache.maven.surefire.providerapi.ProviderParameters;
@@ -43,10 +43,7 @@ public class OptimusProvider extends AbstractProvider
     private final RunOrderCalculator runOrderCalculator;
     private JUnitExecutor executor;
     private final ScanResult scanResult;
-    private JUnit4TestChecker junit4TestChecker;
-    private PojoAndJUnit3Checker v3testChecker;
     private List<org.junit.runner.notification.RunListener> customRunListeners;
-    private boolean isJunit4 = false;
     private String testGranularity;
     private String prioritizationTechnique;
     private String projectPath;
@@ -60,6 +57,7 @@ public class OptimusProvider extends AbstractProvider
     private boolean collectCoberturaData = false;
     private ProjectData projectData;
     private boolean collectCoverageData = true;
+    private boolean simulateExecution = false;
 
     public OptimusProvider(ProviderParameters booterParameters)
     {
@@ -72,67 +70,50 @@ public class OptimusProvider extends AbstractProvider
         this.customRunListeners = JUnit4RunListenerFactory.createCustomListeners(providerParameters.getProviderProperties().get("listener"));
         this.consoleStream = this.providerParameters.getConsoleLogger();
         this.projectPath = getProjectPath(providerParameters.getProviderProperties().get("testClassesDirectory"));
-
-        this.junit4TestChecker = new JUnit4TestChecker(testClassLoader);
-        LocalProjectCrawler crawler = new LocalProjectCrawler(this.projectPath);
-        this.projectData = crawler.getProjectData();
-
-        String exampleTestClassName = providerParameters.getProviderProperties().get("tc.0");
-        if (exampleTestClassName != null)
+        setupProperties();
+        if (simulateExecution)
         {
-            try
+            this.projectData = ProjectData.getProjectData();
+            executor = new TestExecutorSimulation(consoleStream, booterParameters, customRunListeners);
+        } else
+        {
+            LocalProjectCrawler crawler = new LocalProjectCrawler(this.projectPath);
+            this.projectData = crawler.getProjectData();
+            executor = new JUnit4Executor(booterParameters, customRunListeners);
+        }
+        if (!integrationTests)
+        {
+            if (collectCoverageData)
             {
-                Class exampleTestClass = testClassLoader.loadClass(exampleTestClassName);
-                if (junit4TestChecker.accept(exampleTestClass))
+                this.customRunListeners.add(new CoverageListener(this.projectPath, this.projectData));
+            }
+            if (this.calculateAPFD)
+            {
+                if (this.testGranularity.equals(TestGranularity.METHOD.getName()))
                 {
-                    if (this.junit4TestChecker.isValidJUnit4Test(exampleTestClass))
-                    {
-                        this.isJunit4 = true;
-                    }
+                    this.customRunListeners.add(new MethodAPFDListener(this.testGranularity));
                 } else
                 {
-                    this.v3testChecker = new PojoAndJUnit3Checker(new JUnit3TestChecker(testClassLoader));
-                }
-                executor = new JUnit4Executor(booterParameters, customRunListeners);
-            } catch (ClassNotFoundException e)
-            {
-            } finally
-            {
-                setupProperties();
-                if (!integrationTests)
-                {
-                    if (collectCoverageData)
-                    {
-                        this.customRunListeners.add(new CoverageListener(this.projectPath, this.projectData));
-                    }
-                    if (this.calculateAPFD)
-                    {
-                        if (this.testGranularity.equals(Granularity.METHOD.getName()))
-                        {
-                            this.customRunListeners.add(new MethodAPFDListener(this.testGranularity));
-                        } else
-                        {
-                            this.customRunListeners.add(new ClassAPFDListener(this.testGranularity));
-                        }
-                    }
-                    if (this.registerExecution)
-                    {
-                        if (this.projectName != null)
-                        {
-                            this.customRunListeners.add(new HistoricalDataListener(this.testGranularity, this.dbPath, this.projectName));
-                        }
-                    }
-                    if (this.generateFaultsFile && this.testGranularity != null)
-                    {
-                        this.customRunListeners.add(new FaultsListener(getAPFDListener()));
-                    }
-                }
-                if (this.collectCoberturaData)
-                {
-                    this.customRunListeners.add(new CoberturaListener(this.projectPath, this.projectData));
+                    this.customRunListeners.add(new ClassAPFDListener(this.testGranularity));
                 }
             }
+            if (this.registerExecution)
+            {
+                if (this.projectName != null)
+                {
+                    this.customRunListeners.add(new HistoricalDataListener(this.testGranularity, this.dbPath, this.projectName));
+                }
+            }
+            if (this.generateFaultsFile && this.testGranularity != null)
+            {
+                this.customRunListeners.add(new FaultsListener(getAPFDListener()));
+            }
         }
+        if (this.collectCoberturaData)
+        {
+            this.customRunListeners.add(new CoberturaListener(this.projectPath, this.projectData));
+        }
+
     }
 
     private boolean isIntegrationTest()
@@ -186,6 +167,7 @@ public class OptimusProvider extends AbstractProvider
             properties.setProperty("projectName", this.projectName);
         }
         properties.setProperty("clustersAmount", getProviderProperties("clustersAmount", ""));
+        this.simulateExecution = Boolean.valueOf(getProviderProperties("simulateExecution", "false"));
     }
 
     private String getProviderProperties(String property, String defaultValue)
@@ -195,15 +177,8 @@ public class OptimusProvider extends AbstractProvider
 
     private TestsToRun scanClassPath()
     {
-        if (isJunit4)
-        {
-            final TestsToRun testsToRun = scanResult.applyFilter(junit4TestChecker, testClassLoader);
-            return runOrderCalculator.orderTestClasses(testsToRun);
-        } else
-        {
-            final TestsToRun testsToRun = scanResult.applyFilter(v3testChecker, testClassLoader);
-            return runOrderCalculator.orderTestClasses(testsToRun);
-        }
+        final TestsToRun testsToRun = scanResult.applyFilter(null, testClassLoader);
+        return runOrderCalculator.orderTestClasses(testsToRun);
     }
 
     public Iterable getSuites()
@@ -211,15 +186,12 @@ public class OptimusProvider extends AbstractProvider
         AbstractTestsToRun toRun = null;
         if (this.testGranularity.equals("method"))
         {
-            toRun = new TestMethodsToRun(scanClassPath(), isJunit4);
-
+            toRun = new TestMethodsToRun(scanClassPath());
         } else
         {
             toRun = new TestClassesToRun(scanClassPath());
-
         }
         return toRun;
-
     }
 
     private List<AbstractTest> orderTests(Iterable testSet)
@@ -231,7 +203,7 @@ public class OptimusProvider extends AbstractProvider
         }
         if (!integrationTests && tests.size() > 0)
         {
-            TestsSorter sorter = new TestsSorter(consoleStream, projectName);
+            TestsSorter sorter = new TestsSorter(consoleStream);
             tests = sorter.sort(tests, prioritizationTechnique, testGranularity);
         }
         return tests;
@@ -296,33 +268,12 @@ public class OptimusProvider extends AbstractProvider
         return null;
     }
 
-    private CoverageListener getCoverageListener()
-    {
-        for (org.junit.runner.notification.RunListener listener : this.customRunListeners)
-        {
-            if (listener instanceof CoverageListener)
-            {
-                return (CoverageListener) listener;
-            }
-        }
-        return null;
-    }
-
-    private CoberturaListener getCoberturaListener()
-    {
-        for (org.junit.runner.notification.RunListener listener : this.customRunListeners)
-        {
-            if (listener instanceof CoberturaListener)
-            {
-                return (CoberturaListener) listener;
-            }
-        }
-        return null;
-    }
-
     private void broadcastTestFinished()
     {
-        this.projectData.writeProjectDataFile();
+        if (!simulateExecution)
+        {
+            this.projectData.writeProjectDataFile();
+        }
     }
 
     private RunResult invokeExecutor(AbstractTest toRun) throws TestSetFailedException

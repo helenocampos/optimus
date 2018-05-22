@@ -15,6 +15,7 @@
  */
 package io.github.helenocampos.surefire.ordering.techniques;
 
+import io.github.helenocampos.extractor.model.Coverage;
 import io.github.helenocampos.extractor.model.CoverageGranularity;
 import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
@@ -42,7 +43,7 @@ public abstract class AdditionalCoverage extends AdditionalCoverageOrderer<Abstr
     {
         return Strategy.ADDITIONAL.getName();
     }
-    
+
     public abstract CoverageGranularity getCoverageGranularity();
 
     @Override
@@ -51,16 +52,18 @@ public abstract class AdditionalCoverage extends AdditionalCoverageOrderer<Abstr
         List<AbstractTest> candidateTests = new LinkedList<>();
         AbstractTest highestCoverageTest = null;
         float highestCoverageScore = Integer.MIN_VALUE;
+        Coverage alreadyCoveredCode = analyzer.getCoverageFromTests(getCurrentCoverageSet());
         for (AbstractTest test : tests)
         {
-            float testScore = analyzer.getAdditionalTestCoverage(test, getCoverageGranularity(), getCurrentCoverageSet());
+            float testScore = analyzer.getAdditionalTestCoverage(test, getCoverageGranularity(), alreadyCoveredCode);
             if (testScore > highestCoverageScore)
             {
                 highestCoverageTest = test;
                 highestCoverageScore = testScore;
                 candidateTests = new LinkedList<>();
             }
-            if(testScore == highestCoverageScore){
+            if (testScore == highestCoverageScore && testScore != 0)
+            {
                 candidateTests.add(test);
             }
         }
@@ -68,10 +71,20 @@ public abstract class AdditionalCoverage extends AdditionalCoverageOrderer<Abstr
         {
             // no tests in the list add any coverage to current covered set
             //in this case, we reset coverage data and start again
-            resetCurrentCoverage();
-            return getNextTest(tests);
-        }else{
-            if(candidateTests.size()>1){
+            if (!isRecursiveLocked())
+            {
+                resetCurrentCoverage();
+                setRecursiveLocked(true);
+                return getNextTest(tests);
+            } else
+            {
+                highestCoverageTest = resolveTies(tests);
+            }
+
+        } else
+        {
+            if (candidateTests.size() > 1)
+            {
                 highestCoverageTest = resolveTies(candidateTests);
             }
         }

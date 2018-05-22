@@ -5,7 +5,6 @@
  */
 package io.github.helenocampos.surefire.junit4;
 
-
 import io.github.helenocampos.extractor.model.TestMethod;
 import io.github.helenocampos.extractor.model.JavaClass;
 import io.github.helenocampos.extractor.model.JavaTestClass;
@@ -109,17 +108,21 @@ public class CoverageListener extends RunListener
                                                 branchProbes[currentBranchIndex++] = line.getBranchCounter().getCoveredCount() != 0;
                                             }
                                         }
+                                        testMethod.getCoverage().addBranchCoverage(data.getName(), branchProbes);
+                                        clazz.setExecutableBranches(branchProbes.length);
                                     }
-                                    testMethod.getCoverage().addBranchCoverage(data.getName(), branchProbes);
-                                    clazz.setExecutableBranches(branchProbes.length);
+
                                     boolean[] methodProbes = new boolean[classCoverage.getMethodCounter().getTotalCount()];
-                                    int currentMethodIndex = 0;
-                                    for (IMethodCoverage methodCoverage : classCoverage.getMethods())
+                                    if (methodProbes.length != 0)
                                     {
-                                        methodProbes[currentMethodIndex++] = methodCoverage.getMethodCounter().getCoveredCount() != 0;
+                                        int currentMethodIndex = 0;
+                                        for (IMethodCoverage methodCoverage : classCoverage.getMethods())
+                                        {
+                                            methodProbes[currentMethodIndex++] = methodCoverage.getMethodCounter().getCoveredCount() != 0;
+                                        }
+                                        testMethod.getCoverage().addMethodCoverage(data.getName(), methodProbes);
+                                        clazz.setExecutableMethods(methodProbes.length);
                                     }
-                                    testMethod.getCoverage().addMethodCoverage(data.getName(), methodProbes);
-                                    clazz.setExecutableMethods(methodProbes.length);
                                 }
                             } catch (IOException ex)
                             {

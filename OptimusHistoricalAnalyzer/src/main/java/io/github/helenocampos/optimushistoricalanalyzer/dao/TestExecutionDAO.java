@@ -6,7 +6,7 @@
 package io.github.helenocampos.optimushistoricalanalyzer.dao;
 
 import io.github.helenocampos.optimushistoricalanalyzer.domain.TestExecution;
-import io.github.helenocampos.optimushistoricalanalyzer.domain.TestGranularity;
+import io.github.helenocampos.testing.TestGranularity;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;

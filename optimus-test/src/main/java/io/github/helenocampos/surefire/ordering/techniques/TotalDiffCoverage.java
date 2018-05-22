@@ -5,6 +5,7 @@
  */
 package io.github.helenocampos.surefire.ordering.techniques;
 
+import io.github.helenocampos.extractor.model.CoverageGranularity;
 import io.github.helenocampos.extractor.model.ModificationsGranularity;
 import io.github.helenocampos.optimusmodificationsanalyzer.ModificationsAnalyzer;
 import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
@@ -35,9 +36,19 @@ public abstract class TotalDiffCoverage extends DefaultOrderer<AbstractTest>
     @Override
     public int compare(AbstractTest o1, AbstractTest o2)
     {
-        float thiz = analyzer.getTotalDiffTestCoverage(o1, getModificationsGranularity(), this.modifiedElements);
-        float that = analyzer.getTotalDiffTestCoverage(o2, getModificationsGranularity(), this.modifiedElements);
-        return compare(thiz,that);
+        float thiz;
+        float that;
+        if (this.modifiedElements.isEmpty())
+        {
+            thiz = analyzer.getTotalTestCoverage(o1, CoverageGranularity.METHOD);
+            that = analyzer.getTotalTestCoverage(o2, CoverageGranularity.METHOD);
+        } else
+        {
+            thiz = analyzer.getTotalDiffTestCoverage(o1, getModificationsGranularity(), this.modifiedElements);
+            that = analyzer.getTotalDiffTestCoverage(o2, getModificationsGranularity(), this.modifiedElements);
+        }
+
+        return compare(thiz, that);
     }
 
     @Override

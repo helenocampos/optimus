@@ -22,11 +22,9 @@ import org.apache.maven.surefire.report.ConsoleStream;
 public class TestsSorter
 {
     private final ConsoleStream consoleStream;
-    private String projectName;
     
-    public TestsSorter(ConsoleStream consoleStream,String projectName){
+    public TestsSorter(ConsoleStream consoleStream){
         this.consoleStream = consoleStream;
-        this.projectName = projectName;
     }
     
     public List<AbstractTest> sort(List<AbstractTest> tests, String prioritizationTechnique, String testGranularity){
@@ -52,7 +50,7 @@ public class TestsSorter
     }
     
     public List<AbstractTest> sortAdditional(List<AbstractTest> tests, AdditionalOrderer<AbstractTest> testsOrderer){
-        List<AbstractTest> sortedTests = new LinkedList<AbstractTest>();
+        List<AbstractTest> sortedTests = new LinkedList<>();
         while(!tests.isEmpty()){
             AbstractTest nextTest = testsOrderer.getNextTest(tests, sortedTests);
             sortedTests.add(nextTest);

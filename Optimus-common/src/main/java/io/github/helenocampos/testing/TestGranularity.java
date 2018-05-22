@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package io.github.helenocampos.optimushistoricalanalyzer.domain;
+package io.github.helenocampos.testing;
 
 /**
  *
@@ -11,21 +11,40 @@ package io.github.helenocampos.optimushistoricalanalyzer.domain;
  */
 public enum TestGranularity
 {
-    METHOD(1),
-    CLASS(2);
+    METHOD("method",1),
+    CLASS("class",2);
 
-    TestGranularity(int id)
+    TestGranularity(String name, int id)
     {
+        this.name = name;
         this.id = id;
     }
 
-    private final int id;
+    private String name;
+    private int id;
 
+    public String getName()
+    {
+        return this.name;
+    }
+    
     public int getId()
     {
         return this.id;
     }
 
+    public static TestGranularity getGranularityByName(String name)
+    {
+        for (TestGranularity value : values())
+        {
+            if (value.getName().equalsIgnoreCase(name))
+            {
+                return value;
+            }
+        }
+        return null;
+    }
+    
     public static TestGranularity getGranularityById(int id)
     {
         for (TestGranularity granularity : TestGranularity.values())

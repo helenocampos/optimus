@@ -14,7 +14,7 @@ import io.github.helenocampos.extractor.model.JavaTestClass;
 import io.github.helenocampos.extractor.model.ModificationsGranularity;
 import io.github.helenocampos.extractor.model.ProjectData;
 import io.github.helenocampos.testing.AbstractTest;
-import io.github.helenocampos.testing.Granularity;
+import io.github.helenocampos.testing.TestGranularity;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -44,11 +44,11 @@ public class CoverageAnalyzer
             JavaTestClass testClass = this.getProjectData().getTestClassByName(test.getTestClass().getName());
             if (testClass != null)
             {
-                if (test.getTestGranularity().equals(Granularity.METHOD))
+                if (test.getTestGranularity().equals(TestGranularity.METHOD))
                 {
                     TestMethod method = testClass.getMethodByName(test.getTestName());
                     score = getTestMethodTotalCoverage(method, granularity);
-                } else if (test.getTestGranularity().equals(Granularity.CLASS))
+                } else if (test.getTestGranularity().equals(TestGranularity.CLASS))
                 {
                     for (TestMethod method : testClass.getMethods().values())
                     {
@@ -70,11 +70,11 @@ public class CoverageAnalyzer
             JavaTestClass testClass = this.getProjectData().getTestClassByName(test.getTestClass().getName());
             if (testClass != null)
             {
-                if (test.getTestGranularity().equals(Granularity.METHOD))
+                if (test.getTestGranularity().equals(TestGranularity.METHOD))
                 {
                     TestMethod method = testClass.getMethodByName(test.getTestName());
                     score = getTestMethodTotalDiffCoverage(method, modificationsGranularity, modifiedElements);
-                } else if (test.getTestGranularity().equals(Granularity.CLASS))
+                } else if (test.getTestGranularity().equals(TestGranularity.CLASS))
                 {
                     for (TestMethod method : testClass.getMethods().values())
                     {
@@ -95,7 +95,7 @@ public class CoverageAnalyzer
             if (method.getCoverage() != null)
             {
                 modifiedElements = normalizeCoverageStrings(modifiedElements);
-                Set<String> elementsCovered = normalizeCoverageStrings(getElementsCovered(method.getCoverage().getCoverage(CoverageGranularity.METHOD), modificationsGranularity));
+                Set<String> elementsCovered = normalizeCoverageStrings(getElementsCovered(method.getCoverage().getCoverage(CoverageGranularity.METHOD, false), modificationsGranularity));
                 modifiedElements.retainAll(elementsCovered);
                 score = modifiedElements.size();
             }
@@ -176,7 +176,7 @@ public class CoverageAnalyzer
         return coveredClasses;
     }
 
-    public float getAdditionalTestCoverage(AbstractTest test, CoverageGranularity granularity, List<AbstractTest> currentCandidateTests)
+    public float getAdditionalTestCoverage(AbstractTest test, CoverageGranularity granularity, Coverage coveredCode)
     {
         float score = 0;
 
@@ -185,16 +185,15 @@ public class CoverageAnalyzer
             JavaTestClass testClass = this.getProjectData().getTestClassByName(test.getTestClass().getName());
             if (testClass != null)
             {
-                Coverage coveredCode = getCoverageFromTests(currentCandidateTests);
-                if (test.getTestGranularity().equals(Granularity.METHOD))
+                if (test.getTestGranularity().equals(TestGranularity.METHOD))
                 {
                     TestMethod method = testClass.getMethodByName(test.getTestName());
-                    score = getTestMethodAdditionalCoverage(method, granularity, coveredCode);
-                } else if (test.getTestGranularity().equals(Granularity.CLASS))
+                    score = getTestMethodAdditionalCoverage(method, granularity, coveredCode, false);
+                } else if (test.getTestGranularity().equals(TestGranularity.CLASS))
                 {
                     for (TestMethod method : testClass.getMethods().values())
                     {
-                        score += getTestMethodAdditionalCoverage(method, granularity, coveredCode);
+                        score += getTestMethodAdditionalCoverage(method, granularity, coveredCode, true);
                     }
                 }
             }
@@ -203,7 +202,7 @@ public class CoverageAnalyzer
         return score;
     }
 
-    public float getAdditionalDiffTestCoverage(AbstractTest test, ModificationsGranularity modificationsGranularity, List<AbstractTest> currentCandidateTests, Set<String> modifiedElements)
+    public float getAdditionalDiffTestCoverage(AbstractTest test, ModificationsGranularity modificationsGranularity, Coverage alreadyCoveredCode, Set<String> modifiedElements)
     {
         float score = 0;
 
@@ -212,13 +211,12 @@ public class CoverageAnalyzer
             JavaTestClass testClass = this.getProjectData().getTestClassByName(test.getTestClass().getName());
             if (testClass != null)
             {
-                Coverage coveredCode = getCoverageFromTests(currentCandidateTests);
-                Set<String> alreadyCoveredElements = normalizeCoverageStrings(getElementsCovered(coveredCode.getCoverage(CoverageGranularity.METHOD), modificationsGranularity));
-                if (test.getTestGranularity().equals(Granularity.METHOD))
+                Set<String> alreadyCoveredElements = normalizeCoverageStrings(getElementsCovered(alreadyCoveredCode.getCoverage(CoverageGranularity.METHOD, false), modificationsGranularity));
+                if (test.getTestGranularity().equals(TestGranularity.METHOD))
                 {
                     TestMethod method = testClass.getMethodByName(test.getTestName());
                     score = getTestMethodAdditionalDiffCoverage(method, modificationsGranularity, alreadyCoveredElements, modifiedElements);
-                } else if (test.getTestGranularity().equals(Granularity.CLASS))
+                } else if (test.getTestGranularity().equals(TestGranularity.CLASS))
                 {
                     for (TestMethod method : testClass.getMethods().values())
                     {
@@ -239,7 +237,7 @@ public class CoverageAnalyzer
             if (method.getCoverage() != null)
             {
                 modifiedElements = normalizeCoverageStrings(modifiedElements);
-                Set<String> elementsCovered = normalizeCoverageStrings(getAdditionalElementsCovered(method.getCoverage().getCoverage(CoverageGranularity.METHOD), diffGranularity, alreadyCoveredElements));
+                Set<String> elementsCovered = normalizeCoverageStrings(getAdditionalElementsCovered(method.getCoverage().getCoverage(CoverageGranularity.METHOD, false), diffGranularity, alreadyCoveredElements));
                 alreadyCoveredElements.addAll(elementsCovered);
                 modifiedElements.retainAll(elementsCovered);
                 additionalScore = modifiedElements.size();
@@ -255,7 +253,7 @@ public class CoverageAnalyzer
         {
             if (method.getCoverage() != null)
             {
-                for (String data : method.getCoverage().getCoverage(granularity).values())
+                for (String data : method.getCoverage().getCoverage(granularity, false).values())
                 {
                     for (int x = 0; x < data.length(); x++)
                     {
@@ -271,7 +269,7 @@ public class CoverageAnalyzer
         return score;
     }
 
-    private float getTestMethodAdditionalCoverage(TestMethod method, CoverageGranularity granularity, Coverage candidatesCoveredCode)
+    private float getTestMethodAdditionalCoverage(TestMethod method, CoverageGranularity granularity, Coverage candidatesCoveredCode, boolean updateCoverage)
     {
         float additionalScore = 0;
         if (method != null)
@@ -279,30 +277,32 @@ public class CoverageAnalyzer
             if (method.getCoverage() != null)
             {
                 Coverage coverage = method.getCoverage();
-                for (String className : coverage.getCoverage(granularity).keySet())
+                for (String className : coverage.getCoverage(granularity, false).keySet())
                 {
-                    String coveredElements = coverage.getCoverage(granularity).get(className); //statements really covered by the test contained in className
-                    String candidatesCoveredElements = candidatesCoveredCode.getCoverage(granularity).get(className);
+                    String coveredElements = coverage.getCoverage(granularity, false).get(className); //elements covered by the test contained in className
+                    String candidatesCoveredElements = candidatesCoveredCode.getCoverage(granularity, false).get(className); //elements already covered
 
                     if (candidatesCoveredElements == null)
                     {
                         candidatesCoveredElements = getClearedCoverage(coveredElements.length());
                     }
-
+                    StringBuilder alreadyCoveredElements = new StringBuilder(candidatesCoveredElements);
                     for (int x = 0; x < coveredElements.length(); x++)
                     {
                         if (coveredElements.charAt(x) == '1')
                         {
-                            if (candidatesCoveredElements.charAt(x) == '0')
+                            if (alreadyCoveredElements.charAt(x) == '0')
                             {
                                 //element not yet covered by candidates tests, compute one Score
-                                candidatesCoveredElements = replaceCoverage(x, candidatesCoveredElements, '1');
+                                alreadyCoveredElements.setCharAt(x, '1');
                                 additionalScore++;
 
                             }
                         }
                     }
-                    candidatesCoveredCode.getCoverage(granularity).put(className, candidatesCoveredElements);
+                    if(updateCoverage){
+                        candidatesCoveredCode.getCoverage(granularity, false).put(className, alreadyCoveredElements.toString());
+                    }
                 }
             }
         }
@@ -311,12 +311,13 @@ public class CoverageAnalyzer
 
     private String getClearedCoverage(int size)
     {
-        String clearedCoverage = "";
+        StringBuilder clearedCoverage = new StringBuilder();
+         
         for (int i = 0; i < size; i++)
         {
-            clearedCoverage += "0";
+            clearedCoverage.append("0");
         }
-        return clearedCoverage;
+        return clearedCoverage.toString();
     }
 
     private String replaceCoverage(int index, String coverageString, char newValue)
@@ -326,7 +327,7 @@ public class CoverageAnalyzer
         return String.valueOf(stringChars);
     }
 
-    private Coverage getCoverageFromTests(List<AbstractTest> tests)
+    public Coverage getCoverageFromTests(List<AbstractTest> tests)
     {
         Coverage testsCoverage = new Coverage();
         for (AbstractTest test : tests)
@@ -340,24 +341,24 @@ public class CoverageAnalyzer
         return testsCoverage;
     }
 
-    public LinkedHashMap<String, String> getTestCoverage(AbstractTest test, CoverageGranularity granularity)
+    private LinkedHashMap<String, String> getTestCoverage(AbstractTest test, CoverageGranularity granularity)
     {
         JavaTestClass testClass = this.getProjectData().getTestClassByName(test.getTestClass().getName());
         LinkedHashMap<String, String> testCoverage = new LinkedHashMap<>();
         if (testClass != null)
         {
-            if (test.getTestGranularity().equals(Granularity.METHOD))
+            if (test.getTestGranularity().equals(TestGranularity.METHOD))
             {
                 TestMethod method = testClass.getMethodByName(test.getTestName());
                 if (method != null)
                 {
-                    testCoverage.putAll(method.getCoverage().getCoverage(granularity));
+                    testCoverage.putAll(method.getCoverage().getCoverage(granularity, false));
                 }
-            } else if (test.getTestGranularity().equals(Granularity.CLASS))
+            } else if (test.getTestGranularity().equals(TestGranularity.CLASS))
             {
                 for (TestMethod method : testClass.getMethods().values())
                 {
-                    LinkedHashMap<String, String> methodCoverage = method.getCoverage().getCoverage(granularity);
+                    LinkedHashMap<String, String> methodCoverage = method.getCoverage().getCoverage(granularity, false);
                     testCoverage = Coverage.merge(methodCoverage, testCoverage);
                 }
             }
@@ -371,15 +372,15 @@ public class CoverageAnalyzer
         JavaTestClass testClass = getProjectData().getTestClassByName(test.getTestClass().getCanonicalName());
         if (testClass != null)
         {
-            if (test.getTestGranularity().equals(Granularity.CLASS))
+            if (test.getTestGranularity().equals(TestGranularity.CLASS))
             {
                 LinkedHashMap<String, String> testClassCoverage = new LinkedHashMap<>();
                 for (TestMethod method : testClass.getMethods().values())
                 {
-                    LinkedHashMap<String, String> testMethodCoverage = method.getCoverage().getCoverage(coverageGranularity);
+                    LinkedHashMap<String, String> testMethodCoverage = method.getCoverage().getCoverage(coverageGranularity, true);
                     testClassCoverage = Coverage.merge(testMethodCoverage, testClassCoverage);
                 }
-                coverageString = Coverage.getCoverageString(coverageGranularity, testClassCoverage);
+                coverageString = Coverage.getCoverageString(testClassCoverage);
             } else
             {
                 TestMethod method = testClass.getMethodByName(test.getTestName());

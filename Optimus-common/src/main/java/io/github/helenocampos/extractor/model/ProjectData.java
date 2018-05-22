@@ -25,6 +25,8 @@ public class ProjectData
     private HashMap<String, JavaSourceCodeClass> classes;
     private HashMap<String, JavaTestClass> tests;
 
+    private static ProjectData INSTANCE = null;
+    
     public ProjectData(String projectPath)
     {
         classes = new HashMap<String, JavaSourceCodeClass>();
@@ -79,7 +81,7 @@ public class ProjectData
 
     public void writeProjectDataFile()
     {
-        normalizeCoverageData();
+//        normalizeCoverageData();
         XStream xstream = new XStream();
         List<String> lines = Arrays.asList(xstream.toXML(this));
         Path file = Paths.get("projectData.xml");
@@ -120,6 +122,13 @@ public class ProjectData
 
         }
         return loadedProjectData;
+    }
+    
+    public static ProjectData getProjectData(){
+        if(INSTANCE==null){
+            INSTANCE = getProjectDataFromFile();
+        }
+        return INSTANCE;
     }
     
     private static boolean validateProjectData(String firstLine){

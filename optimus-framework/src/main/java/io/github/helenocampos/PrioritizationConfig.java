@@ -20,8 +20,9 @@ public class PrioritizationConfig {
     private boolean generateFaultsFile;
     private boolean collectCoverageData;
     private boolean calcAPFD;
+    private boolean simulateExecution;
     
-    public PrioritizationConfig(String granularity, String technique, String projectFolder, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD) {
+    public PrioritizationConfig(String granularity, String technique, String projectFolder, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD, boolean simulateExecution) {
         this.granularity = granularity;
         this.technique = technique;
         this.projectFolder = projectFolder;
@@ -29,6 +30,7 @@ public class PrioritizationConfig {
         this.projectName = projectName;
         this.generateFaultsFile = generateFaultsFile;
         this.calcAPFD = calcAPFD;
+        this.simulateExecution = simulateExecution;
     }
 
     public PrioritizationConfig() {
@@ -150,5 +152,15 @@ public class PrioritizationConfig {
     public void setCollectCoverageData(boolean collectCoverageData)
     {
         this.collectCoverageData = collectCoverageData;
+    }
+
+    public boolean isSimulateExecution()
+    {
+        return simulateExecution;
+    }
+
+    public void setSimulateExecution(boolean simulateExecution)
+    {
+        this.simulateExecution = simulateExecution;
     }
 }

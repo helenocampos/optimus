@@ -6,7 +6,7 @@
 package io.github.helenocampos.surefire;
 
 import io.github.helenocampos.testing.AbstractTest;
-import io.github.helenocampos.testing.Granularity;
+import io.github.helenocampos.testing.TestGranularity;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -20,9 +20,9 @@ public class TestClass extends AbstractTest
     private List<Method> methods;
     
     @Override
-    public Granularity getTestGranularity()
+    public TestGranularity getTestGranularity()
     {
-        return Granularity.CLASS;
+        return TestGranularity.CLASS;
     }
 
     public List<Method> getMethods()

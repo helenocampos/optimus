@@ -9,6 +9,7 @@ import io.github.helenocampos.extractor.AttributesExtractor;
 import io.github.helenocampos.extractor.model.JavaSourceCodeClass;
 import io.github.helenocampos.extractor.model.ModificationsGranularity;
 import io.github.helenocampos.extractor.model.ProjectData;
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,32 +45,40 @@ public class ModificationsAnalyzer
     public Set<String> getModifiedElements(ModificationsGranularity modificationsGranularity)
     {
         Set<String> modifiedElements = new HashSet<>();
-        for (String key : projectData.getClasses().keySet())
+        if (backupExists())
         {
-            JavaSourceCodeClass originalClass = projectData.getClasses().get(key);
-            String currentVersion = originalClass.getPath();
-            String oldVersion = sourceBackupPath + currentVersion.substring(currentVersion.indexOf("src/") + 3);
-            if (modificationsGranularity.equals(ModificationsGranularity.METHOD))
+            for (String key : projectData.getClasses().keySet())
             {
-                List<String> methods = AttributesExtractor.parseClass(currentVersion).getMethodsNames();
-                for (String method : methods)
+                JavaSourceCodeClass originalClass = projectData.getClasses().get(key);
+                String currentVersion = originalClass.getPath();
+                String oldVersion = sourceBackupPath + currentVersion.substring(currentVersion.indexOf("src/") + 3);
+                if (modificationsGranularity.equals(ModificationsGranularity.METHOD))
                 {
-                    ProgramElement element = new ProgramElement(method, oldVersion, currentVersion, modificationsGranularity);
+                    List<String> methods = AttributesExtractor.parseClass(currentVersion).getMethodsNames();
+                    for (String method : methods)
+                    {
+                        ProgramElement element = new ProgramElement(method, oldVersion, currentVersion, modificationsGranularity);
+                        if (element.getDeltas().size() > 0)
+                        {
+                            modifiedElements.add(key + "." + method);
+                        }
+                    }
+                } else
+                {
+                    ProgramElement element = new ProgramElement(key, oldVersion, currentVersion, modificationsGranularity);
                     if (element.getDeltas().size() > 0)
                     {
-                        modifiedElements.add(key + "." + method);
+                        modifiedElements.add(key);
                     }
-                }
-            } else
-            {
-                ProgramElement element = new ProgramElement(key, oldVersion, currentVersion, modificationsGranularity);
-                if (element.getDeltas().size() > 0)
-                {
-                    modifiedElements.add(key);
                 }
             }
         }
         return modifiedElements;
+    }
+    
+    private boolean backupExists(){
+        File backupFolder = new File(sourceBackupPath);
+        return backupFolder.exists();
     }
 
     public int getAmountOfModifiedLines(String elementName, ModificationsGranularity modificationsGranularity)

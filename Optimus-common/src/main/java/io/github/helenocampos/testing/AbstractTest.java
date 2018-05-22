@@ -16,7 +16,7 @@ public abstract class AbstractTest
     private String classPath; //TODO: pode ser obtido através do classLoader?
     private String sourcePath;
     
-    public abstract Granularity getTestGranularity();
+    public abstract TestGranularity getTestGranularity();
 
     public Class getTestClass()
     {

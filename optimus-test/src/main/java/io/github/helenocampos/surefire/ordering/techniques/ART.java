@@ -5,6 +5,7 @@
  */
 package io.github.helenocampos.surefire.ordering.techniques;
 
+import io.github.helenocampos.extractor.model.Coverage;
 import io.github.helenocampos.extractor.model.CoverageGranularity;
 import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
 import io.github.helenocampos.surefire.api.AdditionalOrderer;
@@ -69,7 +70,8 @@ public abstract class ART extends AdditionalOrderer<AbstractTest>
             while (additionalCoverageScore != 0 && remainingTests.size() > 0)
             {
                 AbstractTest randomTest = remainingTests.get(randomizer.nextInt(remainingTests.size()));
-                additionalCoverageScore = this.coverageAnalyzer.getAdditionalTestCoverage(randomTest, getCoverageGranularity(), candidateSet);
+                Coverage candidateSetCoveredCode = this.coverageAnalyzer.getCoverageFromTests(candidateSet);
+                additionalCoverageScore = this.coverageAnalyzer.getAdditionalTestCoverage(randomTest, getCoverageGranularity(), candidateSetCoveredCode);
                 if (additionalCoverageScore != 0)
                 {
                     candidateSet.add(randomTest);

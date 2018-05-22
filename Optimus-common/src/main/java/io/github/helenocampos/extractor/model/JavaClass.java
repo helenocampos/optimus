@@ -109,4 +109,13 @@ public abstract class JavaClass{
     {
         this.executableMethods = executableMethods;
     }
+    
+    public int getExecutableElements(CoverageGranularity granularity){
+        switch(granularity){
+            case STATEMENT: return executableLines;
+            case BRANCH: return executableBranches;
+            case METHOD: return executableMethods;
+            default: return 0;
+        }
+    }
 }

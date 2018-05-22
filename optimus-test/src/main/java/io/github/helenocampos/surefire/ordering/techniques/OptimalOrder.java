@@ -19,7 +19,7 @@ import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.ordering.Strategy;
 import io.github.helenocampos.surefire.api.DefaultOrderer;
 import io.github.helenocampos.surefire.junit4.FaultRevealingTest;
-import io.github.helenocampos.testing.Granularity;
+import io.github.helenocampos.testing.TestGranularity;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -76,7 +76,7 @@ public class OptimalOrder extends DefaultOrderer<AbstractTest>
         return Strategy.DEFAULT.getName();
     }
 
-    private void readTestsFile(Granularity testGranularity)
+    private void readTestsFile(TestGranularity testGranularity)
     {
         Path file = Paths.get("TestsRevealingFaults");
         List<String> fileLines = new LinkedList<String>();
@@ -89,7 +89,7 @@ public class OptimalOrder extends DefaultOrderer<AbstractTest>
         }
         for (String line : fileLines)
         {
-            if (testGranularity.equals(Granularity.CLASS))
+            if (testGranularity.equals(TestGranularity.CLASS))
             {
                 if (line.contains("."))
                 {

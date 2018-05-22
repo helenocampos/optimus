@@ -10,7 +10,7 @@ import io.github.helenocampos.extractor.model.TestMethod;
 import io.github.helenocampos.extractor.model.JavaTestClass;
 import io.github.helenocampos.extractor.model.ProjectData;
 import io.github.helenocampos.testing.AbstractTest;
-import io.github.helenocampos.testing.Granularity;
+import io.github.helenocampos.testing.TestGranularity;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,10 +62,10 @@ public class ExecutionTraceAnalyzer
     public float getTestExecutionScore(AbstractTest test)
     {
         float score = 0;
-        if (test.getTestGranularity().equals(Granularity.METHOD))
+        if (test.getTestGranularity().equals(TestGranularity.METHOD))
         {
             score = getTestExecutionCount(test.getQualifiedName());
-        } else if (test.getTestGranularity().equals(Granularity.CLASS))
+        } else if (test.getTestGranularity().equals(TestGranularity.CLASS))
         {
             JavaTestClass testClass = projectData.getTestClassByName(test.getQualifiedName());
             for (TestMethod method : testClass.getMethods().values())
@@ -139,10 +139,10 @@ public class ExecutionTraceAnalyzer
         String frequencyProfile = "";
         for (AbstractTest test : tests)
         {
-            if (test.getTestGranularity().equals(Granularity.METHOD))
+            if (test.getTestGranularity().equals(TestGranularity.METHOD))
             {
                 frequencyProfile += getTestFrequencyProfile(test.getQualifiedName());
-            } else if (test.getTestGranularity().equals(Granularity.CLASS))
+            } else if (test.getTestGranularity().equals(TestGranularity.CLASS))
             {
                 JavaTestClass testClass = projectData.getTestClassByName(test.getQualifiedName());
                 
@@ -158,10 +158,10 @@ public class ExecutionTraceAnalyzer
     public String getTestOrderedSequence(AbstractTest test)
     {
         String orderedSequence = "";
-        if (test.getTestGranularity().equals(Granularity.METHOD))
+        if (test.getTestGranularity().equals(TestGranularity.METHOD))
         {
             orderedSequence = getTestOrderedSequence(test.getQualifiedName());
-        } else if (test.getTestGranularity().equals(Granularity.CLASS))
+        } else if (test.getTestGranularity().equals(TestGranularity.CLASS))
         {
             JavaTestClass testClass = projectData.getTestClassByName(test.getQualifiedName());
             String frequencyProfile = "";
