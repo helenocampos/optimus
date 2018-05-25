@@ -274,8 +274,26 @@ public class OptimusProvider extends AbstractProvider
         {
             this.projectData.writeProjectDataFile();
         }
+        if(registerExecution){
+            HistoricalDataListener listener = this.getHistoricalDataListener();
+            if(listener!=null){
+                listener.registerExecution();
+            }
+        }
     }
-
+    
+    private HistoricalDataListener getHistoricalDataListener()
+    {
+        for (org.junit.runner.notification.RunListener listener : this.customRunListeners)
+        {
+            if (listener instanceof HistoricalDataListener)
+            {
+                return (HistoricalDataListener) listener;
+            }
+        }
+        return null;
+    }
+    
     private RunResult invokeExecutor(AbstractTest toRun) throws TestSetFailedException
     {
         if (executor != null)

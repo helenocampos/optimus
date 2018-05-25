@@ -94,7 +94,7 @@ public class LocalProjectCrawler
     
     private void processFile(File f){
         String fileExtension = FilenameUtils.getExtension(f.getName());
-            if (fileExtension.equals("java"))
+            if (fileExtension.equals("java") && f.getPath().contains("src"))
             {
                 String packageNameSource = getPackageFromSourceFile(f.getPath());
                 if (isTestClass(f.getAbsolutePath()))

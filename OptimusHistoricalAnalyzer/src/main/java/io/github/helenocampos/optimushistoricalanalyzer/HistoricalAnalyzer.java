@@ -6,7 +6,9 @@
 package io.github.helenocampos.optimushistoricalanalyzer;
 
 import io.github.helenocampos.optimushistoricalanalyzer.dao.TestExecutionDAO;
-import io.github.helenocampos.optimushistoricalanalyzer.domain.TestExecution;
+import io.github.helenocampos.optimushistoricalanalyzer.domain.TestCaseExecution;
+import io.github.helenocampos.optimushistoricalanalyzer.domain.TestSetExecution;
+import java.util.List;
 
 /**
  *
@@ -36,10 +38,28 @@ public class HistoricalAnalyzer
             return failureAmount / (float)executedAmount;
         }
     }
-
-    public void registerTestExecution(TestExecution execution)
+    
+    public float getRecentTestFailureScore(String testName, String projectName)
     {
-        this.dao.insertExecution(execution);
+        List<TestSetExecution> testSetExecutions = this.dao.getTestSetExecutions(testName, projectName);
+        int freshnessOfExecution = 1;
+        int score = 0;
+        for(TestSetExecution testSetExecution: testSetExecutions){
+            for(TestCaseExecution testCaseExecution: testSetExecution.getExecutedTests()){
+                if(!testCaseExecution.isResult()){
+                    score+=freshnessOfExecution;
+                }
+            }
+            freshnessOfExecution++;
+        }
+       return score;
+    }
+    
+    
+
+    public void registerTestSetExecution(TestSetExecution execution)
+    {
+        this.dao.insertTestSetExecution(execution);
     }
 
 }

@@ -6,7 +6,8 @@
 package io.github.helenocampos.surefire.junit4;
 
 import io.github.helenocampos.optimushistoricalanalyzer.HistoricalAnalyzer;
-import io.github.helenocampos.optimushistoricalanalyzer.domain.TestExecution;
+import io.github.helenocampos.optimushistoricalanalyzer.domain.TestCaseExecution;
+import io.github.helenocampos.optimushistoricalanalyzer.domain.TestSetExecution;
 import io.github.helenocampos.testing.TestGranularity;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
@@ -24,13 +25,15 @@ public class HistoricalDataListener extends RunListener
     private TestGranularity granualarity;
     private String projectName;
     private String lastClass;
-    private TestExecution currentTest;
+    private TestCaseExecution currentTest;
+    private TestSetExecution testSet;
 
     public HistoricalDataListener(String granularity, String dbPath, String projectName)
     {
         super();
         this.analyzer = new HistoricalAnalyzer(dbPath);
         this.granualarity = TestGranularity.getGranularityByName(granularity);
+        this.testSet = new TestSetExecution(System.currentTimeMillis(),projectName);
         this.lastClass = "";
         this.currentTest = null;
         this.projectName = projectName;
@@ -60,7 +63,7 @@ public class HistoricalDataListener extends RunListener
     {
         super.testRunFinished(result); //To change body of generated methods, choose Tools | Templates.
         updateTestTime(result.getRunTime());
-        this.analyzer.registerTestExecution(currentTest);
+        this.testSet.addExecutedTest(currentTest);
     }
 
     @Override
@@ -93,18 +96,16 @@ public class HistoricalDataListener extends RunListener
         return testName;
     }
 
-    private TestExecution instantiateTestExecution(String testName)
+    private TestCaseExecution instantiateTestExecution(String testName)
     {
-        TestExecution execution = new TestExecution();
+        TestCaseExecution execution = new TestCaseExecution();
         execution.setTestName(testName);
-        execution.setTimeStamp(System.currentTimeMillis());
         execution.setResult(true);
-        execution.setProjectName(this.projectName);
         setGranularity(execution);
         return execution;
     }
 
-    private void setGranularity(TestExecution execution)
+    private void setGranularity(TestCaseExecution execution)
     {
         if (this.granualarity.equals(TestGranularity.METHOD))
         {
@@ -113,6 +114,10 @@ public class HistoricalDataListener extends RunListener
         {
             execution.setGranularity(TestGranularity.CLASS);
         }
+    }
+    
+    public void registerExecution(){
+        this.analyzer.registerTestSetExecution(testSet);
     }
 
 }

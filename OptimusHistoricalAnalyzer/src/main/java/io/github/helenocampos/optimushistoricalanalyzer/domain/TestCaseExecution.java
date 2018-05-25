@@ -11,7 +11,7 @@ import io.github.helenocampos.testing.TestGranularity;
  *
  * @author helenocampos
  */
-public class TestExecution
+public class TestCaseExecution
 {
 
     private int id;
@@ -19,36 +19,22 @@ public class TestExecution
     private TestGranularity granularity;
     private double executionTime;
     private boolean result;
-    private long timeStamp;
-    private String projectName;
-
-    public TestExecution(int id, String testName, TestGranularity granularity, double executionTime, boolean result, long timeStamp, String projectName)
+    private int testSetId;
+    
+    public TestCaseExecution(int id, String testName, TestGranularity granularity, double executionTime, boolean result, int testSetId)
     {
         this.id = id;
         this.testName = testName;
         this.granularity = granularity;
         this.executionTime = executionTime;
         this.result = result;
-        this.timeStamp = timeStamp;
-        this.projectName = projectName;
+        this.testSetId = testSetId;
     }
-
-    public String getProjectName()
-    {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName)
-    {
-        this.projectName = projectName;
-    }
-
-    public TestExecution()
-    {
-    }
-
     
-    
+    public TestCaseExecution()
+    {
+    }
+   
     public int getId()
     {
         return id;
@@ -99,14 +85,13 @@ public class TestExecution
         this.result = result;
     }
 
-    public long getTimeStamp()
+    public int getTestSetId()
     {
-        return timeStamp;
+        return testSetId;
     }
 
-    public void setTimeStamp(long timeStamp)
+    public void setTestSetId(int testSetId)
     {
-        this.timeStamp = timeStamp;
+        this.testSetId = testSetId;
     }
-
 }
