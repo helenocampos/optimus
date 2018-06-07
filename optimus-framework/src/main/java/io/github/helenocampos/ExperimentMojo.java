@@ -148,14 +148,6 @@ public class ExperimentMojo
         ReportsController reports = new ReportsController(this.getMavenProject().getName(), new File(getExperimentOutputDirectory(), timeStamp), this.getReports(), "multiple");
     }
 
-    //executed each time when it is the first execution, so that coverage data can be gathered before prioritization
-    private void collectCoverageData(File outputExperimentFolder) {
-        pomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
-        pomManager.setupFirstRun(outputExperimentFolder.getAbsolutePath());
-        Runtime rt = Runtime.getRuntime();
-        invokeProcess(rt, outputExperimentFolder, true);
-    }
-
     private void logMessage(String message) {
         System.out.println("-------------------------");
         System.out.println("[OPTIMUS]" + message);
