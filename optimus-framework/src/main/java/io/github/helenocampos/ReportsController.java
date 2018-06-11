@@ -38,7 +38,12 @@ public class ReportsController {
             File[] subFiles = this.rootFolder.listFiles();
             for (File subFile : subFiles) {
                 if (subFile.isDirectory()) {
-                    File runFolder = new File(subFile, projectName);
+                    File runFolder;
+                    if(PomManager.isMavenProject(subFile.getAbsolutePath())){
+                        runFolder = subFile;
+                    }else{
+                        runFolder = new File(subFile, projectName);
+                    }
                     ExecutionData data = new ExecutionData(runFolder.getAbsolutePath());
                     this.executionData.addAll(data.readExecutionData());
                 }

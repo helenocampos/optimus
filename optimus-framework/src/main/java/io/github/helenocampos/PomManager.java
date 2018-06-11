@@ -5,6 +5,7 @@
  */
 package io.github.helenocampos;
 
+import io.github.helenocampos.PrioritizationConfig;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -25,21 +26,18 @@ import org.apache.maven.model.PluginExecution;
 import org.apache.maven.model.io.DefaultModelWriter;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.twdata.maven.mojoexecutor.MojoExecutor;
 
 /**
  *
  * @author helenocampos
  */
-public class PomManager
-{
+public class PomManager {
 
     /**
      * @return the excludes
      */
-    public Xpp3Dom[] getExcludes()
-    {
+    public Xpp3Dom[] getExcludes() {
         return excludes;
     }
 
@@ -47,94 +45,79 @@ public class PomManager
     private Xpp3Dom[] excludes;
     private Xpp3Dom[] includes;
 
-    public PomManager(String projectFolder)
-    {
+    public PomManager(String projectFolder) {
         this.originalPom = readPom(projectFolder);
         this.excludes = getSurefireExcludesConfig(originalPom);
         this.includes = getSurefireIncludesConfig(originalPom);
     }
 
-    public Model readPom(String projectFolder)
-    {
+    public static Model readPom(String projectFolder) {
         MavenXpp3Reader reader = new MavenXpp3Reader();
         File newProjectDir = new File(projectFolder);
         Model pomModel = null;
-        if (newProjectDir.exists())
-        {
+        if (newProjectDir.exists()) {
             File pom = new File(newProjectDir, "pom.xml");
-            if (pom.exists())
-            {
-                try
-                {
+            if (pom.exists()) {
+                try {
                     pomModel = reader.read(new FileReader(pom));
-                } catch (FileNotFoundException ex)
-                {
+                } catch (Exception ex) {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex)
-                {
-//                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (XmlPullParserException ex)
-                {
-//                    Logger.getLogger(PomManager.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
         return pomModel;
     }
 
-    public void writePom(Model model, String projectFolder)
-    {
+    public static String getProjectId(String projectFolder) {
+        Model model = readPom(projectFolder);
+        if(model!=null){
+            return model.getArtifactId();
+        }else{
+            return "";
+        }
+    }
+
+    public void writePom(Model model, String projectFolder) {
         File newProjectDir = new File(projectFolder);
-        if (newProjectDir.exists())
-        {
+        if (newProjectDir.exists()) {
             File pom = new File(newProjectDir, "pom.xml");
-            if (pom.exists())
-            {
-                try
-                {
+            if (pom.exists()) {
+                try {
                     DefaultModelWriter writer = new DefaultModelWriter();
                     OutputStream output = new FileOutputStream(pom);
                     replaceSpecialCharacters(model);
                     writer.write(output, null, model);
                     output.close();
-                } catch (FileNotFoundException ex)
-                {
+                } catch (FileNotFoundException ex) {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (IOException ex)
-                {
+                } catch (IOException ex) {
 //                    Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
     }
 
-    private void replaceSpecialCharacters(Model model)
-    {
+    private void replaceSpecialCharacters(Model model) {
         List<Contributor> contributors = model.getContributors();
-        if (contributors != null)
-        {
-            for (Contributor contributor : contributors)
-            {
+        if (contributors != null) {
+            for (Contributor contributor : contributors) {
                 String name = contributor.getName();
                 contributor.setName(Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}", ""));
             }
         }
         List<Developer> developers = model.getDevelopers();
-        if (developers != null)
-        {
-            for (Developer developer : developers)
-            {
+        if (developers != null) {
+            for (Developer developer : developers) {
                 String name = developer.getName();
                 developer.setName(Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}", ""));
             }
         }
     }
 
-    public void setupPrioritizationPlugin(PrioritizationConfig config)
-    {
+    public void setupPrioritizationPlugin(PrioritizationConfig config) {
         Model model = readPom(config.getProjectFolder());
         Build build = model.getBuild();
-        if(build==null){
+        if (build == null) {
             build = new Build();
             build.setPlugins(new LinkedList<Plugin>());
             model.setBuild(build);
@@ -144,19 +127,14 @@ public class PomManager
         writePom(model, config.getProjectFolder());
     }
 
-    private Xpp3Dom[] getSurefireExcludesConfig(Model model)
-    {
-        if (model != null)
-        {
+    private Xpp3Dom[] getSurefireExcludesConfig(Model model) {
+        if (model != null) {
             Build build = model.getBuild();
-            if (build != null)
-            {
+            if (build != null) {
                 Plugin surefire = getPluginByArtifactId(build.getPlugins(), "maven-surefire-plugin");
-                if (surefire != null)
-                {
+                if (surefire != null) {
                     Xpp3Dom configuration = (Xpp3Dom) surefire.getConfiguration();
-                    if (configuration != null)
-                    {
+                    if (configuration != null) {
                         return configuration.getChildren("excludes");
                     }
                 }
@@ -165,19 +143,14 @@ public class PomManager
         return null;
     }
 
-    private Xpp3Dom[] getSurefireIncludesConfig(Model model)
-    {
-        if (model != null)
-        {
+    private Xpp3Dom[] getSurefireIncludesConfig(Model model) {
+        if (model != null) {
             Build build = model.getBuild();
-            if (build != null)
-            {
+            if (build != null) {
                 Plugin surefire = getPluginByArtifactId(build.getPlugins(), "maven-surefire-plugin");
-                if (surefire != null)
-                {
+                if (surefire != null) {
                     Xpp3Dom configuration = (Xpp3Dom) surefire.getConfiguration();
-                    if (configuration != null)
-                    {
+                    if (configuration != null) {
                         return configuration.getChildren("includes");
                     }
                 }
@@ -186,24 +159,19 @@ public class PomManager
         return null;
     }
 
-    private Plugin getPluginByArtifactId(List<Plugin> plugins, String artifactId)
-    {
-        for (Plugin plugin : plugins)
-        {
-            if (plugin.getArtifactId().equals(artifactId))
-            {
+    private Plugin getPluginByArtifactId(List<Plugin> plugins, String artifactId) {
+        for (Plugin plugin : plugins) {
+            if (plugin.getArtifactId().equals(artifactId)) {
                 return plugin;
             }
         }
         return null;
     }
 
-    public void removeFramework(String projectFolder)
-    {
+    public void removeFramework(String projectFolder) {
         Model model = readPom(projectFolder);
         Build build = model.getBuild();
-        if (build != null)
-        {
+        if (build != null) {
             build.setPlugins(removePlugin("optimus-framework", build.getPlugins()));
             build.setPlugins(removePlugin("jacoco-maven-plugin", build.getPlugins()));
             build.setPlugins(removePlugin("maven-surefire-plugin", build.getPlugins()));
@@ -211,22 +179,18 @@ public class PomManager
         writePom(model, projectFolder);
     }
 
-    private List<Plugin> removePlugin(String artifactId, List<Plugin> plugins)
-    {
+    private List<Plugin> removePlugin(String artifactId, List<Plugin> plugins) {
         Iterator<Plugin> pluginsIterator = plugins.iterator();
-        while (pluginsIterator.hasNext())
-        {
+        while (pluginsIterator.hasNext()) {
             Plugin plugin = pluginsIterator.next();
-            if (plugin.getArtifactId().equals(artifactId))
-            {
+            if (plugin.getArtifactId().equals(artifactId)) {
                 pluginsIterator.remove();
             }
         }
         return plugins;
     }
 
-    private void addPrioritizationPlugin(List<Plugin> plugins, PrioritizationConfig config)
-    {
+    private void addPrioritizationPlugin(List<Plugin> plugins, PrioritizationConfig config) {
         Dependency dep = new Dependency();
         dep.setGroupId("io.github.helenocampos.surefire");
         dep.setArtifactId("optimus-test");
@@ -246,20 +210,15 @@ public class PomManager
 
     }
 
-    private Xpp3Dom getPrioritizationProperties(PrioritizationConfig config)
-    {
+    private Xpp3Dom getPrioritizationProperties(PrioritizationConfig config) {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
-        if (getExcludes() != null)
-        {
-            for (Xpp3Dom tag : getExcludes())
-            {
+        if (getExcludes() != null) {
+            for (Xpp3Dom tag : getExcludes()) {
                 configuration.addChild(tag);
             }
         }
-        if (getIncludes() != null)
-        {
-            for (Xpp3Dom tag : getIncludes())
-            {
+        if (getIncludes() != null) {
+            for (Xpp3Dom tag : getIncludes()) {
                 configuration.addChild(tag);
             }
         }
@@ -280,23 +239,20 @@ public class PomManager
         properties.addChild(createPropertyNode("clustersAmount", config.getClustersAmount()));
         properties.addChild(createPropertyNode("simulateExecution", Boolean.toString(config.isSimulateExecution())));
 
-        if (!config.getDbPath().equals(""))
-        {
+        if (!config.getDbPath().equals("")) {
             properties.addChild(createPropertyNode("dbPath", config.getDbPath()));
             properties.addChild(createPropertyNode("projectName", config.getProjectName()));
         }
         return configuration;
     }
 
-    private Xpp3Dom createConfigurationNode(String nodeName, String nodeValue)
-    {
+    private Xpp3Dom createConfigurationNode(String nodeName, String nodeValue) {
         Xpp3Dom node = new Xpp3Dom(nodeName);
         node.setValue(nodeValue);
         return node;
     }
 
-    private Xpp3Dom createPropertyNode(String propertyName, String propertyValue)
-    {
+    private Xpp3Dom createPropertyNode(String propertyName, String propertyValue) {
         Xpp3Dom property = new Xpp3Dom("property");
         Xpp3Dom name = new Xpp3Dom("name");
         name.setValue(propertyName);
@@ -307,8 +263,7 @@ public class PomManager
         return property;
     }
 
-    private void addJacocoPlugin(List<Plugin> plugins)
-    {
+    private void addJacocoPlugin(List<Plugin> plugins) {
         Plugin plugin = MojoExecutor.plugin(
                 "org.jacoco",
                 "jacoco-maven-plugin",
@@ -320,36 +275,28 @@ public class PomManager
         plugins.add(plugin);
     }
 
-    public Xpp3Dom[] getIncludes()
-    {
+    public Xpp3Dom[] getIncludes() {
         return includes;
     }
 
-    private boolean hasSubmodules(String projectPath)
-    {
+    private boolean hasSubmodules(String projectPath) {
         boolean hasSubmodules = false;
         Model pom = readPom(projectPath);
-        if (pom != null)
-        {
+        if (pom != null) {
             hasSubmodules = !pom.getModules().isEmpty();
         }
         return hasSubmodules;
     }
 
-    public List<File> getSubModules(String projectPath)
-    {
+    public List<File> getSubModules(String projectPath) {
         return getLeavesSubModules(projectPath, true);
     }
 
-    private boolean isMavenProject(String projectPath)
-    {
+    public static boolean isMavenProject(String projectPath) {
         File projectFolder = new File(projectPath);
-        if (projectFolder.exists())
-        {
-            for (File subFile : projectFolder.listFiles())
-            {
-                if (subFile.getName().equals("pom.xml"))
-                {
+        if (projectFolder.exists()) {
+            for (File subFile : projectFolder.listFiles()) {
+                if (subFile.getName().equals("pom.xml")) {
                     return true;
                 }
             }
@@ -357,25 +304,18 @@ public class PomManager
         return false;
     }
 
-    private List<File> getLeavesSubModules(String projectPath, boolean topLevelProject)
-    {
+    private List<File> getLeavesSubModules(String projectPath, boolean topLevelProject) {
         List<File> submodules = new LinkedList<File>();
         File projectFolder = new File(projectPath);
-        if (projectFolder.exists())
-        {
-            if (hasSubmodules(projectPath))
-            {
-                for (File subFile : projectFolder.listFiles())
-                {
-                    if (subFile.isDirectory() && isMavenProject(subFile.getAbsolutePath()))
-                    {
+        if (projectFolder.exists()) {
+            if (hasSubmodules(projectPath)) {
+                for (File subFile : projectFolder.listFiles()) {
+                    if (subFile.isDirectory() && isMavenProject(subFile.getAbsolutePath())) {
                         submodules.addAll(getLeavesSubModules(subFile.getAbsolutePath(), false));
                     }
                 }
-            } else
-            {
-                if (!topLevelProject)
-                {
+            } else {
+                if (!topLevelProject) {
                     submodules.add(projectFolder);
                 }
             }
@@ -383,13 +323,10 @@ public class PomManager
         return submodules;
     }
 
-    public String getSubModulePath(String subModuleName, String projectPath)
-    {
+    public String getSubModulePath(String subModuleName, String projectPath) {
         List<File> modules = getSubModules(projectPath);
-        for (File module : modules)
-        {
-            if (module.getName().equals(subModuleName))
-            {
+        for (File module : modules) {
+            if (module.getName().equals(subModuleName)) {
                 return module.getAbsolutePath();
             }
         }

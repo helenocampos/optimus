@@ -43,22 +43,19 @@ import org.twdata.maven.mojoexecutor.MojoExecutor;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
 public abstract class OptimusMojo
-        extends AbstractMojo
-{
+        extends AbstractMojo {
 
     /**
      * @return the printLogs
      */
-    public String getPrintLogs()
-    {
+    public String getPrintLogs() {
         return printLogs;
     }
 
     /**
      * @param printLogs the printLogs to set
      */
-    public void setPrintLogs(String printLogs)
-    {
+    public void setPrintLogs(String printLogs) {
         this.printLogs = printLogs;
     }
 
@@ -126,7 +123,7 @@ public abstract class OptimusMojo
 
     @Parameter(property = "", defaultValue = "")
     private String backupPath = "";
-    
+
     @Parameter(property = "", defaultValue = "false")
     private String simulateExecution = "";
 
@@ -134,10 +131,8 @@ public abstract class OptimusMojo
 
     protected PomManager pomManager;
 
-    protected void addJacocoPlugin() throws MojoExecutionException
-    {
-        if (!hasJacocoAgentSet())
-        {
+    protected void addJacocoPlugin() throws MojoExecutionException {
+        if (!hasJacocoAgentSet()) {
             executeMojo(
                     plugin(
                             groupId("org.jacoco"),
@@ -155,33 +150,27 @@ public abstract class OptimusMojo
         }
     }
 
-    private boolean hasJacocoAgentSet()
-    {
+    private boolean hasJacocoAgentSet() {
         //only returns true if has jacoco set and it is allowed version
         final Properties projectProperties = mavenProject.getProperties();
         String argLine = projectProperties.getProperty("argLine");
-        if (argLine != null && argLine.contains("jacoco"))
-        {
-            if (!argLine.contains(jacocoVersion))
-            {
+        if (argLine != null && argLine.contains("jacoco")) {
+            if (!argLine.contains(jacocoVersion)) {
                 projectProperties.setProperty("argLine", "");
                 return false;
-            } else
-            {
+            } else {
                 return true;
             }
         }
         return false;
     }
 
-    protected void runPitestPlugin()
-    {
+    protected void runPitestPlugin() {
         Plugin assembly = MojoExecutor.plugin(
                 "org.pitest",
                 "pitest-maven",
                 "1.3.2");
-        try
-        {
+        try {
             MojoExecutor.executeMojo(assembly,
                     MojoExecutor.goal("mutationCoverage"),
                     configuration(
@@ -194,14 +183,12 @@ public abstract class OptimusMojo
                             pluginManager
                     )
             );
-        } catch (MojoExecutionException ex)
-        {
+        } catch (MojoExecutionException ex) {
             Logger.getLogger(OptimusMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    protected void runFaultInjectionPlugin(String experimentFolder, String injectionId) throws MojoExecutionException
-    {
+    protected void runFaultInjectionPlugin(String experimentFolder, String injectionId) throws MojoExecutionException {
 
         File outputExperimentFolder = new File(new File(getExperimentOutputDirectory(), experimentFolder).getAbsolutePath(), injectionId);
         executeMojo(
@@ -222,8 +209,7 @@ public abstract class OptimusMojo
         );
     }
 
-    protected void runPrioritizationPlugin(boolean generateReport)
-    {
+    protected void runPrioritizationPlugin(boolean generateReport) {
         Dependency dep = new Dependency();
         dep.setGroupId("io.github.helenocampos.surefire");
         dep.setArtifactId("optimus-test");
@@ -238,8 +224,7 @@ public abstract class OptimusMojo
         dependencies.add(dep);
         assembly.setDependencies(dependencies);
         boolean exit = false;
-        try
-        {
+        try {
 
             MojoExecutor.executeMojo(assembly, goal("test"),
                     getPrioritizationProperties(generateReport),
@@ -250,34 +235,26 @@ public abstract class OptimusMojo
                     )
             );
 
-        } catch (MojoExecutionException ex)
-        {
+        } catch (MojoExecutionException ex) {
             exit = true;
-        } finally
-        {
-            if (generateReport)
-            {
+        } finally {
+            if (generateReport) {
 //                PrioritizationReport report = new PrioritizationReport(this.getMavenProject().getName(), this.getMavenProject().getBasedir());
-                ReportsController reports = new ReportsController(this.getMavenProject().getName(), this.getMavenProject().getBasedir(), Arrays.asList(new String[]
-                {
+                ReportsController reports = new ReportsController(this.getMavenProject().getName(), this.getMavenProject().getBasedir(), Arrays.asList(new String[]{
                     "raw"
                 }), "single");
             }
-            if (exit)
-            {
+            if (exit) {
                 System.exit(1);
             }
         }
     }
 
-    private Xpp3Dom getPrioritizationProperties(boolean generateReport)
-    {
+    private Xpp3Dom getPrioritizationProperties(boolean generateReport) {
         Xpp3Dom configuration = new Xpp3Dom("configuration");
         Xpp3Dom[] excludes = pomManager.getExcludes();
-        if (excludes != null)
-        {
-            for (Xpp3Dom tag : excludes)
-            {
+        if (excludes != null) {
+            for (Xpp3Dom tag : excludes) {
                 configuration.addChild(tag);
             }
         }
@@ -285,27 +262,23 @@ public abstract class OptimusMojo
         configuration.addChild(properties);
         properties.addChild(createPropertyNode("granularity", this.granularity));
         properties.addChild(createPropertyNode("prioritization", this.prioritization));
-        if (generateReport)
-        {
+        if (generateReport) {
             properties.addChild(createPropertyNode("apfd", "true"));
             properties.addChild(createPropertyNode("faultsFile", "true"));
         }
 
-        if (!dbPath.equals(""))
-        {
+        if (!dbPath.equals("")) {
             properties.addChild(createPropertyNode("dbPath", this.dbPath));
             properties.addChild(createPropertyNode("projectName", this.mavenProject.getName()));
         }
-        if (!clustersAmount.equals(""))
-        {
+        if (!clustersAmount.equals("")) {
             properties.addChild(createPropertyNode("clustersAmount", this.getClustersAmount()));
         }
 
         return configuration;
     }
 
-    private Xpp3Dom createPropertyNode(String propertyName, String propertyValue)
-    {
+    private Xpp3Dom createPropertyNode(String propertyName, String propertyValue) {
         Xpp3Dom property = new Xpp3Dom("property");
         Xpp3Dom name = new Xpp3Dom("name");
         name.setValue(propertyName);
@@ -316,139 +289,114 @@ public abstract class OptimusMojo
         return property;
     }
 
-    protected void manageSourceCodeBackup()
-    {
-        String projectPath = this.getMavenProject().getBasedir().getAbsolutePath();
+    protected void manageSourceCodeBackup(String projectPath) {
         File srcFolder = Paths.get(projectPath, "src").toFile();
-        File backupFolder = new File(getBackupPath());
-        try
-        {
-            if (srcFolder.exists())
-            {
-                if (backupFolder.exists())
-                {
+        File backupFolder = new File(getBackupPath(projectPath));
+        try {
+            if (srcFolder.exists()) {
+                if (backupFolder.exists()) {
                     FileUtils.deleteDirectory(backupFolder);
                 }
-                if (this.backupSourceCode.equalsIgnoreCase("true"))
-                {
+                if (this.backupSourceCode.equalsIgnoreCase("true")) {
                     backupFolder.mkdir();
                     FileUtils.copyDirectory(srcFolder, backupFolder);
                 }
             }
-        } catch (IOException ex)
-        {
+        } catch (IOException ex) {
             Logger.getLogger(OptimusMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    protected String getBackupPath()
-    {
+    protected String getBackupPath(String projectPath) {
         String path;
-        ProjectData projectData = ProjectData.getProjectDataFromFile();
-        if (backupPath.equals(""))
-        {
-            if (projectData.getSourceBackupPath().equals(""))
-            {
-                path = Paths.get(this.getMavenProject().getBasedir().getAbsolutePath(), "previousVersionCode").toString();
-            }else{
-                path = projectData.getSourceBackupPath();
+        ProjectData projectData = ProjectData.getProjectDataFromFile(projectPath);
+        if (projectData != null) {
+            if (backupPath.equals("")) {
+                if (projectData.getSourceBackupPath().equals("")) {
+                    path = Paths.get(projectPath, "previousVersionCode").toString();
+                } else {
+                    path = projectData.getSourceBackupPath();
+                }
+            } else {
+                path = backupPath;
             }
-        } else
-        {
-            path = backupPath;
+            projectData.setSourceBackupPath(path);
+            projectData.writeProjectDataFile();
+        } else {
+            path = Paths.get(projectPath, "previousVersionCode").toString();
         }
-        projectData.setSourceBackupPath(path);
-        projectData.writeProjectDataFile();
         return path;
     }
 
-    public String getPrioritization()
-    {
+    public String getPrioritization() {
         return prioritization;
     }
 
-    public String getGranularity()
-    {
+    public String getGranularity() {
         return granularity;
     }
 
-    public String getExperimentOutputDirectory()
-    {
+    public String getExperimentOutputDirectory() {
         return experimentOutputDirectory;
     }
 
-    public MavenProject getMavenProject()
-    {
+    public MavenProject getMavenProject() {
         return this.mavenProject;
     }
 
-    public List<String> getPrioritizationTechniques()
-    {
+    public List<String> getPrioritizationTechniques() {
         return prioritizationTechniques;
     }
 
-    public void setPrioritizationTechniques(List<String> prioritizationTechniques)
-    {
+    public void setPrioritizationTechniques(List<String> prioritizationTechniques) {
         this.prioritizationTechniques = prioritizationTechniques;
     }
 
-    public List<String> getReports()
-    {
+    public List<String> getReports() {
         return reports;
     }
 
-    public void setReports(List<String> reports)
-    {
+    public void setReports(List<String> reports) {
         this.reports = reports;
     }
 
-    public String getDbPath()
-    {
+    public String getDbPath() {
         return dbPath;
     }
 
-    public void setDbPath(String dbPath)
-    {
+    public void setDbPath(String dbPath) {
         this.dbPath = dbPath;
     }
 
-    public String getExperimentType()
-    {
+    public String getExperimentType() {
         return experimentType;
     }
 
-    public void setExperimentType(String experimentType)
-    {
+    public void setExperimentType(String experimentType) {
         this.experimentType = experimentType;
     }
 
-    public String getVersionsFolder()
-    {
+    public String getVersionsFolder() {
         return versionsFolder;
     }
 
-    public void setVersionsFolder(String versionsFolder)
-    {
+    public void setVersionsFolder(String versionsFolder) {
         this.versionsFolder = versionsFolder;
     }
 
-    public String getClustersAmount()
-    {
+    public String getClustersAmount() {
         return clustersAmount;
     }
 
-    public void setClustersAmount(String clustersAmount)
-    {
+    public void setClustersAmount(String clustersAmount) {
         this.clustersAmount = clustersAmount;
     }
 
-    public String getBackupSourceCode()
-    {
+    public String getBackupSourceCode() {
         return backupSourceCode;
     }
 
-    public String getSimulateExecution()
-    {
+    public String getSimulateExecution() {
         return simulateExecution;
     }
 }

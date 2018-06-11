@@ -6,6 +6,7 @@
 package io.github.helenocampos.surefire.report;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.StaxDriver;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -200,16 +201,31 @@ public class ExecutionData
     
      public String[] getValues()
     {
-        String[] values = new String[7];
-        values[0] = this.technique;
-        values[1] = Double.toString(this.APFD);
-        values[2] = Integer.toString(this.seededFaultsAmount);
-        values[3] = Integer.toString(this.amountExecutedTests);
-        values[4] = this.testGranularity;
-        values[5] = Float.toString(this.executionTime);
-        values[6] = this.executionDate;
+        String[] values = new String[8];
+        values[0] = getProjectName();
+        values[1] = this.technique;
+        values[2] = Double.toString(this.APFD);
+        values[3] = Integer.toString(this.seededFaultsAmount);
+        values[4] = Integer.toString(this.amountExecutedTests);
+        values[5] = this.testGranularity;
+        values[6] = Float.toString(this.executionTime);
+        values[7] = this.executionDate;
         return values;
     }
+     
+     private String getProjectName(){
+         String[] folders;
+         if(projectPath.contains("/")){
+             folders = projectPath.split("/");
+         }else{
+             folders = projectPath.split("\\\\");
+         }
+         if(folders!=null){
+             return folders[folders.length-1];
+         }else{
+             return projectPath;
+         }
+     }
 
     /**
      * @return the executionDate

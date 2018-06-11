@@ -164,28 +164,31 @@ public final class RawReport {
         font.setBold(true);
         style.setFont(font);
         cell = row.createCell(0);
-        cell.setCellValue("Prioritization technique");
+        cell.setCellValue("Project");
         cell.setCellStyle(style);
         cell = row.createCell(1);
-        cell.setCellValue("APFD");
+        cell.setCellValue("Prioritization technique");
         cell.setCellStyle(style);
         cell = row.createCell(2);
-        cell.setCellValue("Failures");
+        cell.setCellValue("APFD");
         cell.setCellStyle(style);
         cell = row.createCell(3);
-        cell.setCellValue("Executed tests");
+        cell.setCellValue("Failures");
         cell.setCellStyle(style);
         cell = row.createCell(4);
-        cell.setCellValue("Test granularity");
+        cell.setCellValue("Executed tests");
         cell.setCellStyle(style);
         cell = row.createCell(5);
-        cell.setCellValue("Execution time (seconds)");
+        cell.setCellValue("Test granularity");
         cell.setCellStyle(style);
         cell = row.createCell(6);
+        cell.setCellValue("Execution time (seconds)");
+        cell.setCellStyle(style);
+        cell = row.createCell(7);
         cell.setCellValue("Timestamp");
         cell.setCellStyle(style);
 
-        cell = row.createCell(7);
+        cell = row.createCell(8);
         cell.setCellValue("Execution order");
         cell.setCellStyle(style);
     }

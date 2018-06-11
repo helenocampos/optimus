@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,28 +50,30 @@ public class ExperimentMojo
 
     @Parameter(defaultValue = "1", readonly = true)
     private String executionTimes;
-    
+
     @Parameter(defaultValue = "1", readonly = true)
     private String randomRepeat;
 
     private final String MVN_CLEAN_TEST = "mvn clean test";
     private final String MVN_TEST = "mvn test";
-    
+
     public void execute()
             throws MojoExecutionException {
-        pomManager = new PomManager(this.getMavenProject().getBasedir().getAbsolutePath());
+        this.pomManager = new PomManager(this.getMavenProject().getBasedir().getAbsolutePath());
         addJacocoPlugin();
 
         if (getExperimentType().equals("mutation")) {
             executeMutationExperiment();
+            manageSourceCodeBackup(this.getMavenProject().getBasedir().getAbsolutePath());
         } else if (getExperimentType().equals("versions")) {
             executeVersionsExperiment();
         } else if (getExperimentType().equals("local")) {
             executeLocalExperiment();
+            manageSourceCodeBackup(this.getMavenProject().getBasedir().getAbsolutePath());
         }
-        manageSourceCodeBackup();
+        
     }
-    
+
     private void executeLocalExperiment() throws MojoExecutionException {
         Model pom = pomManager.readPom(this.getMavenProject().getBasedir().getAbsolutePath());
         logMessage("Collecting coverage data");
@@ -93,6 +97,7 @@ public class ExperimentMojo
                     collectCoverageAndGenerateFaultsFile(version);
                     executeTechniques(version, false);
                 }
+                manageSourceCodeBackup(version.getAbsolutePath());
             }
             ReportsController reports = new ReportsController(this.getMavenProject().getName(), versionsFolderFile, this.getReports(), "multiple");
         }
@@ -103,6 +108,27 @@ public class ExperimentMojo
         if (versionFolder.isDirectory()) {
             versions.addAll(Arrays.asList(versionFolder.listFiles()));
         }
+        Collections.sort(versions, new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                int n1 = extractNumber(o1.getName());
+                int n2 = extractNumber(o2.getName());
+                return n1 - n2;
+            }
+
+            private int extractNumber(String name) {
+                int i = 0;
+                try {
+                    int s = name.indexOf('-') + 1;
+                    int e = name.length();
+                    String number = name.substring(s, e);
+                    i = Integer.parseInt(number);
+                } catch (Exception e) {
+                    i = 0;
+                }
+                return i;
+            }
+        });
         return versions;
     }
 
@@ -110,15 +136,15 @@ public class ExperimentMojo
         boolean simulateExecution = Boolean.valueOf(getSimulateExecution());
         if (this.getPrioritizationTechniques() != null) {
             for (String technique : this.getPrioritizationTechniques()) {
-                invokePrioritization(technique, projectFolder, generateFaultsFile, true, false, false,simulateExecution);
+                invokePrioritization(technique, projectFolder, generateFaultsFile, true, false, false, simulateExecution);
             }
         } else {
             if (this.getPrioritization().equals("all")) {
                 for (String technique : PrioritizationTechniques.getAllTechniquesNames()) {
-                    invokePrioritization(technique, projectFolder, generateFaultsFile, true, false, false,simulateExecution);
+                    invokePrioritization(technique, projectFolder, generateFaultsFile, true, false, false, simulateExecution);
                 }
             } else {
-                invokePrioritization(this.getPrioritization(), projectFolder, generateFaultsFile, true, false, false,simulateExecution);
+                invokePrioritization(this.getPrioritization(), projectFolder, generateFaultsFile, true, false, false, simulateExecution);
             }
 
         }
@@ -156,16 +182,16 @@ public class ExperimentMojo
 
     private void invokePrioritization(String technique, File outputExperimentFolder, boolean generateFaultsFile, boolean calcAPFD, boolean collectCoverage, boolean cleanProject, boolean simulateExecution) throws MojoExecutionException {
         int executionsAmount = 1;
-        if(technique.equals("random")){
+        if (technique.equals("random")) {
             executionsAmount = Integer.valueOf(randomRepeat);
         }
         for (int i = 0; i < executionsAmount; i++) {
             long start = System.currentTimeMillis();
             String timeStamp = new SimpleDateFormat("HH:mm:ss").format(new Date());
-            logMessage("Executing tests with " + technique + " prioritization technique. Started at: "+timeStamp);
+            logMessage("Executing tests with " + technique + " prioritization technique. Started at: " + timeStamp);
             Runtime rt = Runtime.getRuntime();
             pomManager.removeFramework(outputExperimentFolder.getAbsolutePath());
-            pomManager.setupPrioritizationPlugin(getPrioritizationConfig(technique, outputExperimentFolder.getAbsolutePath(), outputExperimentFolder.getName(), generateFaultsFile, calcAPFD, collectCoverage, simulateExecution));
+            pomManager.setupPrioritizationPlugin(getPrioritizationConfig(technique, outputExperimentFolder.getAbsolutePath(), generateFaultsFile, calcAPFD, collectCoverage, simulateExecution));
             invokeProcess(rt, outputExperimentFolder, cleanProject);
             long finish = System.currentTimeMillis();
             double time = (double) (finish - start) / 1000;
@@ -173,13 +199,13 @@ public class ExperimentMojo
         }
     }
 
-    private PrioritizationConfig getPrioritizationConfig(String technique, String projectFolder, String projectName, boolean generateFaultsFile, boolean calcAPFD, boolean collectCoverage, boolean simulateExecution){
+    private PrioritizationConfig getPrioritizationConfig(String technique, String projectFolder, boolean generateFaultsFile, boolean calcAPFD, boolean collectCoverage, boolean simulateExecution) {
         PrioritizationConfig config = new PrioritizationConfig();
         config.setGranularity(this.getGranularity());
         config.setTechnique(technique);
         config.setProjectFolder(projectFolder);
         config.setDbPath(this.getDbPath());
-        config.setProjectName(projectName);
+        config.setProjectName(PomManager.getProjectId(projectFolder));
         config.setCalcAPFD(calcAPFD);
         config.setGenerateFaultsFile(generateFaultsFile);
         config.setClustersAmount(this.getClustersAmount());
@@ -187,7 +213,7 @@ public class ExperimentMojo
         config.setSimulateExecution(simulateExecution);
         return config;
     }
-    
+
     private void invokeProcess(Runtime rt, File folder, boolean clean) {
         try {
             String mvnInvokation;
@@ -208,7 +234,7 @@ public class ExperimentMojo
             } else {
 //                Process pr = rt.exec(mvnInvokation, new String[0], folder);
 //                pr.waitFor();
-                 ProcessBuilder pb = new ProcessBuilder("/bin/sh", "-c", mvnInvokation);
+                ProcessBuilder pb = new ProcessBuilder("/bin/sh", "-c", mvnInvokation);
                 pb.directory(folder);
                 Process p = pb.start();
                 StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream(), "ERROR", Boolean.valueOf(getPrintLogs()));

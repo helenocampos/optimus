@@ -1,6 +1,7 @@
 package io.github.helenocampos.extractor.model;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.StaxDriver;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -84,7 +85,7 @@ public class ProjectData
 //        normalizeCoverageData();
         XStream xstream = new XStream();
         List<String> lines = Arrays.asList(xstream.toXML(this));
-        Path file = Paths.get("projectData.xml");
+        Path file = Paths.get(projectPath, "projectData.xml");
         try
         {
             Files.write(file, lines, Charset.forName("UTF-8"));
@@ -98,6 +99,36 @@ public class ProjectData
     {
         ProjectData loadedProjectData = null;
         Path file = Paths.get("projectData.xml");
+
+        try
+        {
+            List<String> xmlFile = Files.readAllLines(file);
+            StringBuilder sb = new StringBuilder();
+            boolean firstLine = true;
+            boolean validFile = false;
+            for (String s : xmlFile)
+            {
+                if(firstLine){
+                    firstLine = false;
+                    validFile = validateProjectData(s);
+                }
+                sb.append(s);
+            }
+            if(validFile){
+                XStream xstream = new XStream();
+                loadedProjectData = (ProjectData) xstream.fromXML(sb.toString());
+            }
+        } catch (IOException ex)
+        {
+
+        }
+        return loadedProjectData;
+    }
+    
+    public static ProjectData getProjectDataFromFile(String projectPath)
+    {
+        ProjectData loadedProjectData = null;
+        Path file = Paths.get(projectPath, "projectData.xml");
 
         try
         {
