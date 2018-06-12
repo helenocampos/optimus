@@ -51,7 +51,7 @@ public class ModificationsAnalyzer
             {
                 JavaSourceCodeClass originalClass = projectData.getClasses().get(key);
                 String currentVersion = originalClass.getPath();
-                String oldVersion = sourceBackupPath + currentVersion.substring(currentVersion.indexOf("src/") + 3);
+                String oldVersion = sourceBackupPath + currentVersion.substring(currentVersion.indexOf("src"+File.separator) + 3);
                 if (modificationsGranularity.equals(ModificationsGranularity.METHOD))
                 {
                     List<String> methods = AttributesExtractor.parseClass(currentVersion).getMethodsNames();
