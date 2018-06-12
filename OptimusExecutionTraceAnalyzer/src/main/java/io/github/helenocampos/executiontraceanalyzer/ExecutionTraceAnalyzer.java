@@ -115,8 +115,8 @@ public class ExecutionTraceAnalyzer
                 ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", mvnInvokation);
                 pb.directory(folder);
                 Process p = pb.start();
-                StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream(), "ERROR", true);
-                StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream(), "OUTPUT", true);
+                StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream(), "ERROR", false);
+                StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream(), "OUTPUT", false);
                 errorGobbler.start();
                 outputGobbler.start();
                 p.waitFor();

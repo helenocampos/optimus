@@ -27,7 +27,7 @@ public class ProjectData
     private HashMap<String, JavaTestClass> tests;
 
     private static ProjectData INSTANCE = null;
-    
+
     public ProjectData(String projectPath)
     {
         classes = new HashMap<String, JavaSourceCodeClass>();
@@ -99,24 +99,13 @@ public class ProjectData
     {
         ProjectData loadedProjectData = null;
         Path file = Paths.get("projectData.xml");
-
         try
         {
-            List<String> xmlFile = Files.readAllLines(file);
-            StringBuilder sb = new StringBuilder();
-            boolean firstLine = true;
-            boolean validFile = false;
-            for (String s : xmlFile)
+            String firstLine = Files.lines(file).findFirst().get();
+            if (validateProjectData(firstLine))
             {
-                if(firstLine){
-                    firstLine = false;
-                    validFile = validateProjectData(s);
-                }
-                sb.append(s);
-            }
-            if(validFile){
                 XStream xstream = new XStream();
-                loadedProjectData = (ProjectData) xstream.fromXML(sb.toString());
+                loadedProjectData = (ProjectData) xstream.fromXML(file.toFile());
             }
         } catch (IOException ex)
         {
@@ -124,7 +113,7 @@ public class ProjectData
         }
         return loadedProjectData;
     }
-    
+
     public static ProjectData getProjectDataFromFile(String projectPath)
     {
         ProjectData loadedProjectData = null;
@@ -132,21 +121,11 @@ public class ProjectData
 
         try
         {
-            List<String> xmlFile = Files.readAllLines(file);
-            StringBuilder sb = new StringBuilder();
-            boolean firstLine = true;
-            boolean validFile = false;
-            for (String s : xmlFile)
+            String firstLine = Files.lines(file).findFirst().get();
+            if (validateProjectData(firstLine))
             {
-                if(firstLine){
-                    firstLine = false;
-                    validFile = validateProjectData(s);
-                }
-                sb.append(s);
-            }
-            if(validFile){
                 XStream xstream = new XStream();
-                loadedProjectData = (ProjectData) xstream.fromXML(sb.toString());
+                loadedProjectData = (ProjectData) xstream.fromXML(file.toFile());
             }
         } catch (IOException ex)
         {
@@ -154,16 +133,20 @@ public class ProjectData
         }
         return loadedProjectData;
     }
-    
-    public static ProjectData getProjectData(){
-        if(INSTANCE==null){
+
+    public static ProjectData getProjectData()
+    {
+        if (INSTANCE == null)
+        {
             INSTANCE = getProjectDataFromFile();
         }
         return INSTANCE;
     }
-    
-    private static boolean validateProjectData(String firstLine){
-        if(firstLine.equals("<io.github.helenocampos.extractor.model.ProjectData>")){
+
+    private static boolean validateProjectData(String firstLine)
+    {
+        if (firstLine.equals("<io.github.helenocampos.extractor.model.ProjectData>"))
+        {
             return true;
         }
         return false;
@@ -196,7 +179,8 @@ public class ProjectData
 
         //removes classes that dont exist in the new build
         Iterator<String> keys = this.classes.keySet().iterator();
-        while(keys.hasNext()){
+        while (keys.hasNext())
+        {
             String key = keys.next();
             if (classes.get(key) == null)
             {
@@ -221,13 +205,14 @@ public class ProjectData
 
         }
         //removes tests that dont exist in the new build
-         Iterator<String> keys = this.tests.keySet().iterator();
-         while(keys.hasNext()){
+        Iterator<String> keys = this.tests.keySet().iterator();
+        while (keys.hasNext())
+        {
             String key = keys.next();
-                if (tests.get(key) == null)
-                {
-                    keys.remove();
-                }
+            if (tests.get(key) == null)
+            {
+                keys.remove();
+            }
         }
     }
 
@@ -270,11 +255,15 @@ public class ProjectData
     {
         return tests.get(testClassName);
     }
-    
-    private void normalizeCoverageData(){
-        for(JavaTestClass testClass: tests.values()){
-            for(TestMethod testMethod: testClass.getMethods().values()){
-                for(JavaClass clazz: classes.values()){
+
+    private void normalizeCoverageData()
+    {
+        for (JavaTestClass testClass : tests.values())
+        {
+            for (TestMethod testMethod : testClass.getMethods().values())
+            {
+                for (JavaClass clazz : classes.values())
+                {
                     testMethod.getCoverage().includeRemainingClassesData(clazz);
                 }
             }
