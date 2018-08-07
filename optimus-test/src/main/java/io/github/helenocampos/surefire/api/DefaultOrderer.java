@@ -16,7 +16,6 @@
 package io.github.helenocampos.surefire.api;
 
 import java.util.Comparator;
-import java.util.Random;
 
 /**
  *
@@ -24,18 +23,4 @@ import java.util.Random;
  */
 public abstract class DefaultOrderer<AbstractTest> implements Comparator<AbstractTest>, Orderer {
     public abstract int compare(AbstractTest o1, AbstractTest o2);
-    
-    protected int compare(float test1, float test2){
-        if(test1==test2){
-            Random randomizer = new Random();
-            int random = randomizer.nextInt(2);
-            if(random==1){
-                return 1;
-            }else{
-                return -1;
-            }
-        }else{
-            return Float.compare(test1, test2);
-        }
-    }
 }

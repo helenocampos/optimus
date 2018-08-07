@@ -10,33 +10,32 @@ import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
 import io.github.helenocampos.surefire.api.DefaultOrderer;
 import io.github.helenocampos.surefire.ordering.Strategy;
 import io.github.helenocampos.testing.AbstractTest;
-import java.util.Random;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  *
  * @author helenocampos
  */
-public abstract class TotalCoverage extends DefaultOrderer<AbstractTest>
-{
+public abstract class TotalCoverage extends DefaultOrderer<AbstractTest> {
+
     CoverageAnalyzer analyzer;
-    
-    public TotalCoverage(){
+
+    public TotalCoverage() {
         analyzer = new CoverageAnalyzer();
     }
-    
+
     public abstract CoverageGranularity getCoverageGranularity();
-    
+
     @Override
-    public int compare(AbstractTest o1, AbstractTest o2)
-    {
+    public int compare(AbstractTest o1, AbstractTest o2) {
         float thiz = analyzer.getTotalTestCoverage(o1, getCoverageGranularity());
         float that = analyzer.getTotalTestCoverage(o2, getCoverageGranularity());
-        return compare(thiz,that);
+        return Float.compare(thiz, that);
     }
-    
+
     @Override
-    public String getStrategy()
-    {
+    public String getStrategy() {
         return Strategy.DEFAULT.getName();
     }
 }

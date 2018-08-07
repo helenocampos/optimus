@@ -18,14 +18,12 @@ import java.util.Set;
  *
  * @author helenocampos
  */
-public abstract class TotalDiffCoverage extends DefaultOrderer<AbstractTest>
-{
+public abstract class TotalDiffCoverage extends DefaultOrderer<AbstractTest> {
 
     private CoverageAnalyzer analyzer;
     private Set<String> modifiedElements;
 
-    public TotalDiffCoverage()
-    {
+    public TotalDiffCoverage() {
         this.analyzer = new CoverageAnalyzer();
         ModificationsAnalyzer diffAnalyzer = new ModificationsAnalyzer(this.analyzer.getProjectData());
         this.modifiedElements = diffAnalyzer.getModifiedElements(getModificationsGranularity());
@@ -34,26 +32,21 @@ public abstract class TotalDiffCoverage extends DefaultOrderer<AbstractTest>
     public abstract ModificationsGranularity getModificationsGranularity();
 
     @Override
-    public int compare(AbstractTest o1, AbstractTest o2)
-    {
+    public int compare(AbstractTest o1, AbstractTest o2) {
         float thiz;
         float that;
-        if (this.modifiedElements.isEmpty())
-        {
+        if (this.modifiedElements.isEmpty()) {
             thiz = analyzer.getTotalTestCoverage(o1, CoverageGranularity.METHOD);
             that = analyzer.getTotalTestCoverage(o2, CoverageGranularity.METHOD);
-        } else
-        {
+        } else {
             thiz = analyzer.getTotalDiffTestCoverage(o1, getModificationsGranularity(), this.modifiedElements);
             that = analyzer.getTotalDiffTestCoverage(o2, getModificationsGranularity(), this.modifiedElements);
         }
-
-        return compare(thiz, that);
+        return Float.compare(thiz, that);
     }
 
     @Override
-    public String getStrategy()
-    {
+    public String getStrategy() {
         return Strategy.DEFAULT.getName();
     }
 }

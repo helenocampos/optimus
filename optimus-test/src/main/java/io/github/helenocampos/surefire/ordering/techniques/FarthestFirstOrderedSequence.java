@@ -21,6 +21,7 @@ import io.github.helenocampos.surefire.analyzer.coverage.CoverageAnalyzer;
 import io.github.helenocampos.surefire.api.AdditionalOrderer;
 import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.ordering.Strategy;
+import io.github.helenocampos.surefire.util.SimilarityMeasures;
 import java.util.List;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 
@@ -33,11 +34,13 @@ public class FarthestFirstOrderedSequence extends AdditionalOrderer<AbstractTest
 
     private ExecutionTraceAnalyzer analyzer;
     private CoverageAnalyzer coverageAnalyzer;
+    private TestsDistances testsDistances;
     
     public FarthestFirstOrderedSequence()
     {
         analyzer = new ExecutionTraceAnalyzer();
         coverageAnalyzer = new CoverageAnalyzer();
+        this.testsDistances = new TestsDistances();
     }
 
     @Override
@@ -50,6 +53,7 @@ public class FarthestFirstOrderedSequence extends AdditionalOrderer<AbstractTest
     public AbstractTest getNextTest(List<AbstractTest> tests, List<AbstractTest> alreadyOrderedTests)
     {
         if(alreadyOrderedTests.isEmpty()){ //select the test with greatest coverage
+            initializeTestsDistances(tests);
             return getHighestCoverageTest(tests);
         }else{
             //calculate edit distance for each test to the already selected tests
@@ -60,14 +64,7 @@ public class FarthestFirstOrderedSequence extends AdditionalOrderer<AbstractTest
             for(AbstractTest test: tests){
                 int minimumDistance = Integer.MAX_VALUE;
                 for(AbstractTest orderedTest: alreadyOrderedTests){
-                    LevenshteinDistance distanceCalculator = new LevenshteinDistance();
-                    String orderedSequenceTest = analyzer.getTestOrderedSequence(test);
-                    String orderedSequenceSelectedTest = analyzer.getTestOrderedSequence(orderedTest);
-                    int distance = 0;
-                    if(!orderedSequenceTest.equals(orderedSequenceSelectedTest)){
-                        distance = distanceCalculator.apply(orderedSequenceTest, orderedSequenceSelectedTest);
-                    }
-                    
+                    int distance = testsDistances.getDistance(test.getQualifiedName(), orderedTest.getQualifiedName()).intValue();
                     if(distance<minimumDistance){
                         minimumDistance = distance;
                     }
@@ -92,5 +89,23 @@ public class FarthestFirstOrderedSequence extends AdditionalOrderer<AbstractTest
             }
         }
         return biggestCoverageTest;
+    }
+    
+     private void initializeTestsDistances(List<AbstractTest> tests) {
+        LevenshteinDistance distanceCalculator = new LevenshteinDistance();
+        for (AbstractTest source : tests) {
+            String orderedSequenceSource = analyzer.getTestOrderedSequence(source);
+            for (AbstractTest target : tests) {
+                if (!source.equals(target)) {
+                    String orderedSequenceTarget = analyzer.getTestOrderedSequence(target);
+                    Integer distance = distanceCalculator.apply(orderedSequenceSource, orderedSequenceTarget);
+                    testsDistances.addDistance(source.getQualifiedName(), target.getQualifiedName(), distance.doubleValue());
+                    testsDistances.addDistance(target.getQualifiedName(), source.getQualifiedName(), distance.doubleValue());
+                } else {
+                    testsDistances.addDistance(source.getQualifiedName(), target.getQualifiedName(), new Double(0));
+                    testsDistances.addDistance(target.getQualifiedName(), source.getQualifiedName(), new Double(0));
+                }
+            }
+        }
     }
 }

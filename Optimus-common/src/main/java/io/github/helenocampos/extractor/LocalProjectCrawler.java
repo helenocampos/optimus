@@ -3,6 +3,7 @@ package io.github.helenocampos.extractor;
 import io.github.helenocampos.extractor.model.JavaSourceCodeClass;
 import io.github.helenocampos.extractor.model.JavaTestClass;
 import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import org.apache.bcel.classfile.ClassParser;
@@ -137,7 +138,10 @@ public class LocalProjectCrawler
         } catch (FileNotFoundException ex)
         {
 //            Logger.getLogger(CouplingManager.class.getName()).log(Level.SEVERE, null, ex);
-        }  catch(Exception ex){
+        }  catch(ParseProblemException ex){
+            Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.SEVERE, null, ex+ " file: "+file);
+        }
+        catch(Exception ex){
              Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.SEVERE, null, ex);
         }finally
         {

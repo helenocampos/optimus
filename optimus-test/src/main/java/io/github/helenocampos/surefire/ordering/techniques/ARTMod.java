@@ -21,20 +21,16 @@ import java.util.Random;
  * @author helenocampos //reference for the algorithms used is the original
  * paper Adaptive Random Test Case Prioritization by Jiang et. al 2009
  */
-public abstract class ART extends AdditionalOrderer<AbstractTest> {
+public abstract class ARTMod extends AdditionalOrderer<AbstractTest> {
 
     public enum SelectionFunction {
         MAXMIN, MAXAVG, MAXMAX;
     }
 
     protected CoverageAnalyzer coverageAnalyzer;
-    private TestsDistances testsDistances;
-    private boolean firstExecution;
-
-    public ART() {
+        
+    public ARTMod() {
         coverageAnalyzer = new CoverageAnalyzer();
-        testsDistances = new TestsDistances();
-        this.firstExecution = true;
     }
 
     public abstract CoverageGranularity getCoverageGranularity();
@@ -48,10 +44,6 @@ public abstract class ART extends AdditionalOrderer<AbstractTest> {
 
     @Override
     public AbstractTest getNextTest(List<AbstractTest> tests, List<AbstractTest> alreadyOrderedTests) {
-        if (firstExecution) {
-            firstExecution = false;
-            initializeTestsDistances(tests);
-        }
         List<AbstractTest> candidateSet = getCandidateSet(tests);
         AbstractTest nextTest = selectOneTestCase(candidateSet, alreadyOrderedTests);
         if (nextTest == null) {
@@ -102,7 +94,7 @@ public abstract class ART extends AdditionalOrderer<AbstractTest> {
         AbstractTest maxDistanceTest = null;
         Double maxDistanceFromOrderedTests = Double.NEGATIVE_INFINITY;
         for (AbstractTest test : candidateSet) {
-            Double distance = getTestDistanceFromSet(test, alreadySelectedTests);
+            Double distance = getTestDistanceFromSet(test, candidateSet);
             if (distance > maxDistanceFromOrderedTests) {
                 maxDistanceTest = test;
                 maxDistanceFromOrderedTests = distance;
@@ -157,38 +149,11 @@ public abstract class ART extends AdditionalOrderer<AbstractTest> {
     }
 
     private double getTestsDistance(AbstractTest test1, AbstractTest test2) {
-        Double distance = new Double(1);
-        if (test1 != null) {
-            if (test2 != null) {
-                distance = testsDistances.getDistance(test1.getQualifiedName(), test2.getQualifiedName());
-            }
-        }
-        return distance;
-    }
-
-    private double getTestsDistance2(AbstractTest test1, AbstractTest test2) {
         String testCoverage = coverageAnalyzer.getTestCoverageString(test1, getCoverageGranularity());
         String orderedTestCoverage = "";
         if (test2 != null) {
             orderedTestCoverage = coverageAnalyzer.getTestCoverageString(test2, getCoverageGranularity());
         }
         return SimilarityMeasures.getJaccardDistance(testCoverage, orderedTestCoverage);
-    }
-
-    private void initializeTestsDistances(List<AbstractTest> tests) {
-        for (AbstractTest source : tests) {
-            String sourceCoverage = coverageAnalyzer.getTestCoverageString(source, getCoverageGranularity());
-            for (AbstractTest target : tests) {
-                if (!source.equals(target)) {
-                    String targetCoverage = coverageAnalyzer.getTestCoverageString(target, getCoverageGranularity());
-                    Double distance = SimilarityMeasures.getJaccardDistance(sourceCoverage, targetCoverage);
-                    testsDistances.addDistance(source.getQualifiedName(), target.getQualifiedName(), distance);
-                    testsDistances.addDistance(target.getQualifiedName(), source.getQualifiedName(), distance);
-                } else {
-                    testsDistances.addDistance(source.getQualifiedName(), target.getQualifiedName(), new Double(0));
-                    testsDistances.addDistance(target.getQualifiedName(), source.getQualifiedName(), new Double(0));
-                }
-            }
-        }
     }
 }
