@@ -6,6 +6,7 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.PackageDeclaration;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import io.github.helenocampos.extractor.model.ProjectData;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -158,7 +160,13 @@ public class LocalProjectCrawler
         }
         if (cu != null)
         {
-            return cu.getPackageDeclaration().get().getNameAsString();
+            Optional<PackageDeclaration> declaration = cu.getPackageDeclaration();
+            if(declaration.isPresent()){
+                return cu.getPackageDeclaration().get().getNameAsString();
+            }else{
+                return "";
+            }
+            
         } else
         {
             return "";
