@@ -70,9 +70,9 @@ public class PomManager {
 
     public static String getProjectId(String projectFolder) {
         Model model = readPom(projectFolder);
-        if(model!=null){
+        if (model != null) {
             return model.getArtifactId();
-        }else{
+        } else {
             return "";
         }
     }
@@ -102,14 +102,18 @@ public class PomManager {
         if (contributors != null) {
             for (Contributor contributor : contributors) {
                 String name = contributor.getName();
-                contributor.setName(Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}", ""));
+                if (name != null) {
+                    contributor.setName(Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}", ""));
+                }
             }
         }
         List<Developer> developers = model.getDevelopers();
         if (developers != null) {
             for (Developer developer : developers) {
                 String name = developer.getName();
-                developer.setName(Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}", ""));
+                if (name != null) {
+                    developer.setName(Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}", ""));
+                }
             }
         }
     }

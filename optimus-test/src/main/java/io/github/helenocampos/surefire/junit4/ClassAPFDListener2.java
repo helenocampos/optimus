@@ -14,33 +14,37 @@ import org.junit.runner.notification.Failure;
  *
  * @author helenocampos
  */
-public class MethodAPFDListener extends APFDListener {
+public class ClassAPFDListener2 extends APFDListener {
 
-    String lastExecutedTest = "";
+    private String lastExecutedClass;
 
-    public MethodAPFDListener(String granularity) {
+    public ClassAPFDListener2(String granularity) {
         super(granularity);
+        this.lastExecutedClass = "";
     }
 
     @Override
     public void testFinished(Description description) throws Exception {
         super.testFinished(description);
-
         String testName = description.getClassName() + "." + description.getMethodName();
         this.getExecutedTests().put(testName, new TestExecution(testName));
-        this.lastExecutedTest = testName;
         if (this.getFaultRevealingTests().containsKey(testName)) {
             this.getFaultRevealingTests().put(testName, getExecutedTests().size());
         }
+//        this.lastExecutedClass = testName;
+
     }
 
     @Override
     public void testRunFinished(Result result) throws Exception {
         super.testRunFinished(result);
         if (getExecutedTests().size() >= 1) {
-            TestExecution execution = getExecutedTests().get(this.lastExecutedTest);
-            execution.setTestResult(result.wasSuccessful());
-            execution.setExecutionTime(result.getRunTime());
+            for (Failure failure : result.getFailures()) {
+                Description failledTest = failure.getDescription();
+                String testName = failledTest.getClassName() + "." + failledTest.getMethodName();
+                TestExecution execution = getExecutedTests().get(testName);
+                execution.setTestResult(false);
+            }
         }
     }
 }

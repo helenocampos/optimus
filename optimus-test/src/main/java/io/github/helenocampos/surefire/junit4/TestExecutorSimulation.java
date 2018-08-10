@@ -19,10 +19,12 @@ import io.github.helenocampos.testing.AbstractTest;
 import io.github.helenocampos.surefire.api.JUnitExecutor;
 import io.github.helenocampos.testing.TestGranularity;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -48,16 +50,14 @@ import org.junit.runner.notification.RunNotifier;
  *
  * @author helenocampos
  */
-public class TestExecutorSimulation implements JUnitExecutor
-{
+public class TestExecutorSimulation implements JUnitExecutor {
 
     private final ProviderParameters providerParameters;
     private List<org.junit.runner.notification.RunListener> customRunListeners;
     private List<String> faults;
     private TestGranularity testGranularity;
-    
-    public TestExecutorSimulation(ConsoleStream consoleStream, ProviderParameters booterParameters, List<org.junit.runner.notification.RunListener> customRunListeners)
-    {
+
+    public TestExecutorSimulation(ConsoleStream consoleStream, ProviderParameters booterParameters, List<org.junit.runner.notification.RunListener> customRunListeners) {
         this.providerParameters = booterParameters;
         this.customRunListeners = customRunListeners;
         this.faults = new LinkedList<>();
@@ -65,21 +65,18 @@ public class TestExecutorSimulation implements JUnitExecutor
         consoleStream.println("Simulating tests execution\n");
     }
 
-    private RunNotifier getRunNotifier(org.junit.runner.notification.RunListener main, Result result, List<org.junit.runner.notification.RunListener> others)
-    {
+    private RunNotifier getRunNotifier(org.junit.runner.notification.RunListener main, Result result, List<org.junit.runner.notification.RunListener> others) {
         RunNotifier fNotifier = new RunNotifier();
         fNotifier.addListener(main);
         fNotifier.addListener(result.createListener());
-        for (org.junit.runner.notification.RunListener listener : others)
-        {
+        for (org.junit.runner.notification.RunListener listener : others) {
             fNotifier.addListener(listener);
         }
         return fNotifier;
     }
 
     //Mostly taken from Junit4Provider.java
-    public RunResult invokeMethod(AbstractTest test) throws TestSetFailedException
-    {
+    public RunResult invokeMethod(AbstractTest test) throws TestSetFailedException {
         setTestGranularity(test);
         final ReporterFactory reporterFactory = providerParameters.getReporterFactory();
 
@@ -96,14 +93,10 @@ public class TestExecutorSimulation implements JUnitExecutor
 
         final TestSetReportEntry report = new SimpleReportEntry(getClass().getName() + "." + test.getTestName(), test.getTestClass() + "." + test.getTestName());
 //        reporter.testSetStarting(report);
-        try
-        {
-            for (final Method method : test.getTestClass().getMethods())
-            {
-                if (method.getParameterTypes().length == 0 && test.getTestName().equals(method.getName()))
-                {
-                    if (faults.contains(test.getQualifiedName()))
-                    {
+        try {
+            for (final Method method : test.getTestClass().getMethods()) {
+                if (method.getParameterTypes().length == 0 && test.getTestName().equals(method.getName())) {
+                    if (faults.contains(test.getQualifiedName())) {
                         listeners.fireTestFailure(new Failure(testDescription, new Exception()));
                     }
                     listeners.fireTestFinished(testDescription);
@@ -111,11 +104,9 @@ public class TestExecutorSimulation implements JUnitExecutor
                     break;
                 }
             }
-        } catch (Throwable e)
-        {
+        } catch (Throwable e) {
             reporter.testError(SimpleReportEntry.withException(report.getSourceName(), report.getName(), new PojoStackTraceWriter(report.getSourceName(), report.getName(), e)));
-        } finally
-        {
+        } finally {
 //            reporter.testSetCompleted(report);
         }
         listeners.fireTestRunFinished(result);
@@ -125,8 +116,7 @@ public class TestExecutorSimulation implements JUnitExecutor
         return reporterFactory.close();
     }
 
-    public RunResult invokeClass(AbstractTest test) throws TestSetFailedException
-    {
+    public RunResult invokeClass(AbstractTest test) throws TestSetFailedException {
         setTestGranularity(test);
         final ReporterFactory reporterFactory = providerParameters.getReporterFactory();
 
@@ -139,22 +129,24 @@ public class TestExecutorSimulation implements JUnitExecutor
         Result result = new Result();
         RunNotifier listeners = getRunNotifier(jUnit4TestSetReporter, result, customRunListeners);
         Description testDescription = Description.createSuiteDescription(test.getTestClass());
+        List<String> testMethods = getTestMethods(test.getTestClass());
         listeners.fireTestRunStarted(testDescription);
 
         final TestSetReportEntry report = new SimpleReportEntry(getClass().getName(), test.getTestClass().getName());
         reporter.testSetStarting(report);
-        try
-        {
-            if (faults.contains(test.getTestName()))
-            {
-                listeners.fireTestFailure(new Failure(testDescription, new Exception()));
+        try {
+            for (String testMethod : testMethods) {
+                  Description testMethodDescription = Description.createTestDescription(test.getTestClass(), testMethod);
+                  String testName = test.getTestClass().getName() + "." + testMethod;
+                if (faults.contains(testName)) {
+                    listeners.fireTestFailure(new Failure(testMethodDescription, new Exception()));
+                }
+                listeners.fireTestFinished(testMethodDescription);
             }
-            listeners.fireTestFinished(testDescription);
-        } catch (Throwable e)
-        {
+
+        } catch (Throwable e) {
             reporter.testError(SimpleReportEntry.withException(report.getSourceName(), report.getName(), new PojoStackTraceWriter(report.getSourceName(), report.getName(), e)));
-        } finally
-        {
+        } finally {
             reporter.testSetCompleted(report);
         }
         listeners.fireTestRunFinished(result);
@@ -164,53 +156,72 @@ public class TestExecutorSimulation implements JUnitExecutor
         return reporterFactory.close();
     }
 
-    private void closeRunNotifier(org.junit.runner.notification.RunListener main, List<org.junit.runner.notification.RunListener> others)
-    {
+    private List<String> getTestMethods(Class testClass) {
+        List<String> methods = new LinkedList<>();
+
+        for (Method m : testClass.getDeclaredMethods()) {
+            boolean found = false;
+            if (m.getReturnType() == Void.TYPE && m.getParameterTypes().length == 0) {
+                for (Annotation a : m.getAnnotations()) {
+                    if (a.annotationType().getCanonicalName().equals("org.junit.Test")) {
+                        found = true;
+                    }
+                }
+            }
+            if (!found && (m.getName().startsWith("test")) && m.getReturnType() == Void.TYPE && m.getParameterTypes().length == 0) {
+                if (testClass.getSuperclass().getCanonicalName().equals("junit.framework.TestCase")) {
+                    found = true;
+                }
+            }
+            if (found) {
+                methods.add(m.getName());
+            }
+
+        }
+        return methods;
+    }
+
+    private void closeRunNotifier(org.junit.runner.notification.RunListener main, List<org.junit.runner.notification.RunListener> others) {
         RunNotifier fNotifier = new RunNotifier();
         fNotifier.removeListener(main);
-        for (org.junit.runner.notification.RunListener listener : others)
-        {
+        for (org.junit.runner.notification.RunListener listener : others) {
             fNotifier.removeListener(listener);
         }
     }
 
-    private void proccessFaults()
-    {
+    private void proccessFaults() {
         List<String> fileLines = new LinkedList<String>();
-        try
-        {
+        try {
             Path path = Paths.get("TestsRevealingFaults");
-            if (path.toFile().exists())
-            {
+            if (path.toFile().exists()) {
                 fileLines = Files.readAllLines(path);
             }
 
-        } catch (IOException ex)
-        {
+        } catch (IOException ex) {
             Logger.getLogger(FaultsListener.class.getName()).log(Level.SEVERE, null, ex);
         }
         for (String line : fileLines) {
-            String testName = getTestName(line);
+            String testName = line;
             this.faults.add(testName);
         }
     }
-    
-    protected String getTestName(String testName){
-        
+
+    protected String getTestName(String testName) {
+
         if (this.testGranularity.equals(TestGranularity.CLASS)) {
-                if (testName.contains(".")) {
-                    testName = testName.substring(0, testName.lastIndexOf("."));
-                    
-                }
-            } 
+            if (testName.contains(".")) {
+                testName = testName.substring(0, testName.lastIndexOf("."));
+
+            }
+        }
         return testName;
     }
-    
-    private void setTestGranularity(AbstractTest test){
-        if(this.testGranularity == null){
+
+    private void setTestGranularity(AbstractTest test) {
+        if (this.testGranularity == null) {
             this.testGranularity = test.getTestGranularity();
             proccessFaults();
         }
     }
-    
+
 }

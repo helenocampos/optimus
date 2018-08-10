@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import org.junit.runner.notification.RunListener;
@@ -26,16 +27,13 @@ public abstract class APFDListener extends RunListener {
 
     private int faultsAmount;
     private HashMap<String, Integer> faultRevealingTests;
-    private List<TestExecution> executedTests;
+    private LinkedHashMap<String, TestExecution> executedTests;
     private String testGranularity;
 
     public APFDListener(String testGranularity) {
         super();
-        this.faultsAmount = 0;
-        this.faultRevealingTests = new HashMap<String, Integer>();
-        this.executedTests = new LinkedList<TestExecution>();
         this.testGranularity = testGranularity;
-        readTestsFile();
+        resetListener();
     }
 
     protected void readTestsFile() {
@@ -47,22 +45,22 @@ public abstract class APFDListener extends RunListener {
 //            Logger.getLogger(MyMojo.class.getName()).log(Level.SEVERE, null, ex);
         }
         for (String line : fileLines) {
-            String testName = getTestName(line);
-             if (this.faultRevealingTests.get(testName) == null) {
-                    this.faultRevealingTests.put(testName, 0);
-                }
+            String testName = line;
+            if (this.faultRevealingTests.get(testName) == null) {
+                this.faultRevealingTests.put(testName, 0);
+            }
         }
         this.setFaultsAmount(fileLines.size());
     }
-    
-    protected String getTestName(String testName){
-        
+
+    protected String getTestName(String testName) {
+
         if (this.testGranularity.equals("class")) {
-                if (testName.contains(".")) {
-                    testName = testName.substring(0, testName.lastIndexOf("."));
-                    
-                }
-            } 
+            if (testName.contains(".")) {
+                testName = testName.substring(0, testName.lastIndexOf("."));
+
+            }
+        }
         return testName;
     }
 
@@ -80,7 +78,7 @@ public abstract class APFDListener extends RunListener {
         data.setAmountExecutedTests(this.getExecutedTests().size());
         data.setSeededFaultsAmount(this.getFaultsAmount());
         data.setAPFD(APFD);
-        data.setExecutedTests(this.getExecutedTests());
+        data.setExecutedTests(new LinkedList<>(this.getExecutedTests().values()));
         List<String> faultList = new LinkedList<String>();
         faultList.addAll(faultRevealingTests.keySet());
         data.setFaultRevealingTests(faultList);
@@ -111,11 +109,18 @@ public abstract class APFDListener extends RunListener {
         this.faultRevealingTests = faultRevealingTests;
     }
 
-    protected List<TestExecution> getExecutedTests() {
+    protected HashMap<String, TestExecution> getExecutedTests() {
         return executedTests;
     }
 
-    protected void setExecutedTests(List<TestExecution> executedTests) {
+    protected void setExecutedTests(LinkedHashMap<String, TestExecution> executedTests) {
         this.executedTests = executedTests;
+    }
+
+    public void resetListener() {
+        this.faultsAmount = 0;
+        this.faultRevealingTests = new HashMap<String, Integer>();
+        this.executedTests = new LinkedHashMap<String, TestExecution>();
+        readTestsFile();
     }
 }

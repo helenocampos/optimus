@@ -31,7 +31,7 @@ public class ClassAPFDListener extends APFDListener
         String testName = description.getClassName();
         if (!lastExecutedClass.equals(testName))
         {
-            this.getExecutedTests().add(new TestExecution(testName));
+            this.getExecutedTests().put(testName,new TestExecution(testName));
             if (this.getFaultRevealingTests().containsKey(testName))
             {
                 this.getFaultRevealingTests().put(testName, getExecutedTests().size());
