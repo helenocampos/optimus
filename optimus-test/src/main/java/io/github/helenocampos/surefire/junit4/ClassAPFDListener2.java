@@ -43,6 +43,7 @@ public class ClassAPFDListener2 extends APFDListener {
                 Description failledTest = failure.getDescription();
                 String testName = failledTest.getClassName() + "." + failledTest.getMethodName();
                 TestExecution execution = getExecutedTests().get(testName);
+                this.incrementFaultsAmount();
                 execution.setTestResult(false);
             }
         }

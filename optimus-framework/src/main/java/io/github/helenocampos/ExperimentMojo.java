@@ -91,6 +91,7 @@ public class ExperimentMojo
             List<File> versions = getVersionsFolders(versionsFolderFile);
             for (File version : versions) {
                 if (version.isDirectory()) {
+                    this.pomManager = new PomManager(version.getAbsolutePath());
                     logMessage("Initializing experiment for " + version.getName());
 
                     logMessage("Collecting coverage and faults data");

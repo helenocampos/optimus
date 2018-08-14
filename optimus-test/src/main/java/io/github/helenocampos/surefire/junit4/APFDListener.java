@@ -50,7 +50,7 @@ public abstract class APFDListener extends RunListener {
                 this.faultRevealingTests.put(testName, 0);
             }
         }
-        this.setFaultsAmount(fileLines.size());
+//        this.setFaultsAmount(fileLines.size());
     }
 
     protected String getTestName(String testName) {
@@ -115,6 +115,10 @@ public abstract class APFDListener extends RunListener {
 
     protected void setExecutedTests(LinkedHashMap<String, TestExecution> executedTests) {
         this.executedTests = executedTests;
+    }
+    
+    protected void incrementFaultsAmount(){
+        this.faultsAmount++;
     }
 
     public void resetListener() {

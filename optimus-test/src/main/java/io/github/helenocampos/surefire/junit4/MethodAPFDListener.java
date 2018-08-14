@@ -40,6 +40,9 @@ public class MethodAPFDListener extends APFDListener {
         if (getExecutedTests().size() >= 1) {
             TestExecution execution = getExecutedTests().get(this.lastExecutedTest);
             execution.setTestResult(result.wasSuccessful());
+            if(!result.wasSuccessful()){
+                this.incrementFaultsAmount();
+            }
             execution.setExecutionTime(result.getRunTime());
         }
     }
