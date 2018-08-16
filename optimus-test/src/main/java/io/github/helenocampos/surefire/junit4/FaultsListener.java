@@ -83,15 +83,18 @@ public class FaultsListener extends RunListener
     @Override
     public void testFailure(Failure failure) throws Exception
     {
-        super.testFailure(failure);
-        if (firstFailure)
+        if (!failure.getDescription().getDisplayName().equals("Test mechanism"))
         {
-            firstFailure = false;
-            resetFaultsFile();
+            super.testFailure(failure);
+            if (firstFailure)
+            {
+                firstFailure = false;
+                resetFaultsFile();
+            }
+            String testName = getTestName(failure.getDescription());
+            writeFaultToFile(testName);
+            updateAPFDListener(testName);
         }
-        String testName = getTestName(failure.getDescription());
-        writeFaultToFile(testName);
-        updateAPFDListener(testName);
     }
 
     private void updateAPFDListener(String testFailure)

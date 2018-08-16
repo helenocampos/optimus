@@ -32,7 +32,7 @@ public class TestMethodsToRun extends AbstractTestsToRun
                     }
                     if (!found && (m.getName().startsWith("test")) && m.getReturnType() == Void.TYPE && m.getParameterTypes().length == 0)
                     {
-                        if (c.getSuperclass().getCanonicalName().equals("junit.framework.TestCase"))
+                        if (extendsTestCase(c))
                         {
                             found = true;
                         }
@@ -54,6 +54,17 @@ public class TestMethodsToRun extends AbstractTestsToRun
         }
     }
 
+    private boolean extendsTestCase(Class<?> clazz){
+        if(clazz.getSuperclass()!=null){
+            if (clazz.getSuperclass().getCanonicalName().equals("junit.framework.TestCase")){
+                return true;
+            }else{
+                return extendsTestCase(clazz.getSuperclass());
+            }
+        }
+        return false;
+    }
+    
     @Override
     public String getGranularity()
     {

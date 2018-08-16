@@ -169,7 +169,7 @@ public class TestExecutorSimulation implements JUnitExecutor {
                 }
             }
             if (!found && (m.getName().startsWith("test")) && m.getReturnType() == Void.TYPE && m.getParameterTypes().length == 0) {
-                if (testClass.getSuperclass().getCanonicalName().equals("junit.framework.TestCase")) {
+                if (extendsTestCase(testClass)) {
                     found = true;
                 }
             }
@@ -179,6 +179,17 @@ public class TestExecutorSimulation implements JUnitExecutor {
 
         }
         return methods;
+    }
+    
+        private boolean extendsTestCase(Class<?> clazz){
+        if(clazz.getSuperclass()!=null){
+            if (clazz.getSuperclass().getCanonicalName().equals("junit.framework.TestCase")){
+                return true;
+            }else{
+                return extendsTestCase(clazz.getSuperclass());
+            }
+        }
+        return false;
     }
 
     private void closeRunNotifier(org.junit.runner.notification.RunListener main, List<org.junit.runner.notification.RunListener> others) {

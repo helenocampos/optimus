@@ -242,6 +242,7 @@ public class PomManager {
         properties.addChild(createPropertyNode("collectCoverageData", Boolean.toString(config.isCollectCoverageData())));
         properties.addChild(createPropertyNode("clustersAmount", config.getClustersAmount()));
         properties.addChild(createPropertyNode("simulateExecution", Boolean.toString(config.isSimulateExecution())));
+        properties.addChild(createPropertyNode("firstVersionExecution", Boolean.toString(config.isFirstVersionExecution())));
 
         if (!config.getDbPath().equals("")) {
             properties.addChild(createPropertyNode("dbPath", config.getDbPath()));

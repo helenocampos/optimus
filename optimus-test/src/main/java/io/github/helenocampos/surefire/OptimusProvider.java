@@ -57,6 +57,7 @@ public class OptimusProvider extends AbstractProvider {
     private ProjectData projectData;
     private boolean collectCoverageData = false;
     private boolean simulateExecution = false;
+    private boolean firstVersionExecution = false;
 
     public OptimusProvider(ProviderParameters booterParameters) {
         this.providerParameters = booterParameters;
@@ -127,6 +128,7 @@ public class OptimusProvider extends AbstractProvider {
         this.testGranularity = properties.getProperty("granularity");
         this.prioritizationTechnique = properties.getProperty("prioritization");
         this.dbPath = properties.getProperty("dbPath");
+        this.firstVersionExecution = Boolean.valueOf(properties.getProperty("firstVersionExecution", "false"));
         if (!this.collectCoberturaData) {
             this.collectCoverageData = Boolean.valueOf(getProviderProperty("collectCoverageData", "true"));
             if (this.testGranularity == null && this.prioritizationTechnique == null) {

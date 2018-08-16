@@ -21,6 +21,7 @@ public class PrioritizationConfig {
     private boolean collectCoverageData;
     private boolean calcAPFD;
     private boolean simulateExecution;
+    private boolean firstVersionExecution;
     
     public PrioritizationConfig(String granularity, String technique, String projectFolder, String dbPath, String projectName, boolean generateFaultsFile, boolean calcAPFD, boolean simulateExecution) {
         this.granularity = granularity;
@@ -162,5 +163,15 @@ public class PrioritizationConfig {
     public void setSimulateExecution(boolean simulateExecution)
     {
         this.simulateExecution = simulateExecution;
+    }
+
+    public boolean isFirstVersionExecution()
+    {
+        return firstVersionExecution;
+    }
+
+    public void setFirstVersionExecution(boolean firstVersionExecution)
+    {
+        this.firstVersionExecution = firstVersionExecution;
     }
 }

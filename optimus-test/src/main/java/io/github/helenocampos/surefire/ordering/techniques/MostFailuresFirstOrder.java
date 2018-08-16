@@ -31,12 +31,14 @@ public class MostFailuresFirstOrder extends DefaultOrderer<AbstractTest>
     private String dbPath;
     private String projectName;
     private HistoricalAnalyzer analyzer;
+    private boolean firstVersionExecution = false;
 
     public MostFailuresFirstOrder()
     {
         Properties properties = System.getProperties();
         this.dbPath = properties.getProperty("dbPath");
         this.projectName = properties.getProperty("projectName");
+        this.firstVersionExecution = Boolean.valueOf(properties.getProperty("fistVersionExecution", "false"));
         if (dbPath != null && projectName != null)
         {
             analyzer = new HistoricalAnalyzer(dbPath);
@@ -45,13 +47,17 @@ public class MostFailuresFirstOrder extends DefaultOrderer<AbstractTest>
 
     public int compare(AbstractTest o1, AbstractTest o2)
     {
-        if (analyzer != null)
+        if (analyzer != null && !firstVersionExecution)
         {
             float thiz = analyzer.getTestFailureRate(o1.getQualifiedName(), this.projectName);
             float that = analyzer.getTestFailureRate(o2.getQualifiedName(), this.projectName);
             return Float.compare(thiz, that);
         } else
         {
+            if (firstVersionExecution)
+            {
+                return o1.getQualifiedName().compareTo(o2.getQualifiedName());
+            }
             return 0;
         }
 
