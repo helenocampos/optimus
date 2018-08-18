@@ -8,7 +8,6 @@ package io.github.helenocampos.optimushistoricalanalyzer;
 import io.github.helenocampos.optimushistoricalanalyzer.dao.TestExecutionDAO;
 import io.github.helenocampos.optimushistoricalanalyzer.domain.TestCaseExecution;
 import io.github.helenocampos.optimushistoricalanalyzer.domain.TestSetExecution;
-import java.io.File;
 import java.util.List;
 
 /**
@@ -23,20 +22,11 @@ public class HistoricalAnalyzer
 
     public HistoricalAnalyzer(String dbURL)
     {
-        this.dbURL = checkForPreviousVersionDB(dbURL);
-        this.dao = new TestExecutionDAO(dbURL);
+        this.dbURL = dbURL;
+        this.dao = new TestExecutionDAO(this.dbURL);
     }
 
-    private String checkForPreviousVersionDB(String path)
-    {
-        File f = new File(path + ".backup");
-        if (f.exists() && !f.isDirectory()){
-            return path + ".backup";
-        }else{
-            return path;
-        }
-    }
-
+    
     public float getTestFailureRate(String testName, String projectName)
     {
         int failureAmount = this.dao.getTestFailureAmount(testName, projectName);

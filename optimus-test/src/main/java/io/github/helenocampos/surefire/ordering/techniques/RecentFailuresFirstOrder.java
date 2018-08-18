@@ -38,7 +38,7 @@ public class RecentFailuresFirstOrder extends DefaultOrderer<AbstractTest>
         Properties properties = System.getProperties();
         this.dbPath = properties.getProperty("dbPath");
         this.projectName = properties.getProperty("projectName");
-        this.firstVersionExecution = Boolean.valueOf(properties.getProperty("fistVersionExecution", "false"));
+        this.firstVersionExecution = Boolean.valueOf(properties.getProperty("firstVersionExecution", "false"));
         if (dbPath != null && projectName != null)
         {
             analyzer = new HistoricalAnalyzer(dbPath);
@@ -55,10 +55,6 @@ public class RecentFailuresFirstOrder extends DefaultOrderer<AbstractTest>
             return Float.compare(thiz, that);
         } else
         {
-            if (firstVersionExecution)
-            {
-                return o1.getQualifiedName().compareTo(o2.getQualifiedName());
-            }
             return 0;
         }
     }

@@ -16,6 +16,7 @@ import io.github.helenocampos.surefire.junit4.TestExecutorSimulation;
 import io.github.helenocampos.testing.TestGranularity;
 import io.github.helenocampos.surefire.ordering.TestsSorter;
 import io.github.helenocampos.surefire.report.ExecutionData;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -57,8 +58,7 @@ public class OptimusProvider extends AbstractProvider {
     private ProjectData projectData;
     private boolean collectCoverageData = false;
     private boolean simulateExecution = false;
-    private boolean firstVersionExecution = false;
-
+    
     public OptimusProvider(ProviderParameters booterParameters) {
         this.providerParameters = booterParameters;
         this.integrationTests = isIntegrationTest();
@@ -128,7 +128,6 @@ public class OptimusProvider extends AbstractProvider {
         this.testGranularity = properties.getProperty("granularity");
         this.prioritizationTechnique = properties.getProperty("prioritization");
         this.dbPath = properties.getProperty("dbPath");
-        this.firstVersionExecution = Boolean.valueOf(properties.getProperty("firstVersionExecution", "false"));
         if (!this.collectCoberturaData) {
             this.collectCoverageData = Boolean.valueOf(getProviderProperty("collectCoverageData", "true"));
             if (this.testGranularity == null && this.prioritizationTechnique == null) {
@@ -136,11 +135,12 @@ public class OptimusProvider extends AbstractProvider {
                 this.prioritizationTechnique = getProviderProperty("prioritization", "");
                 this.calculateAPFD = Boolean.valueOf(getProviderProperty("apfd", "false"));
                 this.generateFaultsFile = Boolean.valueOf(getProviderProperty("faultsFile", "false"));
+                properties.setProperty("firstVersionExecution", getProviderProperty("firstVersionExecution", "false"));
             }
             if (dbPath == null) {
                 this.dbPath = getProviderProperty("dbPath", "");
                 this.registerExecution = !dbPath.equals("");
-                properties.setProperty("dbPath", this.dbPath);
+                properties.setProperty("dbPath", checkForPreviousVersionDB(this.dbPath));
             }
             this.projectName = getProviderProperty("projectName", null);
             if (this.projectName != null) {
@@ -148,6 +148,16 @@ public class OptimusProvider extends AbstractProvider {
             }
             properties.setProperty("clustersAmount", getProviderProperty("clustersAmount", ""));
             this.simulateExecution = Boolean.valueOf(getProviderProperty("simulateExecution", "false"));
+        }
+    }
+    
+    private String checkForPreviousVersionDB(String path)
+    {
+        File f = new File(path + ".backup");
+        if (f.exists() && !f.isDirectory()){
+            return path + ".backup";
+        }else{
+            return path;
         }
     }
 

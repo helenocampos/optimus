@@ -122,11 +122,13 @@ public class ExperimentMojo
     {
         Model pom = pomManager.readPom(this.getMavenProject().getBasedir().getAbsolutePath());
         logMessage("Collecting coverage data");
+        createDBBackup();
         collectCoverageAndGenerateFaultsFile(this.getMavenProject().getBasedir());
         executeTechniques(this.getMavenProject().getBasedir(), false, false);
         logMessage("Generating reports");
         ReportsController reports = new ReportsController(this.getMavenProject().getName(), this.getMavenProject().getBasedir(), this.getReports(), "single");
         pomManager.writePom(pom, this.getMavenProject().getBasedir().getAbsolutePath());
+        deleteDBBackup();
     }
 
     private void executeVersionsExperiment() throws MojoExecutionException
@@ -145,9 +147,11 @@ public class ExperimentMojo
                     logMessage("Initializing experiment for " + version.getName());
 
                     logMessage("Collecting coverage and faults data");
+                    createDBBackup();
                     collectCoverageAndGenerateFaultsFile(version);
                     executeTechniques(version, false, firstVersionExecution);
                     firstVersionExecution = false;
+                    deleteDBBackup();
                 }
                 manageSourceCodeBackup(version.getAbsolutePath());
             }
@@ -227,6 +231,7 @@ public class ExperimentMojo
         int execTimes = Integer.valueOf(executionTimes);
         for (int x = 1; x <= execTimes; x++)
         {
+            createDBBackup();
             logMessage("Experiment run #" + x);
             logMessage("Generating code mutants");
             runPitestPlugin();
@@ -238,6 +243,7 @@ public class ExperimentMojo
             logMessage("Collecting coverage data");
             collectCoverageAndGenerateFaultsFile(outputExperimentFolder);
             executeTechniques(outputExperimentFolder, false, false);
+            deleteDBBackup();
         }
         logMessage("Generating reports");
         ReportsController reports = new ReportsController(this.getMavenProject().getName(), new File(getExperimentOutputDirectory(), timeStamp), this.getReports(), "multiple");
