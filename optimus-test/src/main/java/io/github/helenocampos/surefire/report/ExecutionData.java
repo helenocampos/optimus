@@ -118,7 +118,7 @@ public class ExecutionData {
     private Path getExecutionDataPath() {
         Path filePath = Paths.get(this.projectPath, "target", "optimus-reports", "data", "executionData.xml");
         File file = filePath.toFile();
-        if (file.exists()) {
+        if (!file.exists()) {
             file.getParentFile().mkdirs();
             try {
                 file.createNewFile();
