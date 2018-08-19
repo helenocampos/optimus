@@ -22,8 +22,7 @@ import java.util.List;
  *
  * @author helenocampos
  */
-public class ExecutionData
-{
+public class ExecutionData {
 
     /**
      * @return the executionTime
@@ -50,70 +49,57 @@ public class ExecutionData
     private String executionDate;
     private float executionTime;
 
-    public ExecutionData()
-    {
+    public ExecutionData() {
         this.executedTests = new LinkedList<TestExecution>();
     }
-    
-    public ExecutionData(String projectPath)
-    {
+
+    public ExecutionData(String projectPath) {
         this.projectPath = projectPath;
         this.executedTests = new LinkedList<TestExecution>();
     }
 
-    public double getAPFD()
-    {
+    public double getAPFD() {
         return APFD;
     }
 
-    public void setAPFD(double APFD)
-    {
+    public void setAPFD(double APFD) {
         this.APFD = APFD;
     }
 
-    public String getTechnique()
-    {
+    public String getTechnique() {
         return technique;
     }
 
-    public void setTechnique(String technique)
-    {
+    public void setTechnique(String technique) {
         this.technique = technique;
     }
 
-    public int getSeededFaultsAmount()
-    {
+    public int getSeededFaultsAmount() {
         return seededFaultsAmount;
     }
 
-    public void setSeededFaultsAmount(int seededFaultsAmount)
-    {
+    public void setSeededFaultsAmount(int seededFaultsAmount) {
         this.seededFaultsAmount = seededFaultsAmount;
     }
 
-    public int getAmountExecutedTests()
-    {
+    public int getAmountExecutedTests() {
         return amountExecutedTests;
     }
 
-    public void setAmountExecutedTests(int amountExecutedTests)
-    {
+    public void setAmountExecutedTests(int amountExecutedTests) {
         this.amountExecutedTests = amountExecutedTests;
     }
 
-    public String getTestGranularity()
-    {
+    public String getTestGranularity() {
         return testGranularity;
     }
 
-    public void setTestGranularity(String testGranularity)
-    {
+    public void setTestGranularity(String testGranularity) {
         this.testGranularity = testGranularity;
     }
 
     //   /target/optimus-reports/data
-    public void writeExecutionData()
-    {
+    public void writeExecutionData() {
 
         List<ExecutionData> existentData = readExecutionData();
         existentData.add(this);
@@ -122,85 +108,70 @@ public class ExecutionData
         xstream.alias("TestExecution", TestExecution.class);
         List<String> lines = Arrays.asList(xstream.toXML(existentData));
 
-        try
-        {
+        try {
             Files.write(getExecutionDataPath(), lines, Charset.forName("UTF-8"));
-        } catch (IOException ex)
-        {
+        } catch (IOException ex) {
             System.out.println("could not write: " + ex.getMessage());
         }
     }
 
-    private Path getExecutionDataPath()
-    {
+    private Path getExecutionDataPath() {
         Path filePath = Paths.get(this.projectPath, "target", "optimus-reports", "data", "executionData.xml");
         File file = filePath.toFile();
-        file.getParentFile().mkdirs();
-        try
-        {
-            file.createNewFile();
-        } catch (IOException ex)
-        {
-            System.out.println("could not create file: " + ex.getMessage());
+        if (file.exists()) {
+            file.getParentFile().mkdirs();
+            try {
+                file.createNewFile();
+            } catch (IOException ex) {
+                System.out.println("could not create file: " + ex.getMessage());
+            }
         }
-
         return filePath;
     }
 
-    public List<ExecutionData> readExecutionData()
-    {
+    public List<ExecutionData> readExecutionData() {
         XStream xstream = new XStream();
         xstream.alias("ExecutionData", ExecutionData.class);
         xstream.alias("TestExecution", TestExecution.class);
         xstream.alias("list", List.class);
         List<ExecutionData> dataExecutions = new ArrayList<ExecutionData>();
-        try
-        {
+        try {
             File file = getExecutionDataPath().toFile();
-            if (file.length() > 0)
-            {
+            if (file.length() > 0) {
                 dataExecutions = (List<ExecutionData>) xstream.fromXML(getExecutionDataPath().toFile());
             }
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             System.out.println("exception: " + e.getMessage());
         }
 
         return dataExecutions;
     }
 
-    public String getProjectPath()
-    {
+    public String getProjectPath() {
         return projectPath;
     }
 
-    public void setProjectPath(String projectPath)
-    {
+    public void setProjectPath(String projectPath) {
         this.projectPath = projectPath;
     }
 
-    public List<TestExecution> getExecutedTests()
-    {
+    public List<TestExecution> getExecutedTests() {
         return executedTests;
     }
 
-    public void setExecutedTests(List<TestExecution> executedTests)
-    {
+    public void setExecutedTests(List<TestExecution> executedTests) {
         this.executedTests = executedTests;
     }
 
-    public List<String> getFaultRevealingTests()
-    {
+    public List<String> getFaultRevealingTests() {
         return faultRevealingTests;
     }
 
-    public void setFaultRevealingTests(List<String> faultRevealingTests)
-    {
+    public void setFaultRevealingTests(List<String> faultRevealingTests) {
         this.faultRevealingTests = faultRevealingTests;
     }
-    
-     public String[] getValues()
-    {
+
+    public String[] getValues() {
         String[] values = new String[8];
         values[0] = getProjectName();
         values[1] = this.technique;
@@ -212,20 +183,20 @@ public class ExecutionData
         values[7] = this.executionDate;
         return values;
     }
-     
-     private String getProjectName(){
-         String[] folders;
-         if(projectPath.contains("/")){
-             folders = projectPath.split("/");
-         }else{
-             folders = projectPath.split("\\\\");
-         }
-         if(folders!=null){
-             return folders[folders.length-1];
-         }else{
-             return projectPath;
-         }
-     }
+
+    private String getProjectName() {
+        String[] folders;
+        if (projectPath.contains("/")) {
+            folders = projectPath.split("/");
+        } else {
+            folders = projectPath.split("\\\\");
+        }
+        if (folders != null) {
+            return folders[folders.length - 1];
+        } else {
+            return projectPath;
+        }
+    }
 
     /**
      * @return the executionDate
