@@ -27,8 +27,7 @@ import org.apache.commons.io.FilenameUtils;
  *
  * @author helenocampos
  */
-public class LocalProjectCrawler
-{
+public class LocalProjectCrawler {
 
     private HashMap<String, JavaSourceCodeClass> javaFiles;
     private HashMap<String, JavaTestClass> testFiles;
@@ -36,8 +35,7 @@ public class LocalProjectCrawler
     private String projectPath;
     private ProjectData projectData;
 
-    public LocalProjectCrawler(String projectPath)
-    {
+    public LocalProjectCrawler(String projectPath) {
         javaFiles = new HashMap<String, JavaSourceCodeClass>();
         testFiles = new HashMap<String, JavaTestClass>();
         classFilesPaths = new HashMap<String, String>();
@@ -45,178 +43,136 @@ public class LocalProjectCrawler
         crawl(new File(projectPath));
         resolveClassFilesLocation();
         projectData = ProjectData.getProjectDataFromFile();
-        if (projectData != null)
-        {
+        if (projectData != null) {
             projectData.updateClasses(javaFiles);
             projectData.updateTests(testFiles);
-        } else
-        {
+        } else {
             projectData = new ProjectData(projectPath);
             projectData.setClasses(javaFiles);
             projectData.setTests(testFiles);
         }
     }
 
-    private void resolveClassFilesLocation()
-    {
-        for (JavaSourceCodeClass file : javaFiles.values())
-        {
+    private void resolveClassFilesLocation() {
+        for (JavaSourceCodeClass file : javaFiles.values()) {
             String path = classFilesPaths.get(file.getQualifiedName());
-            if (path != null)
-            {
+            if (path != null) {
                 file.setClassFilePath(path);
             }
         }
 
-        for (JavaTestClass file : testFiles.values())
-        {
+        for (JavaTestClass file : testFiles.values()) {
             String path = classFilesPaths.get(file.getQualifiedName());
-            if (path != null)
-            {
+            if (path != null) {
                 file.setClassFilePath(path);
             }
         }
 
     }
 
-    private void crawl(File f)
-    {
+    private void crawl(File f) {
         Stack<File> fileStack = new Stack<>();
         fileStack.push(f);
-        while (!fileStack.isEmpty())
-        {
+        while (!fileStack.isEmpty()) {
             File child = fileStack.pop();
-            if (child.isDirectory())
-            {
-                for (File subFile : child.listFiles())
-                {
+            if (child.isDirectory()) {
+                for (File subFile : child.listFiles()) {
                     fileStack.push(subFile);
                 }
-            } else
-            {
+            } else {
                 processFile(child);
             }
         }
     }
 
-    private void processFile(File f)
-    {
+    private void processFile(File f) {
         String fileExtension = FilenameUtils.getExtension(f.getName());
-        if (fileExtension.equals("java") && f.getPath().contains("src"))
-        {
+        if (fileExtension.equals("java") && f.getPath().contains("src")) {
             String packageNameSource = getPackageFromSourceFile(f.getPath());
-            if (isTestClass(f.getAbsolutePath()))
-            {
+            if (isTestClass(f.getAbsolutePath())) {
                 JavaTestClass cls = new JavaTestClass(f.getName(), f.getPath(), packageNameSource);
                 testFiles.put(cls.getQualifiedName(), cls);
-            } else
-            {
-                if (fileExtension.equals("java"))
-                {
+            } else {
+                if (fileExtension.equals("java")) {
                     JavaSourceCodeClass cls = new JavaSourceCodeClass(f.getName(), f.getPath(), packageNameSource);
                     javaFiles.put(cls.getQualifiedName(), cls);
                 }
             }
-        } else if (fileExtension.equals("class") && f.getPath().contains("target"))
-        {
-            try
-            {
+        } else if (fileExtension.equals("class") && f.getPath().contains("target")) {
+            try {
                 ClassParser parser = new ClassParser(f.getPath());
                 JavaClass cls = parser.parse();
                 String qualifiedName = f.getName().replace(".class", "");
                 qualifiedName = cls.getPackageName() + "." + qualifiedName;
                 classFilesPaths.put(qualifiedName, f.getPath());
-            } catch (IOException ex)
-            {
+            } catch (IOException ex) {
                 Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
     }
 
-    private String getPackageFromSourceFile(String file)
-    {
+    private String getPackageFromSourceFile(String file) {
         FileInputStream in = null;
         CompilationUnit cu = null;
-        try
-        {
+        try {
             in = new FileInputStream(file);
             cu = JavaParser.parse(in);
-        } catch (FileNotFoundException ex)
-        {
+        } catch (FileNotFoundException ex) {
 //            Logger.getLogger(CouplingManager.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ParseProblemException ex)
-        {
-            Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.SEVERE, null, ex + " file: " + file);
-        } catch (Exception ex)
-        {
+        } catch (ParseProblemException ex) {
+            Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.WARNING, null, ex + " file: " + file);
+        } catch (Exception ex) {
             Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.SEVERE, null, ex);
-        } finally
-        {
-            if (in != null)
-            {
-                try
-                {
+        } finally {
+            if (in != null) {
+                try {
                     in.close();
-                } catch (IOException ex)
-                {
+                } catch (IOException ex) {
 //                    Logger.getLogger(CouplingManager.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
-        if (cu != null)
-        {
+        if (cu != null) {
             Optional<PackageDeclaration> declaration = cu.getPackageDeclaration();
-            if (declaration.isPresent())
-            {
+            if (declaration.isPresent()) {
                 return cu.getPackageDeclaration().get().getNameAsString();
-            } else
-            {
+            } else {
                 return "";
             }
 
-        } else
-        {
+        } else {
             return "";
         }
     }
 
-    private boolean isTestClass(String classPath)
-    {
+    private boolean isTestClass(String classPath) {
         FileInputStream in = null;
         CompilationUnit cu = null;
-        try
-        {
+        try {
             in = new FileInputStream(classPath);
             cu = JavaParser.parse(in);
-        } catch (FileNotFoundException ex)
-        {
+        } catch (FileNotFoundException ex) {
 //            Logger.getLogger(CouplingManager.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex)
-        {
+        } catch (ParseProblemException ex) {
+            Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.WARNING, null, ex + " file: " + classPath);
+        } catch (Exception ex) {
             Logger.getLogger(LocalProjectCrawler.class.getName()).log(Level.SEVERE, null, ex);
-        } finally
-        {
-            if (in != null)
-            {
-                try
-                {
+        } finally {
+            if (in != null) {
+                try {
                     in.close();
-                } catch (IOException ex)
-                {
+                } catch (IOException ex) {
 //                    Logger.getLogger(CouplingManager.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
-        if (cu != null)
-        {
-            List<ImportDeclaration> imports = cu.getImports();            
-            for (ImportDeclaration i : imports)
-            {
+        if (cu != null) {
+            List<ImportDeclaration> imports = cu.getImports();
+            for (ImportDeclaration i : imports) {
                 if (i.getName().toString().equals("org.junit.Test")
                         || i.getNameAsString().equals("junit.framework.TestCase")
-                        || i.getNameAsString().equals("org.junit.Assert"))
-                {
+                        || i.getNameAsString().equals("org.junit.Assert")) {
                     return true;
                 }
             }
@@ -224,22 +180,19 @@ public class LocalProjectCrawler
         return false;
     }
 
-    private List<JavaSourceCodeClass> getJavaFiles()
-    {
+    private List<JavaSourceCodeClass> getJavaFiles() {
         final List<JavaSourceCodeClass> files = new ArrayList();
         files.addAll(this.javaFiles.values());
         return files;
     }
 
-    private List<JavaTestClass> getTestFiles()
-    {
+    private List<JavaTestClass> getTestFiles() {
         final List<JavaTestClass> javaTestClasses = new ArrayList();
         javaTestClasses.addAll(this.testFiles.values());
         return javaTestClasses;
     }
 
-    public ProjectData getProjectData()
-    {
+    public ProjectData getProjectData() {
         return projectData;
     }
 }
