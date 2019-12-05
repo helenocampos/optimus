@@ -5,7 +5,6 @@
  */
 package io.github.helenocampos.executiontraceanalyzer;
 
-import com.sun.javafx.PlatformUtil;
 import io.github.helenocampos.extractor.model.TestMethod;
 import io.github.helenocampos.extractor.model.JavaTestClass;
 import io.github.helenocampos.extractor.model.ProjectData;
@@ -110,7 +109,7 @@ public class ExecutionTraceAnalyzer
         {
             String mvnInvokation = "mvn cobertura:cobertura -Dcobertura.report.format=xml -Dprioritization=default -Dgranularity=method -Dmaven.test.skip=false -DskipTests=false -Dskip=false -Dmaven.surefire.skip=false -DcollectCoverageData=false -DcollectCoberturaData=true";
 
-            if (PlatformUtil.isWindows())
+            if (System.getProperty("os.name").indexOf("win") >= 0)
             {
                 ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", mvnInvokation);
                 pb.directory(folder);
