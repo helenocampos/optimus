@@ -15,7 +15,6 @@ package io.github.helenocampos;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import com.sun.javafx.PlatformUtil;
 import io.github.helenocampos.surefire.ordering.techniques.PrioritizationTechniques;
 import java.io.File;
 import java.io.IOException;
@@ -307,7 +306,7 @@ public class ExperimentMojo
             {
                 mvnInvokation = MVN_TEST;
             }
-            if (PlatformUtil.isWindows())
+            if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0)
             {
                 ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", mvnInvokation);
                 pb.directory(folder);
