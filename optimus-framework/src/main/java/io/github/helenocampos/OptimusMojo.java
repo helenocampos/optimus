@@ -127,7 +127,7 @@ public abstract class OptimusMojo
     @Parameter(property = "", defaultValue = "false")
     private String simulateExecution = "";
 
-    private final String jacocoVersion = "0.7.9";
+    public static final String jacocoVersion = "0.8.5";
 
     protected PomManager pomManager;
 
@@ -193,9 +193,9 @@ public abstract class OptimusMojo
         File outputExperimentFolder = new File(new File(getExperimentOutputDirectory(), experimentFolder).getAbsolutePath(), injectionId);
         executeMojo(
                 plugin(
-                        groupId("io.github.helenocampos"),
+                        groupId("info.heleno"),
                         artifactId("fault-injection-plugin"),
-                        version("1.0.0")
+                        version("0.0.1")
                 ),
                 goal("touch"),
                 configuration(
@@ -211,9 +211,9 @@ public abstract class OptimusMojo
 
     protected void runPrioritizationPlugin(boolean generateReport) {
         Dependency dep = new Dependency();
-        dep.setGroupId("io.github.helenocampos.surefire");
+        dep.setGroupId("info.heleno");
         dep.setArtifactId("optimus-test");
-        dep.setVersion("2.20.1");
+        dep.setVersion("0.0.1");
 
         Plugin assembly = MojoExecutor.plugin(
                 "org.apache.maven.plugins",

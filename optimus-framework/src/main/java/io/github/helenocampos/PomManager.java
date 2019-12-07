@@ -196,9 +196,9 @@ public class PomManager {
 
     private void addPrioritizationPlugin(List<Plugin> plugins, PrioritizationConfig config) {
         Dependency dep = new Dependency();
-        dep.setGroupId("io.github.helenocampos.surefire");
+        dep.setGroupId("info.heleno");
         dep.setArtifactId("optimus-test");
-        dep.setVersion("2.20.1");
+        dep.setVersion("0.0.1");
 
         Plugin assembly = MojoExecutor.plugin(
                 "org.apache.maven.plugins",
@@ -272,7 +272,7 @@ public class PomManager {
         Plugin plugin = MojoExecutor.plugin(
                 "org.jacoco",
                 "jacoco-maven-plugin",
-                "0.7.9");
+                OptimusMojo.jacocoVersion);
 
         PluginExecution execution = new PluginExecution();
         execution.addGoal("prepare-agent");
