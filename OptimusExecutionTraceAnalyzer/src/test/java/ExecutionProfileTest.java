@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-import io.github.helenocampos.executiontraceanalyzer.TestExecutionProfile;
+import info.heleno.executiontraceanalyzer.TestExecutionProfile;
 import java.util.HashMap;
 import org.junit.After;
 import org.junit.AfterClass;

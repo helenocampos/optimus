@@ -4,8 +4,7 @@
  * and open the template in the editor.
  */
 
-import io.github.helenocampos.surefire.util.SimilarityMeasures;
-import org.apache.commons.text.similarity.JaccardDistance;
+import info.heleno.surefire.util.SimilarityMeasures;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
