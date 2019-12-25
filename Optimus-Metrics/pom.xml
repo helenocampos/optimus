@@ -37,7 +37,7 @@
                    <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>io.github.helenocampos.javaprojectmetrics.App</mainClass>
+                            <mainClass>info.heleno.metrics.App</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
