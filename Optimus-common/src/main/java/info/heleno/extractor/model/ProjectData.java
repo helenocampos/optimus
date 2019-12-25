@@ -75,6 +75,20 @@ public class ProjectData
         return tests;
     }
 
+    public int getTestClassesTotal(){
+      return getTests().size();
+    }
+
+    public int getTestMethodsTotal(){
+      int testMethodsTotal = 0;
+      for (JavaTestClass testClass: getTests().values()){
+        if(testClass.getMethods() != null){
+            testMethodsTotal+=testClass.getMethods().size();
+        }
+      }
+      return testMethodsTotal;
+    }
+
     public void setTests(HashMap<String, JavaTestClass> tests)
     {
         this.tests = tests;
